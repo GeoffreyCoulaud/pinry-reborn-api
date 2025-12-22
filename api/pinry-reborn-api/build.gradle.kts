@@ -14,6 +14,6 @@ dependencies {
 
 application {
     // Define the Fully Qualified Name for the application main class
-    // (Note that Kotlin compiles `App.kt` to a class with FQN `com.example.app.AppKt`.)
-    mainClass = "fr.geoffreyCoulaud.pinryReborn.app.AppKt"
+    // (Note that Kotlin compiles `App.kt` to a class with FQN `fr.geoffreyCoulaud.pinryReborn.api.AppKt`.)
+    mainClass = "fr.geoffreyCoulaud.pinryReborn.api.AppKt"
 }
