@@ -5,8 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4fce5ef8-119e-427b-b828-5b4700009d96" name="Changes" comment="refactor: improve structure">
-      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/Application.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/Application.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/api/settings.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/adapters/DummyUserRepository.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Board.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Pin.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Tag.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/User.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/interfaces/UserRepository.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/useCases/CreateUserUseCase.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,6 +41,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Kotlin Data Class" />
+        <option value="Kotlin Interface" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>
@@ -99,9 +107,11 @@
       <recent name="$PROJECT_DIR$/server" />
     </key>
     <key name="CreateKotlinClassDialog.RecentsKey">
+      <recent name="fr.geoffreyCoulaud.pinryReborn.api.application.frameworks" />
       <recent name="fr.geoffreyCoulaud.pinryReborn.api.entities" />
     </key>
     <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="fr.geoffreyCoulaud.pinryReborn.api.application.adapters" />
       <recent name="org.example.app.fr.geoffreyCoulaud.pinryReborn.api.application" />
       <recent name="fr.geoffreyCoulaud.pinryReborn.api.fr.geoffreyCoulaud.pinryReborn.api.utils" />
       <recent name="fr.geoffreyCoulaud.pinryReborn.api.fr.geoffreyCoulaud.pinryReborn.api" />
