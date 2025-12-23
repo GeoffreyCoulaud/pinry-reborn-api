@@ -24,6 +24,7 @@ dependencies {
     implementation 'io.ebean:ebean:17.2.0'
     implementation 'io.ebean:ebean-sqlite:17.2.0'
     implementation 'io.ebean:ebean-ddl-generator:17.2.0'
+    implementation 'io.ebean:ebean-migration:13.6.0'
     kapt 'io.ebean:kotlin-querybean-generator:17.2.0'
     testImplementation 'io.ebean:ebean-test:17.2.0'
 
@@ -72,4 +73,12 @@ compileKotlin {
 
 compileTestKotlin {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_21
+}
+
+tasks.register('generateDbMigration', JavaExec) {
+    group = 'ebean'
+    description = 'Generate Ebean database migration'
+    mainClass = 'fr.geoffreyCoulaud.pinryReborn.migration.GenerateDbMigrationKt'
+    classpath = sourceSets.test.runtimeClasspath
+    dependsOn compileTestKotlin
 }
