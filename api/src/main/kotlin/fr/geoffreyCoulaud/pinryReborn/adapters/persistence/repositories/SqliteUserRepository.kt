@@ -5,18 +5,17 @@ import fr.geoffreyCoulaud.pinryReborn.adapters.persistence.mappers.UserModelMapp
 import fr.geoffreyCoulaud.pinryReborn.adapters.persistence.models.SqliteUserModel
 import fr.geoffreyCoulaud.pinryReborn.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.domain.repositories.UserRepository
-import io.ebean.Database
 import jakarta.enterprise.context.ApplicationScoped
 import java.util.UUID
 
 @ApplicationScoped
-class SqliteUserRepository(
-    database: Database,
-) : SqliteBaseRepository<SqliteUserModel>(SqliteUserModel::class, database),
-    UserRepository {
+class SqliteUserRepository : SqliteBaseRepository<SqliteUserModel>(SqliteUserModel::class), UserRepository {
+
     override fun findUser(id: UUID): User? = findById(id)?.toDomain()
 
     override fun saveUser(user: User): User = saveAndReturn(user.toModel()).toDomain()
 
-    override fun deleteUser(user: User): Unit = deleteById(user.id)
+    override fun deleteUser(user: User) {
+        deleteById(user.id)
+    }
 }
