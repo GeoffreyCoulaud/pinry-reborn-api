@@ -4,15 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4fce5ef8-119e-427b-b828-5b4700009d96" name="Changes" comment="refactor: improve structure">
-      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/adapters/DummyUserRepository.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Board.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Pin.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Tag.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/User.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/interfaces/UserRepository.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/useCases/CreateUserUseCase.kt" afterDir="false" />
+    <list default="true" id="4fce5ef8-119e-427b-b828-5b4700009d96" name="Changes" comment="feat: add basic structure">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/build.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/Application.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/adapters/DummyUserRepository.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Board.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Pin.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/Tag.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/entities/User.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/interfaces/UserRepository.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/useCases/CreateUserUseCase.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/buildSrc/build.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/buildSrc/settings.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/buildSrc/src/main/kotlin/buildlogic.kotlin-application-conventions.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/buildSrc/src/main/kotlin/buildlogic.kotlin-common-conventions.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/buildSrc/src/main/kotlin/buildlogic.kotlin-library-conventions.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/gradle/libs.versions.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/gradlew.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/settings.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/utilities/build.gradle.kts" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,11 +115,12 @@
     &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.16978194&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.ktlint-plugin&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/api" />
       <recent name="$PROJECT_DIR$/server" />
     </key>
@@ -281,6 +299,7 @@
     <MESSAGE value="feat: initial project structure" />
     <MESSAGE value="refactor: move into api subdir" />
     <MESSAGE value="refactor: improve structure" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactor: improve structure" />
+    <MESSAGE value="feat: add basic structure" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: add basic structure" />
   </component>
 </project>
