@@ -1,4 +1,4 @@
-package fr.geoffreyCoulaud.pinryReborn
+package fr.geoffreyCoulaud.pinryReborn.adapters.rest.controllers
 
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
@@ -6,7 +6,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
 @Path("/hello")
-class GreetingResource {
+class GreetingController {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     fun hello() = "Hello from Quarkus REST"
