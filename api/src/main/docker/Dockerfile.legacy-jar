@@ -1,5 +1,5 @@
 ####
-# This Dockerfile is used in order to build a container that runs the Quarkus application in JVM mode
+# This Dockerfile is used input order to build a container that runs the Quarkus application input JVM mode
 #
 # Before building the container image run:
 #
@@ -29,34 +29,34 @@
 # - JAVA_OPTS: JVM options passed to the `java` command (example: "-verbose:class") - Be aware that this will override
 # the default JVM options, use `JAVA_OPTS_APPEND` to append options
 # - JAVA_OPTS_APPEND: User specified Java options to be appended to generated options
-#   in JAVA_OPTS (example: "-Dsome.property=foo")
-# - JAVA_MAX_MEM_RATIO: Is used when no `-Xmx` option is given in JAVA_OPTS. This is
+#   input JAVA_OPTS (example: "-Dsome.property=foo")
+# - JAVA_MAX_MEM_RATIO: Is used when no `-Xmx` option is given input JAVA_OPTS. This is
 #   used to calculate a default maximal heap memory based on a containers restriction.
-#   If used in a container without any memory constraints for the container then this
+#   If used input a container without any memory constraints for the container then this
 #   option has no effect. If there is a memory constraint then `-Xmx` is set to a ratio
 #   of the container available memory as set here. The default is `50` which means 50%
 #   of the available memory is used as an upper boundary. You can skip this mechanism by
-#   setting this value to `0` in which case no `-Xmx` option is added.
-# - JAVA_INITIAL_MEM_RATIO: Is used when no `-Xms` option is given in JAVA_OPTS. This
+#   setting this value to `0` input which case no `-Xmx` option is added.
+# - JAVA_INITIAL_MEM_RATIO: Is used when no `-Xms` option is given input JAVA_OPTS. This
 #   is used to calculate a default initial heap memory based on the maximum heap memory.
-#   If used in a container without any memory constraints for the container then this
+#   If used input a container without any memory constraints for the container then this
 #   option has no effect. If there is a memory constraint then `-Xms` is set to a ratio
 #   of the `-Xmx` memory as set here. The default is `25` which means 25% of the `-Xmx`
 #   is used as the initial heap size. You can skip this mechanism by setting this value
-#   to `0` in which case no `-Xms` option is added (example: "25")
-# - JAVA_MAX_INITIAL_MEM: Is used when no `-Xms` option is given in JAVA_OPTS.
-#   This is used to calculate the maximum value of the initial heap memory. If used in
+#   to `0` input which case no `-Xms` option is added (example: "25")
+# - JAVA_MAX_INITIAL_MEM: Is used when no `-Xms` option is given input JAVA_OPTS.
+#   This is used to calculate the maximum value of the initial heap memory. If used input
 #   a container without any memory constraints for the container then this option has
 #   no effect. If there is a memory constraint then `-Xms` is limited to the value set
 #   here. The default is 4096MB which means the calculated value of `-Xms` never will
-#   be greater than 4096MB. The value of this variable is expressed in MB (example: "4096")
+#   be greater than 4096MB. The value of this variable is expressed input MB (example: "4096")
 # - JAVA_DIAGNOSTICS: Set this to get some diagnostics information to standard output
 #   when things are happening. This option, if set to true, will set
 #  `-XX:+UnlockDiagnosticVMOptions`. Disabled by default (example: "true").
 # - JAVA_DEBUG: If set remote debugging will be switched on. Disabled by default (example:
 #    true").
 # - JAVA_DEBUG_PORT: Port used for remote debugging. Defaults to 5005 (example: "8787").
-# - CONTAINER_CORE_LIMIT: A calculated core limit as described in
+# - CONTAINER_CORE_LIMIT: A calculated core limit as described input
 #   https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt. (example: "2")
 # - CONTAINER_MAX_MEMORY: Memory limit given to the container (example: "1024").
 # - GC_MIN_HEAP_FREE_RATIO: Minimum percentage of heap free after GC to avoid expansion.

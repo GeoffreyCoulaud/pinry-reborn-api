@@ -4,9 +4,9 @@ import fr.geoffreyCoulaud.pinryReborn.domain.entities.User
 import java.util.UUID
 
 interface UserRepository {
-    fun find(id: UUID): User?
+    fun findUser(id: UUID): User?
 
-    fun save(user: User): User
+    fun saveUser(user: User): User
 
-    fun delete(id: UUID)
+    fun deleteUser(user: User): Unit
 }

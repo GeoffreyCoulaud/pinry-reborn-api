@@ -1,7 +1,9 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version "2.2.21"
+    id 'org.jetbrains.kotlin.kapt' version "2.2.21"
     id "org.jetbrains.kotlin.plugin.allopen" version "2.2.21"
     id 'io.quarkus'
+    id 'io.ebean' version '17.2.0'
 }
 
 repositories {
@@ -16,6 +18,16 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-rest'
+
+    // Ebean ORM
+    implementation 'io.ebean:ebean:17.2.0'
+    implementation 'io.ebean:ebean-sqlite:17.2.0'
+    kapt 'io.ebean:kotlin-querybean-generator:17.2.0'
+    testImplementation 'io.ebean:ebean-test:17.2.0'
+
+    // SQLite JDBC driver
+    implementation 'org.xerial:sqlite-jdbc:3.47.2.0'
+
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
 }
@@ -37,6 +49,12 @@ allOpen {
     annotation("jakarta.enterprise.context.ApplicationScoped")
     annotation("jakarta.persistence.Entity")
     annotation("io.quarkus.test.junit.QuarkusTest")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
+ebean {
+    debugLevel = 1
 }
 
 compileKotlin {

@@ -1,21 +1,22 @@
 package fr.geoffreyCoulaud.pinryReborn.adapters.persistence.repositories
 
+import fr.geoffreyCoulaud.pinryReborn.adapters.persistence.mappers.UserModelMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.adapters.persistence.mappers.UserModelMapper.toModel
+import fr.geoffreyCoulaud.pinryReborn.adapters.persistence.models.SqliteUserModel
 import fr.geoffreyCoulaud.pinryReborn.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.domain.repositories.UserRepository
+import io.ebean.Database
 import jakarta.enterprise.context.ApplicationScoped
 import java.util.UUID
 
 @ApplicationScoped
-class SqliteUserRepository : UserRepository {
-    override fun find(id: UUID): User? {
-        TODO("Not yet implemented")
-    }
+class SqliteUserRepository(
+    database: Database,
+) : SqliteBaseRepository<SqliteUserModel>(SqliteUserModel::class, database),
+    UserRepository {
+    override fun findUser(id: UUID): User? = findById(id)?.toDomain()
 
-    override fun save(user: User): User {
-        TODO("Not yet implemented")
-    }
+    override fun saveUser(user: User): User = saveAndReturn(user.toModel()).toDomain()
 
-    override fun delete(id: UUID) {
-        TODO("Not yet implemented")
-    }
+    override fun deleteUser(user: User): Unit = deleteById(user.id)
 }

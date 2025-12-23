@@ -8,5 +8,5 @@ import jakarta.enterprise.context.ApplicationScoped
 class CreateUserUseCase(
     private val userRepository: UserRepository,
 ) {
-    fun execute(name: String): User = userRepository.save(User(name = name))
+    fun execute(user: User): User = userRepository.saveUser(user)
 }
