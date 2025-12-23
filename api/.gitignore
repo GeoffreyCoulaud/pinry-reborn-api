@@ -3,3 +3,4 @@
 .gradle
 *.db
 .idea/dataSources*
+.claude
