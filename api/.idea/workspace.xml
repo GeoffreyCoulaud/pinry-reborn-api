@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4fce5ef8-119e-427b-b828-5b4700009d96" name="Changes" comment="feat: move everything back into /api">
+    <list default="true" id="4fce5ef8-119e-427b-b828-5b4700009d96" name="Changes" comment="chore: improve gitignore">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
@@ -36,6 +36,17 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="pinry-reborn" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="pinry-reborn" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="pinry-reborn" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="quarkus" type="c8890929:TasksNode$1" />
               </path>
             </expand>
             <select />
@@ -89,6 +100,7 @@
     "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Gradle./Users/geoffrey/Documents/Repositories/pinry-reborn [run].executor": "Run",
     "Gradle./Users/geoffrey/Documents/Repositories/pinry-reborn/server [run].executor": "Run",
+    "Gradle.Build api.executor": "Run",
     "Gradle.pinry-reborn [build].executor": "Run",
     "Gradle.pinry-reborn [clean].executor": "Run",
     "Gradle.pinry-reborn [quarkusDev].executor": "Run",
@@ -96,6 +108,7 @@
     "Kotlin.AppKt.executor": "Run",
     "Kotlin.ApplicationKt.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Quarkus.pinry-reborn.api-application.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -128,32 +141,7 @@
       <recent name="fr.geoffreyCoulaud.pinryReborn.api.entities" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.pinry-reborn [quarkusDev]">
-    <configuration name="/Users/geoffrey/Documents/Repositories/pinry-reborn/server [run]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/server" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value="run" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>false</RunAsTest>
-      <GradleProfilingDisabled>false</GradleProfilingDisabled>
-      <GradleCoverageDisabled>false</GradleCoverageDisabled>
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Quarkus.pinry-reborn.api-application.main">
     <configuration name="pinry-reborn [quarkusDev]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -204,20 +192,6 @@
       <GradleCoverageDisabled>false</GradleCoverageDisabled>
       <method v="2" />
     </configuration>
-    <configuration name="AppKt" type="JetRunConfigurationType" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="fr.geoffreyCoulaud.pinryReborn.api.AppKt" />
-      <module name="pinry-reborn" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="ApplicationKt" type="JetRunConfigurationType" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="fr.geoffreyCoulaud.pinryReborn.api.application.ApplicationKt" />
-      <module name="pinry-reborn" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration default="true" type="JetRunConfigurationType">
       <module name="utils.main" />
       <method v="2">
@@ -241,36 +215,9 @@
             <list />
           </option>
           <option name="taskNames">
-            <list />
-          </option>
-          <option name="vmOptions" />
-        </ExternalSystemSettings>
-        <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-        <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-        <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
-        <DebugAllEnabled>false</DebugAllEnabled>
-        <RunAsTest>false</RunAsTest>
-        <GradleProfilingDisabled>false</GradleProfilingDisabled>
-        <GradleCoverageDisabled>false</GradleCoverageDisabled>
-        <profile>dev</profile>
-      </QsGradleRunConfiguration>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="pinry-reborn.app.main" type="QuarkusRunConfigurationType" factoryName="Quarkus" nameIsGenerated="true">
-      <module name="pinry-reborn.app.main" />
-      <QsGradleRunConfiguration>
-        <ExternalSystemSettings>
-          <option name="executionName" />
-          <option name="externalProjectPath" value="$PROJECT_DIR$/app" />
-          <option name="externalSystemIdString" value="GRADLE" />
-          <option name="scriptParameters" />
-          <option name="taskDescriptions">
-            <list />
-          </option>
-          <option name="taskNames">
-            <list />
+            <list>
+              <option value="quarkusDev" />
+            </list>
           </option>
           <option name="vmOptions" />
         </ExternalSystemSettings>
@@ -290,9 +237,6 @@
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.pinry-reborn [quarkusDev]" />
-        <item itemvalue="Kotlin.ApplicationKt" />
-        <item itemvalue="Kotlin.AppKt" />
-        <item itemvalue="Gradle./Users/geoffrey/Documents/Repositories/pinry-reborn/server [run]" />
         <item itemvalue="Gradle.pinry-reborn [run]" />
       </list>
     </recent_temporary>
@@ -340,6 +284,7 @@
     <option featureType="dependencySupport" implementationName="java:io.quarkus:quarkus-core" />
     <option featureType="dependencySupport" implementationName="java:io.smallrye.reactive:mutiny" />
     <option featureType="dependencySupport" implementationName="executable:podman" />
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.name" />
     <option featureType="dependencySupport" implementationName="executable:kubectl" />
     <option featureType="dependencySupport" implementationName="java:jakarta.ws.rs:jakarta.ws.rs-api" />
   </component>
@@ -360,6 +305,7 @@
     <MESSAGE value="refactor: improve structure" />
     <MESSAGE value="feat: add basic structure" />
     <MESSAGE value="feat: move everything back into /api" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: move everything back into /api" />
+    <MESSAGE value="chore: improve gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="chore: improve gitignore" />
   </component>
 </project>
