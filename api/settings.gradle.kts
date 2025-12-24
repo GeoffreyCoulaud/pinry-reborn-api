@@ -17,6 +17,10 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 include(":api-domain")
 include(":api-usecases")
 include(":api-persistence-sqlite")

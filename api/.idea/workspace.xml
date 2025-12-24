@@ -4,39 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4fce5ef8-119e-427b-b828-5b4700009d96" name="Changes" comment="chore: improve gitignore">
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules/api-presentation-rest/pinry-reborn.api-presentation-rest.test.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-domain/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/domain/repositories/UserRepository.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/persistence/sqlite/mappers/UserModelMapper.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/persistence/sqlite/repositories/SqliteUserRepository.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/dtos/input/UserInputDto.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/mappers/UserDtoMapper.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-presentation-rest/src/test/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/UserControllerTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-usecases/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/usecases/CreateUserUseCase.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-utilities/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/utilities/StringUtils.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="4fce5ef8-119e-427b-b828-5b4700009d96" name="Changes" comment="chore: wip add tests">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/Application.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-application/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/Application.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-domain/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/domain/entities/User.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-domain/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/domain/entities/User.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-domain/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/domain/repositories/UserRepository.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/persistence/EbeanDatabaseProducer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/persistence/sqlite/EbeanDatabaseProducer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/persistence/mappers/UserModelMapper.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/persistence/models/SqliteBaseModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/persistence/sqlite/models/SqliteBaseModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/persistence/models/SqliteUserModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/persistence/sqlite/models/SqliteUserModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/persistence/repositories/SqliteBaseRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/persistence/sqlite/repositories/SqliteBaseRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/persistence/repositories/SqliteUserRepository.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/test/kotlin/fr/geoffreyCoulaud/pinryReborn/PlaceholderTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/test/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/PlaceholderTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-persistence-sqlite/src/test/kotlin/fr/geoffreyCoulaud/pinryReborn/migration/GenerateDbMigration.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-persistence-sqlite/src/test/kotlin/fr/geoffreyCoulaud/pinryReborn/api/application/migration/GenerateDbMigration.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-application/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/api-application/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api-presentation-rest/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/api-presentation-rest/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/rest/controllers/GreetingController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/controllers/GreetingController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/rest/controllers/UserController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/controllers/UserController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/rest/dtos/input/UserInputDto.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/rest/dtos/output/UserOutputDto.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/dtos/output/UserOutputDto.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/adapters/rest/mappers/UserDtoMapper.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-usecases/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/application/CreateUserUseCase.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/controllers/UserController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-presentation-rest/src/main/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/controllers/UserController.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-presentation-rest/src/test/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/UserControllerTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/api-presentation-rest/src/test/kotlin/fr/geoffreyCoulaud/pinryReborn/api/presentation/rest/UserControllerTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -140,6 +114,7 @@
     "Gradle.Download Sources.executor": "Run",
     "Gradle.UserControllerTest.When creating a user succeeds, then should return 200 and UserOutputDto (1).executor": "Run",
     "Gradle.UserControllerTest.When creating a user succeeds, then should return 200 and UserOutputDto.executor": "Run",
+    "Gradle.UserControllerTest.executor": "Run",
     "Gradle.pinry-reborn [build].executor": "Run",
     "Gradle.pinry-reborn [clean].executor": "Run",
     "Gradle.pinry-reborn [quarkusDev].executor": "Run",
@@ -183,7 +158,34 @@
       <recent name="fr.geoffreyCoulaud.pinryReborn.api.entities" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.UserControllerTest.When creating a user succeeds, then should return 200 and UserOutputDto (1)">
+  <component name="RunManager" selected="Gradle.UserControllerTest">
+    <configuration name="UserControllerTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":api-presentation-rest:test" />
+            <option value="--tests" />
+            <option value="&quot;fr.geoffreyCoulaud.pinryReborn.api.presentation.rest.UserControllerTest&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
     <configuration name="UserControllerTest.When creating a user succeeds, then should return 200 and UserOutputDto (1)" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -332,6 +334,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.UserControllerTest" />
         <item itemvalue="Gradle.UserControllerTest.When creating a user succeeds, then should return 200 and UserOutputDto (1)" />
         <item itemvalue="Gradle.UserControllerTest.When creating a user succeeds, then should return 200 and UserOutputDto" />
         <item itemvalue="Gradle.pinry-reborn [quarkusDev]" />
@@ -404,6 +407,7 @@
     <MESSAGE value="feat: add basic structure" />
     <MESSAGE value="feat: move everything back into /api" />
     <MESSAGE value="chore: improve gitignore" />
-    <option name="LAST_COMMIT_MESSAGE" value="chore: improve gitignore" />
+    <MESSAGE value="chore: wip add tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="chore: wip add tests" />
   </component>
 </project>

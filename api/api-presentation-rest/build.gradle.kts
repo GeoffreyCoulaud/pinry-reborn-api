@@ -1,12 +1,17 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.allopen")
+    kotlin("plugin.noarg")
     id("org.kordamp.gradle.jandex")
 }
 
 allOpen {
     annotation("jakarta.ws.rs.Path")
     annotation("jakarta.enterprise.context.ApplicationScoped")
+}
+
+noArg {
+    annotation("jakarta.ws.rs.Path")
 }
 
 tasks.named<Test>("test") {
@@ -30,4 +35,6 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured:6.0.0")
     testImplementation("io.rest-assured:kotlin-extensions:6.0.0")
     testImplementation("io.rest-assured:json-path:6.0.0")
+    testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.rest-assured:rest-assured")
 }
