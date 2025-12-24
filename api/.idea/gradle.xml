@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/api-persistence-sqlite" />
             <option value="$PROJECT_DIR$/api-presentation-rest" />
             <option value="$PROJECT_DIR$/api-usecases" />
+            <option value="$PROJECT_DIR$/api-utilities" />
           </set>
         </option>
       </GradleProjectSettings>
