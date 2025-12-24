@@ -3,5 +3,6 @@
 .gradle
 *.db
 .idea/dataSources*
+.idea/workspace.xml
 .claude
 .gradle
