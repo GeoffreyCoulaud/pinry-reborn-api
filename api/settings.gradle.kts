@@ -24,6 +24,6 @@ plugins {
 include(":api-domain")
 include(":api-usecases")
 include(":api-persistence-sqlite")
-include(":api-presentation-rest")
+include(":api-presentation-quarkus")
 include(":api-application")
 include(":api-utilities")

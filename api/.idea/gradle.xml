@@ -11,7 +11,7 @@
             <option value="$PROJECT_DIR$/api-application" />
             <option value="$PROJECT_DIR$/api-domain" />
             <option value="$PROJECT_DIR$/api-persistence-sqlite" />
-            <option value="$PROJECT_DIR$/api-presentation-rest" />
+            <option value="$PROJECT_DIR$/api-presentation-quarkus" />
             <option value="$PROJECT_DIR$/api-usecases" />
             <option value="$PROJECT_DIR$/api-utilities" />
           </set>

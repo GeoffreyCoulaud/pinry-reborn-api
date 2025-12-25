@@ -8,6 +8,6 @@ import java.util.UUID.randomUUID
 @Entity
 @Table(name = "users")
 class SqliteUserModel(
-    id: UUID = randomUUID(),
-    var name: String = "",
+    id: UUID,
+    var name: String,
 ) : SqliteBaseModel(id = id)
