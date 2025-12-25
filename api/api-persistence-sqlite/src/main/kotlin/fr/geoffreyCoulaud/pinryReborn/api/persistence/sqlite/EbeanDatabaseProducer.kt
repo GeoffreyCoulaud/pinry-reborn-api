@@ -16,10 +16,10 @@ class EbeanDatabaseProducer {
         val dbPath = System.getenv("DB_PATH") ?: "data.db"
 
         val dataSourceConfig = DataSourceConfig()
-        dataSourceConfig.setUrl("jdbc:sqlite:$dbPath")
-        dataSourceConfig.setDriver("org.sqlite.JDBC")
-        dataSourceConfig.setUsername("sa")
-        dataSourceConfig.setPassword("")
+        dataSourceConfig.url = "jdbc:sqlite:$dbPath"
+        dataSourceConfig.driver = "org.sqlite.JDBC"
+        dataSourceConfig.username = "sa"
+        dataSourceConfig.password = ""
 
         val config = DatabaseConfig()
         config.setDefaultServer(true)
