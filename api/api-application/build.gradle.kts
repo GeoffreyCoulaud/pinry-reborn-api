@@ -15,8 +15,8 @@ dependencies {
     implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.30.4"))
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-kotlin")
-    implementation("io.quarkus:quarkus-quarkus")
-    implementation("io.quarkus:quarkus-quarkus-jackson")
+    implementation("io.quarkus:quarkus-rest")
+    implementation("io.quarkus:quarkus-rest-jackson")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 }
 

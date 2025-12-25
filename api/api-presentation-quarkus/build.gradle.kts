@@ -28,6 +28,7 @@ dependencies {
     compileOnly("jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1")
 
     // Tests
+    testImplementation(testFixtures(project(":api-utilities")))
     testImplementation("jakarta.ws.rs:jakarta.ws.rs-api:3.1.0")
     testImplementation("io.quarkus.resteasy.reactive:resteasy-reactive-common:3.30.4")
     testImplementation("io.quarkus.resteasy.reactive:resteasy-reactive:3.30.4")

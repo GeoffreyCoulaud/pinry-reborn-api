@@ -5,6 +5,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers.UserC
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.UserInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.UserOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.CreateUserUseCase
+import fr.geoffreyCoulaud.pinryReborn.api.utilities.BaseTest
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
 import io.mockk.every
 import io.mockk.mockk
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import java.util.UUID.randomUUID
 
-class UserControllerTest {
+class UserControllerTest : BaseTest() {
     private val createUserUseCase: CreateUserUseCase = mockk()
     private val controller = UserController(createUserUseCase = createUserUseCase)
 

@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    `java-test-fixtures`
 }
 
 group = "fr.geoffreyCoulaud.pinryReborn"
@@ -10,7 +11,14 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    // Test fixtures dependencies (shared test utilities)
+    testFixturesImplementation("io.mockk:mockk:1.14.0")
+    testFixturesImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+
+    // Test dependencies
+    testImplementation("io.mockk:mockk:1.14.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {

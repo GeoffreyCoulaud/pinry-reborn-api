@@ -9,6 +9,7 @@ plugins {
 
 dependencies {
     implementation(project(":api-domain"))
+    implementation(project(":api-utilities"))
 
     // Ebean ORM
     implementation("io.ebean:ebean:17.2.0")
