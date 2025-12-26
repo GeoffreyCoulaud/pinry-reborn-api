@@ -1,5 +1,3 @@
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
 }
-
-// No dependencies - domain is pure Kotlin

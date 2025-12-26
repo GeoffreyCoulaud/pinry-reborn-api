@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.allopen")
-    id("io.quarkus")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.allopen)
+    alias(libs.plugins.quarkus)
 }
 
 dependencies {
@@ -12,12 +12,12 @@ dependencies {
     implementation(project(":api-presentation-quarkus"))
 
     // Quarkus platform
-    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.30.4"))
-    implementation("io.quarkus:quarkus-arc")
-    implementation("io.quarkus:quarkus-kotlin")
-    implementation("io.quarkus:quarkus-rest")
-    implementation("io.quarkus:quarkus-rest-jackson")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation(enforcedPlatform(libs.quarkus.bom))
+    implementation(libs.quarkus.arc)
+    implementation(libs.quarkus.kotlin)
+    implementation(libs.quarkus.rest)
+    implementation(libs.quarkus.rest.jackson)
+    implementation(libs.kotlin.stdlib)
 }
 
 allOpen {

@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm") apply false
-    kotlin("kapt") apply false
-    kotlin("plugin.allopen") apply false
-    kotlin("plugin.noarg") apply false
-    id("io.quarkus") apply false
-    id("io.ebean") apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.kotlin.allopen) apply false
+    alias(libs.plugins.kotlin.noarg) apply false
+    alias(libs.plugins.quarkus) apply false
+    alias(libs.plugins.ebean) apply false
 }
 
 allprojects {
@@ -32,5 +32,9 @@ subprojects {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
             javaParameters.set(true)
         }
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
     }
 }

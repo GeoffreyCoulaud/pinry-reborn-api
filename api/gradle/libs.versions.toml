@@ -1,0 +1,59 @@
+[versions]
+kotlin = "2.2.21"
+quarkus = "3.30.4"
+ebean = "17.2.0"
+ebean-migration = "13.6.0"
+junit = "5.11.0"
+mockk = "1.14.0"
+sqlite-jdbc = "3.47.2.0"
+jakarta-cdi = "4.0.1"
+jakarta-ws-rs = "3.1.0"
+jakarta-inject = "2.0.1"
+jandex = "2.1.0"
+
+[libraries]
+# Testing
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+# Ebean ORM
+ebean = { module = "io.ebean:ebean", version.ref = "ebean" }
+ebean-sqlite = { module = "io.ebean:ebean-sqlite", version.ref = "ebean" }
+ebean-ddl-generator = { module = "io.ebean:ebean-ddl-generator", version.ref = "ebean" }
+ebean-migration = { module = "io.ebean:ebean-migration", version.ref = "ebean-migration" }
+ebean-querybean-generator = { module = "io.ebean:kotlin-querybean-generator", version.ref = "ebean" }
+ebean-test = { module = "io.ebean:ebean-test", version.ref = "ebean" }
+
+# Jakarta APIs
+jakarta-cdi-api = { module = "jakarta.enterprise:jakarta.enterprise.cdi-api", version.ref = "jakarta-cdi" }
+jakarta-ws-rs-api = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version.ref = "jakarta-ws-rs" }
+jakarta-inject-api = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
+
+# Quarkus RESTEasy
+resteasy-reactive-common = { module = "io.quarkus.resteasy.reactive:resteasy-reactive-common", version.ref = "quarkus" }
+resteasy-reactive = { module = "io.quarkus.resteasy.reactive:resteasy-reactive", version.ref = "quarkus" }
+
+# Quarkus platform
+quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
+quarkus-arc = { module = "io.quarkus:quarkus-arc" }
+quarkus-kotlin = { module = "io.quarkus:quarkus-kotlin" }
+quarkus-rest = { module = "io.quarkus:quarkus-rest" }
+quarkus-rest-jackson = { module = "io.quarkus:quarkus-rest-jackson" }
+
+# Other
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+
+[bundles]
+testing = ["junit-jupiter", "mockk"]
+testing-runtime = ["junit-platform-launcher"]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
+kotlin-noarg = { id = "org.jetbrains.kotlin.plugin.noarg", version.ref = "kotlin" }
+quarkus = { id = "io.quarkus", version.ref = "quarkus" }
+ebean = { id = "io.ebean", version.ref = "ebean" }
+jandex = { id = "org.kordamp.gradle.jandex", version.ref = "jandex" }
