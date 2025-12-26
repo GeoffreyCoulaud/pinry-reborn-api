@@ -1,13 +1,14 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories
 
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.SqliteBaseModel
-import io.ebean.DB.save
+import io.ebean.BeanRepository
 import io.ebean.Database
+import java.util.UUID
 import kotlin.reflect.KClass
 
-class SqlRepository<T : SqliteBaseModel>(
-    private val entityClass: KClass<T>,
-    private val database: Database,
-) {
+internal class GenericRepository<T : SqliteBaseModel>(
+    entityClass: KClass<T>,
+    database: Database,
+) : BeanRepository<UUID, T>(entityClass.java, database) {
     fun saveAndReturn(model: T): T = model.also { save(it) }
 }

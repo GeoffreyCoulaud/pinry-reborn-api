@@ -4,7 +4,7 @@ import io.ebean.DB
 import io.ebean.Database
 import org.junit.jupiter.api.BeforeEach
 
-abstract class SqlRepositoryTest {
+abstract class RepositoryTest {
     protected val database: Database get() = DB.getDefault()
 
     /**

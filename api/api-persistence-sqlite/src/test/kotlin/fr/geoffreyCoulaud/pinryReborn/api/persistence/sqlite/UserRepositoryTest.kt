@@ -1,16 +1,15 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
-import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.SqlUserRepository
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.UserRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import java.util.UUID
 import java.util.UUID.randomUUID
 
-class SqlUserRepositoryTest : SqlRepositoryTest() {
-    private val repository = SqlUserRepository(database)
+class UserRepositoryTest : RepositoryTest() {
+    private val repository = UserRepository(database)
 
     @Test
     fun `saveUser should persist user and return it with same id`() {
