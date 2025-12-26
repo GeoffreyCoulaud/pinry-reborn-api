@@ -14,6 +14,8 @@ dependencies {
     implementation(project(":api-usecases"))
     implementation(project(":api-utilities"))
 
+    implementation(libs.kotlin.logging)
+
     // Quarkus RESTEasy Reactive - provided by Quarkus at runtime
     compileOnly(libs.resteasy.reactive.common)
 

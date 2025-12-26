@@ -7,6 +7,7 @@ dependencies {
     implementation(project(":api-domain"))
     implementation(project(":api-utilities"))
 
+    implementation(libs.kotlin.logging)
     compileOnly(libs.jakarta.cdi.api)
 
     testImplementation(testFixtures(project(":api-utilities")))

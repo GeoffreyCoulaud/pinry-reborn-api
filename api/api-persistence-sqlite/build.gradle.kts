@@ -11,6 +11,8 @@ dependencies {
     implementation(project(":api-domain"))
     implementation(project(":api-utilities"))
 
+    implementation(libs.kotlin.logging)
+
     // Ebean ORM
     implementation(libs.ebean)
     implementation(libs.ebean.sqlite)

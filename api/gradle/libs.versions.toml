@@ -10,6 +10,7 @@ jakarta-cdi = "4.0.1"
 jakarta-ws-rs = "3.1.0"
 jakarta-inject = "2.0.1"
 jandex = "2.1.0"
+kotlin-logging = "7.0.3"
 
 [libraries]
 # Testing
@@ -44,6 +45,10 @@ quarkus-rest-jackson = { module = "io.quarkus:quarkus-rest-jackson" }
 # Other
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+
+# Logging
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
+slf4j-jboss-logmanager = { module = "org.jboss.slf4j:slf4j-jboss-logmanager" }
 
 [bundles]
 testing = ["junit-jupiter", "mockk"]

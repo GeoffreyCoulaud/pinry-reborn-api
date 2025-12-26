@@ -18,6 +18,10 @@ dependencies {
     implementation(libs.quarkus.rest)
     implementation(libs.quarkus.rest.jackson)
     implementation(libs.kotlin.stdlib)
+
+    // Logging
+    implementation(libs.kotlin.logging)
+    implementation(libs.slf4j.jboss.logmanager)
 }
 
 allOpen {
