@@ -31,16 +31,17 @@ jakarta-cdi-api = { module = "jakarta.enterprise:jakarta.enterprise.cdi-api", ve
 jakarta-ws-rs-api = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version.ref = "jakarta-ws-rs" }
 jakarta-inject-api = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
 
-# Quarkus RESTEasy
-resteasy-reactive-common = { module = "io.quarkus.resteasy.reactive:resteasy-reactive-common", version.ref = "quarkus" }
-resteasy-reactive = { module = "io.quarkus.resteasy.reactive:resteasy-reactive", version.ref = "quarkus" }
-
-# Quarkus platform
+# Quarkus
 quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
 quarkus-arc = { module = "io.quarkus:quarkus-arc" }
 quarkus-kotlin = { module = "io.quarkus:quarkus-kotlin" }
 quarkus-rest = { module = "io.quarkus:quarkus-rest" }
 quarkus-rest-jackson = { module = "io.quarkus:quarkus-rest-jackson" }
+resteasy-reactive-common = { module = "io.quarkus.resteasy.reactive:resteasy-reactive-common", version.ref = "quarkus" }
+resteasy-reactive = { module = "io.quarkus.resteasy.reactive:resteasy-reactive", version.ref = "quarkus" }
+
+# Jackson (version from Quarkus BOM)
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
 
 # Other
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
@@ -51,8 +52,27 @@ kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = 
 slf4j-jboss-logmanager = { module = "org.jboss.slf4j:slf4j-jboss-logmanager" }
 
 [bundles]
-testing = ["junit-jupiter", "mockk"]
-testing-runtime = ["junit-platform-launcher"]
+testing = [
+    "junit-jupiter",
+    "mockk"
+]
+testing-runtime = [
+    "junit-platform-launcher"
+]
+quarkus-runtime = [
+    "quarkus-arc",
+    "quarkus-kotlin",
+    "quarkus-rest",
+    "quarkus-rest-jackson"
+]
+quarkus-compileOnly = [
+    "resteasy-reactive-common",
+    "resteasy-reactive",
+    "jackson-databind",
+    "jakarta-ws-rs-api",
+    "jakarta-inject-api",
+    "jakarta-cdi-api"
+]
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

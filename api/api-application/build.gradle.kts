@@ -11,12 +11,11 @@ dependencies {
     implementation(project(":api-persistence-sqlite"))
     implementation(project(":api-presentation-quarkus"))
 
-    // Quarkus platform
+    // BOM
     implementation(enforcedPlatform(libs.quarkus.bom))
-    implementation(libs.quarkus.arc)
-    implementation(libs.quarkus.kotlin)
-    implementation(libs.quarkus.rest)
-    implementation(libs.quarkus.rest.jackson)
+
+    // Quarkus
+    implementation(libs.bundles.quarkus.runtime)
     implementation(libs.kotlin.stdlib)
 
     // Logging

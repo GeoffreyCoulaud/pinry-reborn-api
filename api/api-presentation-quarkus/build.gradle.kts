@@ -16,13 +16,9 @@ dependencies {
 
     implementation(libs.kotlin.logging)
 
-    // Quarkus RESTEasy Reactive - provided by Quarkus at runtime
-    compileOnly(libs.resteasy.reactive.common)
-
-    // Jakarta APIs - implementation provided by Quarkus at runtime
-    compileOnly(libs.jakarta.ws.rs.api)
-    compileOnly(libs.jakarta.inject.api)
-    compileOnly(libs.jakarta.cdi.api)
+    // Quarkus APIs - provided by Quarkus at runtime
+    compileOnly(platform(libs.quarkus.bom))
+    compileOnly(libs.bundles.quarkus.compileOnly)
 
     // Tests
     testImplementation(testFixtures(project(":api-utilities")))
