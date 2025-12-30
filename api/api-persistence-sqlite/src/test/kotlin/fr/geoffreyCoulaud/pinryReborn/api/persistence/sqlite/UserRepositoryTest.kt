@@ -14,7 +14,7 @@ class UserRepositoryTest : RepositoryTest() {
     @Test
     fun `saveUser should persist user and return it with same id`() {
         // Given
-        val user = User(name = "Test User")
+        val user = User(id = randomUUID(), name = "Test User")
 
         // When
         val savedUser = repository.saveUser(user)
@@ -27,11 +27,11 @@ class UserRepositoryTest : RepositoryTest() {
     @Test
     fun `findUser should return user when exists`() {
         // Given
-        val user = User(name = "Findable User")
+        val user = User(id = randomUUID(), name = "Findable User")
         repository.saveUser(user)
 
         // When
-        val foundUser = repository.findUser(user.id)
+        val foundUser = repository.findUserById(user.id)
 
         // Then
         assertNotNull(foundUser)
@@ -42,7 +42,7 @@ class UserRepositoryTest : RepositoryTest() {
     @Test
     fun `findUser should return null when user does not exist`() {
         // When
-        val foundUser = repository.findUser(randomUUID())
+        val foundUser = repository.findUserById(randomUUID())
 
         // Then
         assertNull(foundUser)
@@ -51,21 +51,21 @@ class UserRepositoryTest : RepositoryTest() {
     @Test
     fun `deleteUser should remove user from database`() {
         // Given
-        val user = User(name = "User to Delete")
+        val user = User(id = randomUUID(), name = "User to Delete")
         repository.saveUser(user)
 
         // When
         repository.deleteUser(user)
 
         // Then
-        val foundUser = repository.findUser(user.id)
+        val foundUser = repository.findUserById(user.id)
         assertNull(foundUser)
     }
 
     @Test
     fun `saveUser should update existing user`() {
         // Given
-        val originalUser = User(name = "Original Name")
+        val originalUser = User(id = randomUUID(), name = "Original Name")
         repository.saveUser(originalUser)
 
         // When
@@ -73,7 +73,7 @@ class UserRepositoryTest : RepositoryTest() {
         repository.saveUser(updatedUser)
 
         // Then
-        val foundUser = repository.findUser(originalUser.id)
+        val foundUser = repository.findUserById(originalUser.id)
         assertNotNull(foundUser)
         assertEquals("Updated Name", foundUser!!.name)
     }

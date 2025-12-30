@@ -11,6 +11,7 @@ jakarta-ws-rs = "3.1.0"
 jakarta-inject = "2.0.1"
 jandex = "2.1.0"
 kotlin-logging = "7.0.3"
+jbcrypt = "0.4"
 
 [libraries]
 # Testing
@@ -43,13 +44,15 @@ resteasy-reactive = { module = "io.quarkus.resteasy.reactive:resteasy-reactive",
 # Jackson (version from Quarkus BOM)
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
 
+# Logging
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
+slf4j-jboss-logmanager = { module = "org.jboss.slf4j:slf4j-jboss-logmanager" }
+
 # Other
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 
-# Logging
-kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
-slf4j-jboss-logmanager = { module = "org.jboss.slf4j:slf4j-jboss-logmanager" }
+jbcrypt = { module =  "org.mindrot:jbcrypt", version.ref = "jbcrypt"}
 
 [bundles]
 testing = [

@@ -22,10 +22,17 @@ class UserRepository(
      */
     private val sqlRepository = GenericRepository(entityClass = SqliteUserModel::class, database = database)
 
-    override fun findUser(id: UUID): User? =
+    override fun findUserById(id: UUID): User? =
         QSqliteUserModel()
             .id
             .equalTo(id)
+            .findOne()
+            ?.toDomain()
+
+    override fun findUserByName(name: String): User? =
+        QSqliteUserModel()
+            .name
+            .equalTo(name)
             .findOne()
             ?.toDomain()
 

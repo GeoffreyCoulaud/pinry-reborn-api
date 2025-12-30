@@ -7,6 +7,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.util.UUID
 
 class CreateUserUseCaseTest : BaseTest() {
     private val userRepository = mockk<UserRepositoryInterface>()
@@ -15,7 +16,7 @@ class CreateUserUseCaseTest : BaseTest() {
     @Test
     fun `When creating a user, then should succeed`() {
         // Given
-        val user = User(name = "John Doe")
+        val user = User(id = UUID.randomUUID(), name = "John Doe")
         every { userRepository.saveUser(any()) } answers { args[0] as User }
 
         // When

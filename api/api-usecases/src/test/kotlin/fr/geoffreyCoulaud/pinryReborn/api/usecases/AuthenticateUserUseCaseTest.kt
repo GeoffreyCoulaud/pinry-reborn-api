@@ -1,0 +1,94 @@
+package fr.geoffreyCoulaud.pinryReborn.api.usecases
+
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.HashedPassword
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Login.BasicAuthLogin
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.PasswordHashAlgorithm
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginInvalidPasswordError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginUserDoesNotExistError
+import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.mindrot.jbcrypt.BCrypt
+import java.util.UUID
+
+class AuthenticateUserUseCaseTest {
+    private val userRepository = mockk<UserRepositoryInterface>()
+    private val userPasswordRepository = mockk<UserPasswordRepositoryInterface>()
+    private val useCase =
+        AuthenticateUserUseCase(
+            userRepository = userRepository,
+            userPasswordRepository = userPasswordRepository,
+        )
+
+    @Test
+    fun `When authenticating with basic auth, then should work`() {
+        // Given
+        val user = User(id = UUID.randomUUID(), name = createRandomString())
+        val password = createRandomString()
+        val hashedPassword =
+            HashedPassword(
+                hash = BCrypt.hashpw(password, BCrypt.gensalt()),
+                algorithm = PasswordHashAlgorithm.BCRYPT,
+            )
+        val login = BasicAuthLogin(user.name, password)
+        every { userRepository.findUserByName(any()) } returns user
+        every { userPasswordRepository.findUserPasswordHash((any())) } returns hashedPassword
+
+        // When
+        val actual = useCase.execute(login)
+
+        // Then
+        assertEquals(user, actual)
+    }
+
+    @Test
+    fun `When authenticating with basic auth and no saved password, then should work`() {
+        // Given
+        val user = User(id = UUID.randomUUID(), name = createRandomString())
+        val password = createRandomString()
+        val login = BasicAuthLogin(user.name, password)
+        every { userRepository.findUserByName(any()) } returns user
+        every { userPasswordRepository.findUserPasswordHash((any())) } returns null
+
+        // When
+        val actual = useCase.execute(login)
+
+        // Then
+        assertEquals(user, actual)
+    }
+
+    @Test
+    fun `When authenticating with basic auth with a bad username, then should throw`() {
+        // Given
+        val user = User(id = UUID.randomUUID(), name = createRandomString())
+        val login = BasicAuthLogin(user.name, createRandomString())
+        every { userRepository.findUserByName(any()) } returns null
+
+        // When, Then
+        assertThrows<LoginUserDoesNotExistError> {
+            useCase.execute(login)
+        }
+    }
+
+    @Test
+    fun `When authenticating with basic auth with a bad password, then should throw`() {
+        // Given
+        val user = User(id = UUID.randomUUID(), name = createRandomString())
+        val login = BasicAuthLogin(user.name, createRandomString())
+        val hash = BCrypt.hashpw(createRandomString(), BCrypt.gensalt())
+        every { userRepository.findUserByName(any()) } returns user
+        every { userPasswordRepository.findUserPasswordHash((any())) } returns
+            HashedPassword(hash = hash, algorithm = PasswordHashAlgorithm.BCRYPT)
+
+        // When, Then
+        assertThrows<LoginInvalidPasswordError> {
+            useCase.execute(login)
+        }
+    }
+}
