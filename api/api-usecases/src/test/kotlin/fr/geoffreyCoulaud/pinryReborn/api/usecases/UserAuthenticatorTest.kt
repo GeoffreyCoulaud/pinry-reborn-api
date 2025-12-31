@@ -17,11 +17,11 @@ import org.junit.jupiter.api.assertThrows
 import org.mindrot.jbcrypt.BCrypt
 import java.util.UUID
 
-class AuthenticateUserUseCaseTest {
+class UserAuthenticatorTest {
     private val userRepository = mockk<UserRepositoryInterface>()
     private val userPasswordRepository = mockk<UserPasswordRepositoryInterface>()
     private val useCase =
-        AuthenticateUserUseCase(
+        UserAuthenticator(
             userRepository = userRepository,
             userPasswordRepository = userPasswordRepository,
         )
@@ -41,7 +41,7 @@ class AuthenticateUserUseCaseTest {
         every { userPasswordRepository.findUserPasswordHash((any())) } returns hashedPassword
 
         // When
-        val actual = useCase.execute(login)
+        val actual = useCase.authenticate(login)
 
         // Then
         assertEquals(user, actual)
@@ -57,7 +57,7 @@ class AuthenticateUserUseCaseTest {
         every { userPasswordRepository.findUserPasswordHash((any())) } returns null
 
         // When
-        val actual = useCase.execute(login)
+        val actual = useCase.authenticate(login)
 
         // Then
         assertEquals(user, actual)
@@ -72,7 +72,7 @@ class AuthenticateUserUseCaseTest {
 
         // When, Then
         assertThrows<LoginUserDoesNotExistError> {
-            useCase.execute(login)
+            useCase.authenticate(login)
         }
     }
 
@@ -88,7 +88,7 @@ class AuthenticateUserUseCaseTest {
 
         // When, Then
         assertThrows<LoginInvalidPasswordError> {
-            useCase.execute(login)
+            useCase.authenticate(login)
         }
     }
 }

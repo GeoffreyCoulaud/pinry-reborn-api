@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.jbcrypt)
     implementation(libs.kotlin.logging)
     compileOnly(libs.jakarta.cdi.api)
+    compileOnly(libs.jakarta.transaction.api)
 
     testImplementation(testFixtures(project(":api-utilities")))
     testImplementation(libs.bundles.testing)

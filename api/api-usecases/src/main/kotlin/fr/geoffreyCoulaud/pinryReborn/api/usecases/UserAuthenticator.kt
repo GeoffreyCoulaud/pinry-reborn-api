@@ -11,11 +11,11 @@ import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginInvalidPasswo
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginUserDoesNotExistError
 import org.mindrot.jbcrypt.BCrypt
 
-class AuthenticateUserUseCase(
+class UserAuthenticator(
     private val userRepository: UserRepositoryInterface,
     private val userPasswordRepository: UserPasswordRepositoryInterface,
 ) {
-    fun execute(login: Login): User =
+    fun authenticate(login: Login): User =
         when (login) {
             is BasicAuthLogin -> checkLogin(login)
         }
