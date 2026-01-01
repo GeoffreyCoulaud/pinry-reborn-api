@@ -4,4 +4,5 @@ enum class ErrorCode {
     USERNAME_ALREADY_EXISTS,
     USER_DOES_NOT_EXIST,
     INVALID_PASSWORD,
+    INVALID_LOGIN,
 }

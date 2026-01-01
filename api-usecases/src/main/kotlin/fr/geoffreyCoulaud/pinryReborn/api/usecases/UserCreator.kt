@@ -9,6 +9,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.UsernameAlreadyTak
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.mindrot.jbcrypt.BCrypt
+import java.util.UUID
 
 @ApplicationScoped
 class UserCreator(
@@ -16,21 +17,22 @@ class UserCreator(
     private val userPasswordRepository: UserPasswordRepositoryInterface,
 ) {
     @Transactional
-    fun createUser(user: User): User {
+    fun createUser(name: String): User {
         // Check that the username is free
-        val existingUser = userRepository.findUserByName(user.name)
+        val existingUser = userRepository.findUserByName(name)
         if (existingUser != null) throw UsernameAlreadyTakenError()
         // Create the user
+        val user = User(id = UUID.randomUUID(), name = name)
         return userRepository.saveUser(user)
     }
 
     @Transactional
     fun createUserWithPassword(
-        user: User,
+        name: String,
         password: String,
     ): User {
         // Create the user as usual
-        val user = createUser(user)
+        val user = createUser(name)
         // Hash and save the password
         userPasswordRepository.saveUserPassword(
             user = user,

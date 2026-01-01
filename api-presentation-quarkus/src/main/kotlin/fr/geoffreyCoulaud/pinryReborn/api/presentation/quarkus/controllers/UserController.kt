@@ -2,7 +2,6 @@ package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.UserInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.UserOutputDto
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.UserDtoMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.UserDtoMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.UserCreator
 import jakarta.ws.rs.POST
@@ -15,7 +14,7 @@ class UserController(
 ) {
     @POST
     fun createUser(userDto: UserInputDto): RestResponse<UserOutputDto> {
-        val userOutputDto = userDto.toDomain().let { userCreator.createUser(it) }.toDto()
+        val userOutputDto = userCreator.createUser(name = userDto.name).toDto()
         return RestResponse.ok(userOutputDto)
     }
 }

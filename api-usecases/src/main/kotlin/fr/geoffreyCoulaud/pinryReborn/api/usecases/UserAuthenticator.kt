@@ -9,8 +9,10 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordReposi
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginInvalidPasswordError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginUserDoesNotExistError
+import jakarta.enterprise.context.ApplicationScoped
 import org.mindrot.jbcrypt.BCrypt
 
+@ApplicationScoped
 class UserAuthenticator(
     private val userRepository: UserRepositoryInterface,
     private val userPasswordRepository: UserPasswordRepositoryInterface,
