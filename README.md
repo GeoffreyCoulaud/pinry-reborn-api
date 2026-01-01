@@ -1,29 +1,42 @@
-# Pinry Reborn
+# Pinry Reborn - API server
 
-Pinry Reborn is a self-hosted media pin board.  
-Its goal is to reimplement [Pinry](https://github.com/pinry/pinry) and extend its functionalities.
+This directory contains the API server for the project.  
+It is in charge of all the business logic, to be called by clients.
 
-## Why?
+## Running
 
-1. Because the Pinry project is not maintained anymore.  
-2. Because I wanted to add features to Pinry
-3. Because I wanted to try to build a real life project using Kotlin, Quarkus and Gradle. 
+To start the API locally in dev mode
 
-## Goals
+```sh
+./gradlew quarkusDev
+```
 
-Features
+## Architecture
 
-- [ ] Create users
-- [ ] Log in
-- [ ] Create pins
-- [ ] Create tags
-- [ ] View a group of pins 
-- [ ] Role-based authorization
-- [ ] Save local copies of pinned media
-- [ ] Save local thumbnails for pinned media
-- [ ] Create boards (unsure)
+The API follows the clean architecture principle, with each part in its own submodule.
+- `api-domain` contains all the domain models, and is independent
+- `api-persistence-sqlite` implements persistence using sqlite + ebean
+- `api-usecases` implements the business logic, on top of persistence
+- `api-presentation-rest` implements a JSON REST API for the business logic, using Quarkus
+- `api-application` wires everything together
 
-Clients
+```mermaid
+graph TB
+    APP[api-application<br/>Wires everything together]
+    REST[api-presentation-rest<br/>REST API - Quarkus]
+    UC[api-usecases<br/>Business Logic]
+    PERSIST[api-persistence-sqlite<br/>Persistence - SQLite + Ebean]
+    DOMAIN[api-domain<br/>Domain Models]
+    
+    APP --> REST
+    APP --> UC
+    APP --> PERSIST
+    
+    REST --> UC
+    UC --> PERSIST
+    
+    PERSIST -.-> DOMAIN
+    UC -.-> DOMAIN
+    REST -.-> DOMAIN
+```
 
-- [ ] Web-app
-- [ ] Browser extension
