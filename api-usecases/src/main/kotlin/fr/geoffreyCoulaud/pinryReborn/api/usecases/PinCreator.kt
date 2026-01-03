@@ -27,7 +27,7 @@ class PinCreator(
             } catch (error: LoginError) {
                 throw PinCreationBadLoginError(cause = error)
             }
-        val tags = tags.map { tagCreator.findOrCreate(it) }
+        val tags = tags.map { tagCreator.findOrCreate(name = it, user = user) }
         val pin =
             Pin(
                 id = randomUUID(),

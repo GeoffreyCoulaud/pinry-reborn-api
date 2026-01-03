@@ -4,7 +4,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.HashedPassword
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Login.BasicAuthLogin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.PasswordHashAlgorithm
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
-import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordHashRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginInvalidPasswordError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginUserDoesNotExistError
@@ -19,7 +19,7 @@ import java.util.UUID
 
 class UserAuthenticatorTest {
     private val userRepository = mockk<UserRepositoryInterface>()
-    private val userPasswordRepository = mockk<UserPasswordRepositoryInterface>()
+    private val userPasswordRepository = mockk<UserPasswordHashRepositoryInterface>()
     private val useCase =
         UserAuthenticator(
             userRepository = userRepository,

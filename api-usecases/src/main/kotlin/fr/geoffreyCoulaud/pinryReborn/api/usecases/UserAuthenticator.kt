@@ -5,7 +5,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Login
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Login.BasicAuthLogin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.PasswordHashAlgorithm
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
-import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordHashRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginInvalidPasswordError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginUserDoesNotExistError
@@ -15,7 +15,7 @@ import org.mindrot.jbcrypt.BCrypt
 @ApplicationScoped
 class UserAuthenticator(
     private val userRepository: UserRepositoryInterface,
-    private val userPasswordRepository: UserPasswordRepositoryInterface,
+    private val userPasswordRepository: UserPasswordHashRepositoryInterface,
 ) {
     fun authenticate(login: Login): User =
         when (login) {

@@ -13,7 +13,7 @@ fun main() {
     val migration = DbMigration.create()
 
     migration.setPlatform(Platform.SQLITE)
-    migration.setPathToResources("src/main/resources")
+    migration.setPathToResources("api-persistence-sqlite/src/main/resources")
     migration.setMigrationPath("dbmigration")
 
     migration.generateMigration()

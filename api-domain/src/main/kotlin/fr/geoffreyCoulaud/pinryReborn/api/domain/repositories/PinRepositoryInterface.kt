@@ -1,13 +1,16 @@
 package fr.geoffreyCoulaud.pinryReborn.api.domain.repositories
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
-import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import java.util.UUID
 
 interface PinRepositoryInterface {
+    /**
+     * Create or update a pin from the given domain data.
+     */
     fun savePin(pin: Pin): Pin
 
+    /**
+     * Find a pin by its ID
+     */
     fun findPinById(id: UUID): Pin?
-
-    fun findAllUserPins(user: User): List<Pin>
 }

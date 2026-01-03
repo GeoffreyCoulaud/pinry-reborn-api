@@ -41,7 +41,7 @@ class PinCreatorTest {
         val description = "some description"
         val tags = listOf("blue", "landscape", "water")
         every { userAuthenticator.authenticate(login) } returns user
-        every { tagCreator.findOrCreate(any()) } answers { Tag(id = randomUUID(), name = firstArg()) }
+        every { tagCreator.findOrCreate(any(), any()) } answers { Tag(id = randomUUID(), name = firstArg(), author = secondArg()) }
         every { pinRepository.savePin(any()) } answers { firstArg() }
 
         // When
