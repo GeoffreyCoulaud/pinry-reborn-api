@@ -7,6 +7,6 @@ data class Pin(
     val author: User,
     val sourceUrl: String,
     val mediaUrl: String,
-    val description: String?,
+    val description: String,
     val tags: List<Tag>,
 )

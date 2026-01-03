@@ -6,7 +6,10 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 interface TagRepositoryInterface {
     fun saveTag(tag: Tag): Tag
 
-    fun findTagByName(name: String): Tag?
+    fun findTagByName(
+        user: User,
+        name: String,
+    ): Tag?
 
-    fun findAllUserTags(user: User): List<Tag>
+    fun findAllTags(user: User): List<Tag>
 }

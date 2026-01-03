@@ -1,6 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.usecases
 
-import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordHashRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.UsernameAlreadyTakenError
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.BaseTest
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.assertThrows
 
 class UserCreatorTest : BaseTest() {
     private val userRepository = mockk<UserRepositoryInterface>()
-    private val userPasswordRepository = mockk<UserPasswordRepositoryInterface>()
+    private val userPasswordRepository = mockk<UserPasswordHashRepositoryInterface>()
     private val useCase =
         UserCreator(
             userRepository = userRepository,
@@ -53,7 +53,7 @@ class UserCreatorTest : BaseTest() {
         val password = createRandomString()
         every { userRepository.findUserByName(any()) } returns null
         every { userRepository.saveUser(any()) } answers { firstArg() }
-        every { userPasswordRepository.saveUserPassword(any(), any()) } answers { secondArg() }
+        every { userPasswordRepository.saveUserPasswordHash(any(), any()) } answers { secondArg() }
 
         // When, then
         assertDoesNotThrow {

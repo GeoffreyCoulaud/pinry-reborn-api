@@ -4,8 +4,8 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.mappers.UserModelMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.mappers.UserModelMapper.toModel
-import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.SqliteUserModel
-import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.query.QSqliteUserModel
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.UserModel
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.query.QUserModel
 import io.ebean.Database
 import jakarta.enterprise.context.ApplicationScoped
 import java.util.UUID
@@ -20,35 +20,26 @@ class UserRepository(
      * Favor usage of ebean's Query Beans.
      * https://ebean.io/docs/query/query-beans
      */
-    private val sqlRepository = GenericRepository(entityClass = SqliteUserModel::class, database = database)
+    private val sqlRepository = ModelRepository(entityClass = UserModel::class, database = database)
 
     override fun findUserById(id: UUID): User? =
-        QSqliteUserModel()
+        QUserModel()
             .id
             .equalTo(id)
             .findOne()
             ?.toDomain()
 
     override fun findUserByName(name: String): User? =
-        QSqliteUserModel()
+        QUserModel()
             .name
             .equalTo(name)
             .findOne()
             ?.toDomain()
 
-    override fun saveUser(user: User): User {
-        val existing = QSqliteUserModel().id.equalTo(user.id).findOne()
-        val model = existing?.updateWith(user) ?: user.toModel()
-        return sqlRepository.saveAndReturn(model).toDomain()
-    }
-
-    private fun SqliteUserModel.updateWith(user: User) =
-        apply {
-            name = user.name
-        }
+    override fun saveUser(user: User): User = sqlRepository.saveAndReturn(user.toModel()).toDomain()
 
     override fun deleteUser(user: User) {
-        QSqliteUserModel()
+        QUserModel()
             .id
             .equalTo(user.id)
             .delete()

@@ -1,4 +1,4 @@
-package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models
+package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.bases
 
 import io.ebean.annotation.WhenCreated
 import io.ebean.annotation.WhenModified
@@ -9,7 +9,7 @@ import java.util.UUID
 import java.util.UUID.randomUUID
 
 @MappedSuperclass
-class SqliteBaseModel(
+class BaseModel(
     @Id var id: UUID = randomUUID(),
 ) {
     @WhenCreated

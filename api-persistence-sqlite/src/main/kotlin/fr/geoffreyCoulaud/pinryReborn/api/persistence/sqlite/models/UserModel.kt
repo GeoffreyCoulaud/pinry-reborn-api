@@ -1,12 +1,13 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models
 
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.bases.BaseModel
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
 import java.util.UUID
 
 @Entity
 @Table(name = "users")
-class SqliteUserModel(
+class UserModel(
     id: UUID,
     var name: String,
-) : SqliteBaseModel(id = id)
+) : BaseModel(id = id)
