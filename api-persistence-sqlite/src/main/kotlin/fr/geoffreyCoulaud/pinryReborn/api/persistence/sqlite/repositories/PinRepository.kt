@@ -74,4 +74,18 @@ class PinRepository(
                 .findOne() ?: return null
         return pin.toDomain(getTagsForPin(pin.id))
     }
+
+    override fun findPinByIdForUser(
+        id: UUID,
+        reader: fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User,
+    ): Pin? {
+        val pin =
+            QPinModel()
+                .id
+                .equalTo(id)
+                .author.id
+                .equalTo(reader.id)
+                .findOne() ?: return null
+        return pin.toDomain(getTagsForPin(pin.id))
+    }
 }

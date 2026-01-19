@@ -13,6 +13,7 @@ jakarta-transaction = "2.0.1"
 jandex = "2.1.0"
 kotlin-logging = "7.0.3"
 jbcrypt = "0.4"
+smallrye-config = "3.15.1"
 
 [libraries]
 # Testing
@@ -32,7 +33,7 @@ ebean-test = { module = "io.ebean:ebean-test", version.ref = "ebean" }
 jakarta-cdi-api = { module = "jakarta.enterprise:jakarta.enterprise.cdi-api", version.ref = "jakarta-cdi" }
 jakarta-ws-rs-api = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version.ref = "jakarta-ws-rs" }
 jakarta-inject-api = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
-jakarta-transaction-api = { module = "jakarta.transaction:jakarta.transaction-api", version.ref = "jakarta-transaction"}
+jakarta-transaction-api = { module = "jakarta.transaction:jakarta.transaction-api", version.ref = "jakarta-transaction" }
 
 # Quarkus
 quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
@@ -40,6 +41,8 @@ quarkus-arc = { module = "io.quarkus:quarkus-arc" }
 quarkus-kotlin = { module = "io.quarkus:quarkus-kotlin" }
 quarkus-rest = { module = "io.quarkus:quarkus-rest" }
 quarkus-rest-jackson = { module = "io.quarkus:quarkus-rest-jackson" }
+quarkus-security = { module = "io.quarkus:quarkus-security" }
+smallrye-config = { module = "io.smallrye.config:smallrye-config", version.ref = "smallrye-config" }
 resteasy-reactive-common = { module = "io.quarkus.resteasy.reactive:resteasy-reactive-common", version.ref = "quarkus" }
 resteasy-reactive = { module = "io.quarkus.resteasy.reactive:resteasy-reactive", version.ref = "quarkus" }
 
@@ -54,7 +57,7 @@ slf4j-jboss-logmanager = { module = "org.jboss.slf4j:slf4j-jboss-logmanager" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 
-jbcrypt = { module =  "org.mindrot:jbcrypt", version.ref = "jbcrypt"}
+jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "jbcrypt" }
 
 [bundles]
 testing = [
@@ -68,7 +71,8 @@ quarkus-runtime = [
     "quarkus-arc",
     "quarkus-kotlin",
     "quarkus-rest",
-    "quarkus-rest-jackson"
+    "quarkus-rest-jackson",
+    "quarkus-security"
 ]
 quarkus-compileOnly = [
     "resteasy-reactive-common",

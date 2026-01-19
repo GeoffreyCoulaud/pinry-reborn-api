@@ -7,8 +7,8 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.PasswordHashAlgorithm
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserPasswordHashRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserRepositoryInterface
-import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginInvalidPasswordError
-import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.LoginUserDoesNotExistError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.UserAuthenticationInvalidPasswordError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.UserAuthenticationUserDoesNotExistError
 import jakarta.enterprise.context.ApplicationScoped
 import org.mindrot.jbcrypt.BCrypt
 
@@ -23,11 +23,11 @@ class UserAuthenticator(
         }
 
     private fun checkLogin(login: BasicAuthLogin): User {
-        val user = userRepository.findUserByName(login.userName) ?: throw LoginUserDoesNotExistError()
+        val user = userRepository.findUserByName(login.userName) ?: throw UserAuthenticationUserDoesNotExistError()
         // If no password hash is saved for the user, login automatically
         val hash = userPasswordRepository.findUserPasswordHash(user) ?: return user
         // Check the password with the stored hash
-        return user.takeIf { checkPassword(login.password, hash) } ?: throw LoginInvalidPasswordError()
+        return user.takeIf { checkPassword(login.password, hash) } ?: throw UserAuthenticationInvalidPasswordError()
     }
 
     private fun checkPassword(

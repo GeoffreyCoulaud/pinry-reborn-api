@@ -43,8 +43,8 @@ class PinRepositoryTest : RepositoryTest() {
         Pin(
             id = randomUUID(),
             author = createAndSaveUser(),
-            sourceUrl = "https://example.com",
-            mediaUrl = "https://example.com/image.jpeg",
+            sourceContextUrl = "https://example.com",
+            sourceMediaUrl = "https://example.com/image.jpeg",
             description = "Something",
             tags = emptyList(),
         )
@@ -66,8 +66,8 @@ class PinRepositoryTest : RepositoryTest() {
         assertNotNull(model)
         assertEquals(pin.id, model!!.id)
         assertEquals(pin.author.id, model.author.id)
-        assertEquals(pin.sourceUrl, model.sourceUrl)
-        assertEquals(pin.mediaUrl, model.mediaUrl)
+        assertEquals(pin.sourceContextUrl, model.sourceUrl)
+        assertEquals(pin.sourceMediaUrl, model.mediaUrl)
         assertEquals(pin.description, model.description)
     }
 
@@ -78,8 +78,8 @@ class PinRepositoryTest : RepositoryTest() {
         repository.savePin(pin)
         val updatedPin =
             pin.copy(
-                sourceUrl = "https://new-example.com/new.jpeg",
-                mediaUrl = "https://new-example.com/new_image.jpeg",
+                sourceContextUrl = "https://new-example.com/new.jpeg",
+                sourceMediaUrl = "https://new-example.com/new_image.jpeg",
                 description = "New description",
             )
 
@@ -90,8 +90,8 @@ class PinRepositoryTest : RepositoryTest() {
         val model = database.find(PinModel::class.java, pin.id)
         assertNotNull(model)
         assertEquals(pin.id, model!!.id)
-        assertEquals(updatedPin.sourceUrl, model.sourceUrl)
-        assertEquals(updatedPin.mediaUrl, model.mediaUrl)
+        assertEquals(updatedPin.sourceContextUrl, model.sourceUrl)
+        assertEquals(updatedPin.sourceMediaUrl, model.mediaUrl)
         assertEquals(updatedPin.description, model.description)
     }
 

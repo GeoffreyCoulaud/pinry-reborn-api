@@ -1,21 +1,18 @@
 package fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions
 
-open class LoginError(
+open class UserAuthenticationError(
     message: String,
     code: ErrorCode,
-) : BaseError(
-        message,
-        code,
-    )
+) : BaseError(message, code)
 
-class LoginUserDoesNotExistError :
-    LoginError(
+class UserAuthenticationUserDoesNotExistError :
+    UserAuthenticationError(
         "User does not exist",
         ErrorCode.USER_DOES_NOT_EXIST,
     )
 
-class LoginInvalidPasswordError :
-    LoginError(
+class UserAuthenticationInvalidPasswordError :
+    UserAuthenticationError(
         "Invalid password",
         ErrorCode.INVALID_PASSWORD,
     )

@@ -15,10 +15,12 @@ dependencies {
     implementation(project(":api-utilities"))
 
     implementation(libs.kotlin.logging)
+    implementation(libs.smallrye.config)
 
     // Quarkus APIs - provided by Quarkus at runtime
     compileOnly(platform(libs.quarkus.bom))
     compileOnly(libs.bundles.quarkus.compileOnly)
+    compileOnly(libs.quarkus.security)
 
     // Tests
     testImplementation(testFixtures(project(":api-utilities")))
