@@ -10,8 +10,8 @@ import java.util.UUID
 class PinModel(
     id: UUID,
     author: UserModel,
-    var sourceUrl: String,
-    var mediaUrl: String,
+    var sourceContextUrl: String,
+    var sourceMediaUrl: String,
     var description: String,
 ) : AuthoredBaseModel(
         id = id,

@@ -3,6 +3,8 @@ package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.PasswordHashAlgorithm
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.bases.BaseModel
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
@@ -11,5 +13,6 @@ import jakarta.persistence.Table
 class UserPasswordHashModel(
     @ManyToOne var user: UserModel,
     var hash: String,
+    @Enumerated(EnumType.STRING)
     var algorithm: PasswordHashAlgorithm,
 ) : BaseModel()

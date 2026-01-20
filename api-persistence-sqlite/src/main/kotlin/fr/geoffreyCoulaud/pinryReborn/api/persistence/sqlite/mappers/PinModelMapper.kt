@@ -11,8 +11,8 @@ object PinModelMapper {
         PinModel(
             id = id,
             author = author.toModel(),
-            sourceUrl = sourceContextUrl,
-            mediaUrl = sourceMediaUrl,
+            sourceContextUrl = sourceContextUrl,
+            sourceMediaUrl = sourceMediaUrl,
             description = description,
         )
 
@@ -20,8 +20,8 @@ object PinModelMapper {
         Pin(
             id = id,
             author = author.toDomain(),
-            sourceContextUrl = sourceUrl,
-            sourceMediaUrl = mediaUrl,
+            sourceContextUrl = sourceContextUrl,
+            sourceMediaUrl = sourceMediaUrl,
             description = description,
             tags = tags,
         )

@@ -1,6 +1,5 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.migration
 
-import io.ebean.annotation.Platform
 import io.ebean.dbmigration.DbMigration
 
 /**
@@ -12,8 +11,8 @@ import io.ebean.dbmigration.DbMigration
 fun main() {
     val migration = DbMigration.create()
 
-    migration.setPlatform(Platform.SQLITE)
-    migration.setPathToResources("api-persistence-sqlite/src/main/resources")
+    migration.setPlatform(CustomSqlitePlatform())
+    migration.setPathToResources("src/main/resources")
     migration.setMigrationPath("dbmigration")
 
     migration.generateMigration()

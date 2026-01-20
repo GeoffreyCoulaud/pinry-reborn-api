@@ -66,8 +66,8 @@ class PinRepositoryTest : RepositoryTest() {
         assertNotNull(model)
         assertEquals(pin.id, model!!.id)
         assertEquals(pin.author.id, model.author.id)
-        assertEquals(pin.sourceContextUrl, model.sourceUrl)
-        assertEquals(pin.sourceMediaUrl, model.mediaUrl)
+        assertEquals(pin.sourceContextUrl, model.sourceContextUrl)
+        assertEquals(pin.sourceMediaUrl, model.sourceMediaUrl)
         assertEquals(pin.description, model.description)
     }
 
@@ -90,8 +90,8 @@ class PinRepositoryTest : RepositoryTest() {
         val model = database.find(PinModel::class.java, pin.id)
         assertNotNull(model)
         assertEquals(pin.id, model!!.id)
-        assertEquals(updatedPin.sourceContextUrl, model.sourceUrl)
-        assertEquals(updatedPin.sourceMediaUrl, model.mediaUrl)
+        assertEquals(updatedPin.sourceContextUrl, model.sourceContextUrl)
+        assertEquals(updatedPin.sourceMediaUrl, model.sourceMediaUrl)
         assertEquals(updatedPin.description, model.description)
     }
 
