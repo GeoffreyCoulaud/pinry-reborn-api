@@ -4,11 +4,14 @@ import io.smallrye.config.ConfigMapping
 
 @ConfigMapping(
     prefix = "api",
-    namingStrategy = ConfigMapping.NamingStrategy.SNAKE_CASE
+    namingStrategy = ConfigMapping.NamingStrategy.SNAKE_CASE,
 )
 interface ApiConfig {
-    fun host(): String
+    fun remoteHost(): String
+
     fun port(): Int
+
     fun basePath(): String = ""
-    fun baseUrl(): String = "https://${host()}:${port()}/${basePath()}"
+
+    fun baseUrl(): String = "https://${remoteHost()}:${port()}/${basePath()}"
 }
