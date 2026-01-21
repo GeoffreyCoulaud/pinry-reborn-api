@@ -11,5 +11,10 @@ import jakarta.ws.rs.core.MediaType
 class GreetingController {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    fun hello() = "Hello from Quarkus REST"
+    fun hello() = "hello"
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/greeting/{name}")
+    fun greet(name: String) = "hello $name"
 }

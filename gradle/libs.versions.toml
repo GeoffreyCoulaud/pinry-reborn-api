@@ -14,12 +14,16 @@ jandex = "2.1.0"
 kotlin-logging = "7.0.3"
 jbcrypt = "0.4"
 smallrye-config = "3.15.1"
+quarkus-junit = "3.30.6"
+rest-assured = "6.0.0"
 
 [libraries]
 # Testing
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+quarkus-junit = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus-junit" }
+rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
 
 # Ebean ORM
 ebean = { module = "io.ebean:ebean", version.ref = "ebean" }
@@ -66,6 +70,10 @@ testing = [
 ]
 testing-runtime = [
     "junit-platform-launcher"
+]
+integration-testing = [
+    "quarkus-junit",
+    "rest-assured"
 ]
 quarkus-runtime = [
     "quarkus-arc",

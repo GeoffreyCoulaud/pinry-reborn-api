@@ -21,6 +21,9 @@ dependencies {
     // Logging
     implementation(libs.kotlin.logging)
     implementation(libs.slf4j.jboss.logmanager)
+
+    // Integration testing
+    testImplementation(libs.bundles.integration.testing)
 }
 
 allOpen {

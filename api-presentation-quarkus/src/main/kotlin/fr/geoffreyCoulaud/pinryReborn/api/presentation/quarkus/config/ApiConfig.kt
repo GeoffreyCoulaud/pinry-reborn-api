@@ -7,6 +7,8 @@ import io.smallrye.config.ConfigMapping
     namingStrategy = ConfigMapping.NamingStrategy.SNAKE_CASE,
 )
 interface ApiConfig {
+    fun host(): String
+
     fun remoteHost(): String
 
     fun port(): Int
