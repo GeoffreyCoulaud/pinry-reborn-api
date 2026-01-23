@@ -24,6 +24,7 @@ dependencies {
 
     // Integration testing
     testImplementation(libs.bundles.integration.testing)
+    testImplementation(libs.ebean)
 }
 
 allOpen {

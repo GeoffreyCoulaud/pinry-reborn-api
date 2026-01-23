@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 @QuarkusTest
-class GreetingTest {
+class GreetingIntegrationTest : IntegrationTest() {
     @Test
     fun testHelloEndpoint() {
         RestAssured
