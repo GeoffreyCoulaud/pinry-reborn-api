@@ -4,7 +4,7 @@ import java.util.*
 
 data class PinOutputDto(
     val id: UUID,
-    val author: UserOutputDto,
+    val authorId: UUID,
     val sourceContextUrl: String,
     val sourceMediaUrl: String,
     val description: String,

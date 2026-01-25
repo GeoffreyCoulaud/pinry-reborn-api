@@ -20,10 +20,9 @@ class PinCreationIntegrationTest : IntegrationTest() {
 
     @Test
     fun `creating a pin as authenticated user returns the created pin`() {
-        // Create a user with password for authentication
         val username = "pinuser"
         val password = "password123"
-        userCreator.createUserWithPassword(username, password)
+        val user = userCreator.createUserWithPassword(username, password)
 
         given()
             .contentType(ContentType.JSON)
@@ -41,7 +40,7 @@ class PinCreationIntegrationTest : IntegrationTest() {
             .statusCode(201)
             .header("Location", notNullValue())
             .body("id", notNullValue())
-            .body("author.name", equalTo(username))
+            .body("authorId", equalTo(user.id.toString()))
             .body("sourceContextUrl", equalTo("https://example.com/page"))
             .body("sourceMediaUrl", equalTo("https://example.com/image.jpg"))
             .body("description", equalTo("A test pin"))
@@ -172,9 +171,8 @@ class PinCreationIntegrationTest : IntegrationTest() {
 
     @Test
     fun `creating a pin with user without password succeeds`() {
-        // Create a user without password (uses createUser instead of createUserWithPassword)
         val username = "nopassworduser"
-        userCreator.createUser(username)
+        val user = userCreator.createUser(username)
 
         // User without password can authenticate with any password
         given()
@@ -191,7 +189,7 @@ class PinCreationIntegrationTest : IntegrationTest() {
             .post("/api/v1/pins")
             .then()
             .statusCode(201)
-            .body("author.name", equalTo(username))
+            .body("authorId", equalTo(user.id.toString()))
     }
 
     @Test
