@@ -1,6 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models
 
-import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.PasswordHashAlgorithm
+import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PasswordHashAlgorithm
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.bases.BaseModel
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

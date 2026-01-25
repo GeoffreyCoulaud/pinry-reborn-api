@@ -43,7 +43,7 @@ class PinRetrievalIntegrationTest : IntegrationTest() {
             .then()
             .statusCode(200)
             .body("id", equalTo(pin.id.toString()))
-            .body("author.name", equalTo(username))
+            .body("authorId", equalTo(user.id.toString()))
             .body("sourceContextUrl", equalTo("https://example.com/page"))
             .body("sourceMediaUrl", equalTo("https://example.com/image.jpg"))
             .body("description", equalTo("My pin"))
@@ -51,7 +51,7 @@ class PinRetrievalIntegrationTest : IntegrationTest() {
     }
 
     @Test
-    fun `retrieving pin returns correct author information`() {
+    fun `retrieving pin returns correct authorId`() {
         val username = "authorinfouser"
         val password = "password123"
         val user = userCreator.createUserWithPassword(username, password)
@@ -70,8 +70,7 @@ class PinRetrievalIntegrationTest : IntegrationTest() {
             .get("/api/v1/pins/${pin.id}")
             .then()
             .statusCode(200)
-            .body("author.id", notNullValue())
-            .body("author.name", equalTo(username))
+            .body("authorId", equalTo(user.id.toString()))
     }
 
     // ==================== Complex Scenarios ====================
