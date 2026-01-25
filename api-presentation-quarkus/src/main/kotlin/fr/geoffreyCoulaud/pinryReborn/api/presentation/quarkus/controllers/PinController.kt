@@ -38,7 +38,7 @@ class PinController(
             return RestResponse.notFound()
         } catch (_: PinRetrievalPermissionError) {
             return ResponseBuilder
-                .create<PinOutputDto>(RestResponse.Status.UNAUTHORIZED)
+                .create<PinOutputDto>(RestResponse.Status.FORBIDDEN)
                 .build()
         }
     }
