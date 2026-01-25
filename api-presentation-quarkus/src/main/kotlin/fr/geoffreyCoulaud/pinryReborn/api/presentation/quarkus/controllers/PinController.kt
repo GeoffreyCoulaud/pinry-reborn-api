@@ -1,5 +1,7 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PaginationDirection
+import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PaginationDirectionInputEnum
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinCreationInputDto
@@ -10,6 +12,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOu
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PaginationDirectionMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinCreator
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinGetter
@@ -36,72 +39,6 @@ class PinController(
     private val securityIdentity: SecurityIdentity,
     private val apiConfig: ApiConfig,
 ) {
-    @GET
-    @Authenticated
-    fun listPins(
-        @QueryParam("cursor") cursor: UUID?,
-        @QueryParam("direction") direction: PaginationDirectionInputEnum,
-        @QueryParam("pageSize") pageSize: Int?,
-        @QueryParam("sort") sortInput: PinSortStrategyInputEnum,
-    ): RestResponse<PinListOutputDto> {
-        val user = securityIdentity.getUser()
-        val effectivePageSize = pageSize ?: PinLister.DEFAULT_PAGE_SIZE
-        val sort = sortInput.toDomain()
-
-        val page = pinLister.listPinsForUserPaginated(
-            user = user,
-            cursor = cursor,
-            direction = direction.toDomain(),
-            pageSize = effectivePageSize,
-            sort = sort,
-        )
-
-        val nextCursor = page.nextCursor
-        val previousCursor = page.previousCursor
-
-        val pagination = PaginationDto(
-            nextPageUrl = nextCursor?.let {
-                buildPaginationUrl(
-                    it,
-                    PaginationDirectionInputEnum.FORWARD,
-                    effectivePageSize,
-                    sortInput
-                )
-            },
-            previousPageUrl = previousCursor?.let {
-                buildPaginationUrl(
-                    it,
-                    PaginationDirectionInputEnum.BACKWARD,
-                    effectivePageSize,
-                    sortInput
-                )
-            },
-        )
-
-        return RestResponse.ok(
-            PinListOutputDto(
-                pins = page.items.map { it.toDto() },
-                pagination = pagination,
-            )
-        )
-    }
-
-    private fun buildPaginationUrl(
-        cursor: UUID,
-        direction: PaginationDirectionInputEnum,
-        pageSize: Int,
-        sort: PinSortStrategyInputEnum
-    ): String {
-        val builder = UriBuilder.fromUri(apiConfig.baseUrl())
-            .path("/api/v1/pins")
-            .queryParam("cursor", cursor)
-            .queryParam("direction", direction.name)
-            .queryParam("pageSize", pageSize)
-        if (sort != null) {
-            builder.queryParam("sort", sort.name)
-        }
-        return builder.build().toString()
-    }
 
     @GET
     @Authenticated
@@ -136,5 +73,71 @@ class PinController(
             .created<PinOutputDto>(URI("${apiConfig.baseUrl()}/api/v1/pins/${pin.id}"))
             .entity(pin.toDto())
             .build()
+    }
+
+    @GET
+    @Authenticated
+    fun listPins(
+        @QueryParam("cursor") cursor: UUID? = null,
+        @QueryParam("pageSize") pageSizeInput: Int? = null,
+        @QueryParam("direction") directionInput: PaginationDirectionInputEnum? = null,
+        @QueryParam("sort") sortInput: PinSortStrategyInputEnum? = null,
+    ): RestResponse<PinListOutputDto> {
+        val user = securityIdentity.getUser()
+
+        val pageSize = pageSizeInput ?: DEFAULT_PAGE_SIZE
+        val direction = directionInput?.toDomain() ?: PaginationDirection.FORWARD
+        val sort = sortInput?.toDomain() ?: PinSortStrategy.CREATED_AT_DESC
+
+        val page = pinLister.listPinsForUserPaginated(
+            user = user,
+            cursor = cursor,
+            direction = direction,
+            pageSize = pageSize,
+            sort = sort,
+        )
+
+        return RestResponse.ok(
+            PinListOutputDto(
+                pins = page.items.map { it.toDto() },
+                pagination = PaginationDto(
+                    nextPageUrl = page.nextCursor?.let {
+                        buildPaginationUrl(
+                            cursor = it,
+                            direction = PaginationDirectionInputEnum.FORWARD,
+                            pageSize = pageSize,
+                            sort = sort.toDto()
+                        )
+                    },
+                    previousPageUrl = page.previousCursor?.let {
+                        buildPaginationUrl(
+                            cursor = it,
+                            direction = PaginationDirectionInputEnum.BACKWARD,
+                            pageSize = pageSize,
+                            sort = sort.toDto()
+                        )
+                    },
+                ),
+            )
+        )
+    }
+
+    private fun buildPaginationUrl(
+        cursor: UUID,
+        direction: PaginationDirectionInputEnum,
+        pageSize: Int,
+        sort: PinSortStrategyInputEnum
+    ): String {
+        val builder = UriBuilder.fromUri(apiConfig.baseUrl())
+            .path("/api/v1/pins")
+            .queryParam("pageSize", pageSize)
+            .queryParam("sort", sort)
+            .queryParam("cursor", cursor)
+            .queryParam("direction", direction)
+        return builder.build().toString()
+    }
+
+    companion object {
+        const val DEFAULT_PAGE_SIZE = 20
     }
 }

@@ -1,6 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.domain.entities
 
-import java.util.*
+import java.util.UUID
 
 data class Pin(
     val id: UUID,

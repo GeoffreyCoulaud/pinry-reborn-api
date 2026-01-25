@@ -1,5 +1,11 @@
-package fr.geoffreyCoulaud.pinryReborn.api.domain.entities
+package fr.geoffreyCoulaud.pinryReborn.api.domain.enums
 
+/**
+ * Direction to go from a cursor element.
+ *
+ * - To get a page *after* the cursor, use `FORWARD`.
+ * - To get a page *before* the cursor, use `BACKWARD`
+ */
 enum class PaginationDirection {
     /**
      * Signal to return the next page in the pagination context.

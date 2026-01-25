@@ -4,6 +4,6 @@ import java.util.UUID
 
 data class Page<T>(
     val items: List<T>,
-    val nextCursor: UUID?,
     val previousCursor: UUID?,
+    val nextCursor: UUID?,
 )
