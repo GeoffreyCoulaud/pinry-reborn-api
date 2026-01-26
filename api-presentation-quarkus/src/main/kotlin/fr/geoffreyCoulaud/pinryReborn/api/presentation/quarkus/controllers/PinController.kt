@@ -87,7 +87,7 @@ class PinController(
 
         val pageSize = pageSizeInput ?: DEFAULT_PAGE_SIZE
         val direction = directionInput?.toDomain() ?: PaginationDirection.FORWARD
-        val sort = sortInput?.toDomain() ?: PinSortStrategy.CREATED_AT_DESC
+        val sort = sortInput?.toDomain() ?: PinSortStrategy.CREATED_AT_ASC
 
         val page = pinLister.listPinsForUserPaginated(
             user = user,

@@ -1,6 +1,5 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination
 
-import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PaginationDirection
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PaginationDirection.BACKWARD
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PaginationDirection.FORWARD
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.bases.BaseModel
@@ -8,23 +7,42 @@ import io.ebean.typequery.QueryBean
 
 abstract class ModelSortStrategy<M : BaseModel, Q : QueryBean<M, Q>> {
 
-    fun filterCursorNeighbors(cursor: M?, query: Q, direction: PaginationDirection): Q {
-        if (cursor == null) return query // Neighbors are the first results from the sort.
-        return when (direction) {
+    /**
+     * Adapt the query to find the cursor's pivot and neighbors
+     */
+    fun filterCursorNeighbors(query: Q, cursor: Cursor<M>?): Q {
+        if (cursor == null) return query
+        return when (cursor.direction) {
             FORWARD -> filterCursorForwardNeighbors(cursor, query)
             BACKWARD -> filterCursorBackwardNeighbors(cursor, query)
         }
     }
 
-    protected abstract fun filterCursorForwardNeighbors(cursor: M, query: Q): Q
-    protected abstract fun filterCursorBackwardNeighbors(cursor: M, query: Q): Q
+    /**
+     * Adapt the query to find the cursor's pivot and its forward neighbors
+     */
+    protected abstract fun filterCursorForwardNeighbors(cursor: Cursor<M>, query: Q): Q
 
-    fun sortCursorNeighbors(query: Q, direction: PaginationDirection): Q = when (direction) {
+    /**
+     * Adapt the query to find the cursor's pivot and its backward neighbors
+     */
+    protected abstract fun filterCursorBackwardNeighbors(cursor: Cursor<M>, query: Q): Q
+
+    /**
+     * Adapt the query to sort the result according to the strategy
+     */
+    fun sortCursorNeighbors(query: Q, cursor: Cursor<M>?): Q = when (cursor?.direction ?: FORWARD) {
         FORWARD -> sortCursorForwardNeighbors(query)
         BACKWARD -> sortCursorBackwardNeighbors(query)
     }
 
+    /**
+     * Adapt the query to sort the result according to the strategy when going forward
+     */
     protected abstract fun sortCursorForwardNeighbors(query: Q): Q
-    protected abstract fun sortCursorBackwardNeighbors(query: Q): Q
 
+    /**
+     * Adapt the query to sort the result according to the strategy when going backward
+     */
+    protected abstract fun sortCursorBackwardNeighbors(query: Q): Q
 }

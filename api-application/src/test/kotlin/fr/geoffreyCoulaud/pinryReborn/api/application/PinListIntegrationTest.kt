@@ -30,6 +30,8 @@ class PinListIntegrationTest : IntegrationTest() {
 
     private fun createPinsForUser(user: User, count: Int): List<String> {
         return (1..count).map { i ->
+            // Small delay to ensure unique timestamps for deterministic ordering
+            Thread.sleep(2)
             pinCreator.createPin(
                 author = user,
                 sourceContextUrl = "https://example.com/page$i",
@@ -186,7 +188,7 @@ class PinListIntegrationTest : IntegrationTest() {
     }
 
     @Test
-    fun `getting page with cursor returns pins after cursor`() {
+    fun `getting next page with cursor returns pins after cursor`() {
         val username = "cursoruser"
         val user = userCreator.createUserWithPassword(username, defaultPassword)
         val pinIds = createPinsForUser(user, 5)
@@ -206,7 +208,7 @@ class PinListIntegrationTest : IntegrationTest() {
     }
 
     @Test
-    fun `getting previous page with negative direction returns pins before cursor`() {
+    fun `getting previous page returns pins before cursor`() {
         val username = "prevpageuser"
         val user = userCreator.createUserWithPassword(username, defaultPassword)
         val pinIds = createPinsForUser(user, 5)

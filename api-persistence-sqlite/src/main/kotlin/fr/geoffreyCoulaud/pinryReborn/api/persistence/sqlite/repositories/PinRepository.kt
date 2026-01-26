@@ -15,6 +15,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.PinModel
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.PinTagModel
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.query.QPinModel
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.query.QPinTagModel
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.Cursor
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.ModelPaginationHelper
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.PinModelSortStrategy
 import io.ebean.Database
@@ -107,10 +108,15 @@ class PinRepository(
         pageSize: Int,
         sortStrategy: PinSortStrategy,
     ): Page<Pin> {
+        val cursor = cursor?.let { QPinModel().id.equalTo(it).findOne() }?.let {
+            Cursor(
+                pivot = it,
+                direction = direction,
+            )
+        }
         val modelPage = pinModelPaginationHelper.getPage(
-            cursor = cursor?.let { QPinModel().id.equalTo(it).findOne() },
+            cursor = cursor,
             pageSize = pageSize,
-            direction = direction,
             baseQuery = QPinModel().author.id.equalTo(user.id),
             sortStrategy = PinModelSortStrategy.fromDomain(sortStrategy)
         )
