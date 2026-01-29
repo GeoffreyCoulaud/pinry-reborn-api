@@ -1,9 +1,8 @@
 package fr.geoffreyCoulaud.pinryReborn.api.domain.repositories
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Cursor
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Page
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
-import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
-import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PaginationDirection
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
 import java.util.UUID
 
@@ -19,24 +18,14 @@ interface PinRepositoryInterface {
     fun findPinById(id: UUID): Pin?
 
     /**
-     * Find a pin by its ID, for a given user
-     * Read-permissions must be given to the user for them to find the pin, if it exists.
-     */
-    fun findPinByIdForUser(id: UUID, reader: User): Pin?
-
-    /**
-     * Find pins for a given user with pagination support
-     * @param user The user whose pins to find
-     * @param cursor The pin ID to start from (null for first page)
-     * @param direction The pagination direction (forward or backward)
+     * Find pins with pagination support
+     * @param cursor The cursor to find pins relative to
      * @param pageSize Number of pins to return (will be capped at server max)
      * @param sortStrategy The sort strategy
      * @return A page of pins with pagination information
      */
-    fun findPinsForUserPaginated(
-        user: User,
-        cursor: UUID?,
-        direction: PaginationDirection,
+    fun findPinsPaginated(
+        cursor: Cursor?,
         pageSize: Int,
         sortStrategy: PinSortStrategy,
     ): Page<Pin>

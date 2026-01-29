@@ -1,22 +1,21 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
-import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PaginationDirection
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PaginationDirectionInputEnum
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.CursorInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinCreationInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinSortStrategyInputEnum
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PaginationDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PaginationOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PaginationDirectionMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDomain
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.serialization.Base64Json
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinCreator
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinGetter
-import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinLister
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinRetrievalPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinRetrievalPinDoesNotExistError
 import io.quarkus.security.Authenticated
@@ -25,7 +24,6 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.UriBuilder
 import org.jboss.resteasy.reactive.RestResponse
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder
 import java.net.URI
@@ -35,11 +33,9 @@ import java.util.UUID
 class PinController(
     private val pinCreator: PinCreator,
     private val pinGetter: PinGetter,
-    private val pinLister: PinLister,
     private val securityIdentity: SecurityIdentity,
     private val apiConfig: ApiConfig,
 ) {
-
     @GET
     @Authenticated
     @Path("/{pinId}")
@@ -78,63 +74,34 @@ class PinController(
     @GET
     @Authenticated
     fun listPins(
-        @QueryParam("cursor") cursor: UUID? = null,
+        @QueryParam("cursor") @Base64Json cursorInput: CursorInputDto? = null,
         @QueryParam("pageSize") pageSizeInput: Int? = null,
-        @QueryParam("direction") directionInput: PaginationDirectionInputEnum? = null,
         @QueryParam("sort") sortInput: PinSortStrategyInputEnum? = null,
     ): RestResponse<PinListOutputDto> {
         val user = securityIdentity.getUser()
-
         val pageSize = pageSizeInput ?: DEFAULT_PAGE_SIZE
-        val direction = directionInput?.toDomain() ?: PaginationDirection.FORWARD
         val sort = sortInput?.toDomain() ?: PinSortStrategy.CREATED_AT_ASC
+        val cursor = cursorInput?.let { cursorInput.toDomain() }
 
-        val page = pinLister.listPinsForUserPaginated(
-            user = user,
-            cursor = cursor,
-            direction = direction,
-            pageSize = pageSize,
-            sort = sort,
-        )
+        val page =
+            pinGetter.listPinsPaginatedForUser(
+                reader = user,
+                cursor = cursor,
+                pageSize = pageSize,
+                sort = sort,
+            )
 
+        val pagination =
+            PaginationOutputDto(
+                previousPageCursor = page.previousCursor?.toDto(),
+                nextPageCursor = page.nextCursor?.toDto(),
+            )
         return RestResponse.ok(
             PinListOutputDto(
                 pins = page.items.map { it.toDto() },
-                pagination = PaginationDto(
-                    nextPageUrl = page.nextCursor?.let {
-                        buildPaginationUrl(
-                            cursor = it,
-                            direction = PaginationDirectionInputEnum.FORWARD,
-                            pageSize = pageSize,
-                            sort = sort.toDto()
-                        )
-                    },
-                    previousPageUrl = page.previousCursor?.let {
-                        buildPaginationUrl(
-                            cursor = it,
-                            direction = PaginationDirectionInputEnum.BACKWARD,
-                            pageSize = pageSize,
-                            sort = sort.toDto()
-                        )
-                    },
-                ),
-            )
+                pagination = pagination,
+            ),
         )
-    }
-
-    private fun buildPaginationUrl(
-        cursor: UUID,
-        direction: PaginationDirectionInputEnum,
-        pageSize: Int,
-        sort: PinSortStrategyInputEnum
-    ): String {
-        val builder = UriBuilder.fromUri(apiConfig.baseUrl())
-            .path("/api/v1/pins")
-            .queryParam("pageSize", pageSize)
-            .queryParam("sort", sort)
-            .queryParam("cursor", cursor)
-            .queryParam("direction", direction)
-        return builder.build().toString()
     }
 
     companion object {

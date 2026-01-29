@@ -6,7 +6,7 @@ package fr.geoffreyCoulaud.pinryReborn.api.domain.enums
  * - To get a page *after* the cursor, use `FORWARD`.
  * - To get a page *before* the cursor, use `BACKWARD`
  */
-enum class PaginationDirection {
+enum class CursorDirection {
     /**
      * Signal to return the next page in the pagination context.
      *

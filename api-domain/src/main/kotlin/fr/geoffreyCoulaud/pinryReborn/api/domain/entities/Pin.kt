@@ -3,10 +3,10 @@ package fr.geoffreyCoulaud.pinryReborn.api.domain.entities
 import java.util.UUID
 
 data class Pin(
-    val id: UUID,
+    override val id: UUID,
     val author: User,
     val sourceContextUrl: String,
     val sourceMediaUrl: String,
     val description: String,
-    val tags: List<Tag>
-)
+    val tags: List<Tag>,
+) : Identifiable

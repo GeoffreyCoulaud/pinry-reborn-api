@@ -1,10 +1,9 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Cursor
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Page
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Tag
-import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
-import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PaginationDirection
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.PinRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.mappers.PinModelMapper.toDomain
@@ -15,7 +14,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.PinModel
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.PinTagModel
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.query.QPinModel
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.query.QPinTagModel
-import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.Cursor
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.ModelCursor
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.ModelPaginationHelper
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.PinModelSortStrategy
 import io.ebean.Database
@@ -26,10 +25,11 @@ import java.util.UUID
 class PinRepository(
     private val database: Database,
 ) : PinRepositoryInterface {
-    private val sqlRepository = ModelRepository(
-        entityClass = PinModel::class,
-        database = database
-    )
+    private val sqlRepository =
+        ModelRepository(
+            entityClass = PinModel::class,
+            database = database,
+        )
     private val pinModelPaginationHelper = ModelPaginationHelper<PinModel, QPinModel>()
 
     private fun getTagsForPin(pinId: UUID): List<Tag> =
@@ -86,44 +86,26 @@ class PinRepository(
         return pin.toDomain(getTagsForPin(pin.id))
     }
 
-    override fun findPinByIdForUser(
-        id: UUID,
-        reader: User,
-    ): Pin? {
-        val pin =
-            QPinModel()
-                .id
-                .equalTo(id)
-                .author.id
-                .equalTo(reader.id)
-                .findOne() ?: return null
-        return pin.toDomain(getTagsForPin(pin.id))
-    }
-
-
-    override fun findPinsForUserPaginated(
-        user: User,
-        cursor: UUID?,
-        direction: PaginationDirection,
+    override fun findPinsPaginated(
+        cursor: Cursor?,
         pageSize: Int,
         sortStrategy: PinSortStrategy,
     ): Page<Pin> {
-        val cursor = cursor?.let { QPinModel().id.equalTo(it).findOne() }?.let {
-            Cursor(
-                pivot = it,
-                direction = direction,
+        val modelCursor =
+            cursor
+                ?.let { QPinModel().id.equalTo(it.pivotId).findOne() }
+                ?.let { ModelCursor(pivot = it, direction = cursor.direction) }
+        val modelPage =
+            pinModelPaginationHelper.getPage(
+                cursor = modelCursor,
+                pageSize = pageSize,
+                baseQuery = QPinModel(),
+                sortStrategy = PinModelSortStrategy.fromDomain(sortStrategy),
             )
-        }
-        val modelPage = pinModelPaginationHelper.getPage(
-            cursor = cursor,
-            pageSize = pageSize,
-            baseQuery = QPinModel().author.id.equalTo(user.id),
-            sortStrategy = PinModelSortStrategy.fromDomain(sortStrategy)
-        )
         return Page(
             items = modelPage.items.map { it.toDomain(getTagsForPin(it.id)) },
-            nextCursor = modelPage.nextCursor,
-            previousCursor = modelPage.previousCursor,
+            nextCursor = modelPage.nextCursor?.toDomain(),
+            previousCursor = modelPage.previousCursor?.toDomain(),
         )
     }
 }
