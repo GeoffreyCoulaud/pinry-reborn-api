@@ -9,23 +9,23 @@ sealed class PinModelSortStrategy : ModelSortStrategy<PinModel, QPinModel>() {
      * Sort strategy used to get pages of `PinModel`s in ascending creation date.
      */
     class CreatedAtAsc : PinModelSortStrategy() {
-        override fun filterCursorForwardNeighbors(
+        override fun filterCursorAndForwardNeighbors(
             cursor: ModelCursor<PinModel>,
             query: QPinModel,
         ): QPinModel = query.whenCreated.greaterOrEqualTo(cursor.pivot.whenCreated)
 
-        override fun filterCursorBackwardNeighbors(
+        override fun filterCursorAndBackwardNeighbors(
             cursor: ModelCursor<PinModel>,
             query: QPinModel,
         ): QPinModel = query.whenCreated.lessOrEqualTo(cursor.pivot.whenCreated)
 
-        override fun sortCursorForwardNeighbors(query: QPinModel): QPinModel =
+        override fun sortCursorAndForwardNeighbors(query: QPinModel): QPinModel =
             query
                 .orderBy()
                 .whenCreated
                 .asc()
 
-        override fun sortCursorBackwardNeighbors(query: QPinModel): QPinModel =
+        override fun sortCursorAndBackwardNeighbors(query: QPinModel): QPinModel =
             query
                 .orderBy()
                 .whenCreated
@@ -36,23 +36,23 @@ sealed class PinModelSortStrategy : ModelSortStrategy<PinModel, QPinModel>() {
      * Sort strategy used to get pages of `PinModel`s in descending creation date.
      */
     class CreatedAtDesc : PinModelSortStrategy() {
-        override fun filterCursorForwardNeighbors(
+        override fun filterCursorAndForwardNeighbors(
             cursor: ModelCursor<PinModel>,
             query: QPinModel,
         ): QPinModel = query.whenCreated.lessOrEqualTo(cursor.pivot.whenCreated)
 
-        override fun filterCursorBackwardNeighbors(
+        override fun filterCursorAndBackwardNeighbors(
             cursor: ModelCursor<PinModel>,
             query: QPinModel,
         ): QPinModel = query.whenCreated.greaterOrEqualTo(cursor.pivot.whenCreated)
 
-        override fun sortCursorForwardNeighbors(query: QPinModel): QPinModel =
+        override fun sortCursorAndForwardNeighbors(query: QPinModel): QPinModel =
             query
                 .orderBy()
                 .whenCreated
                 .desc()
 
-        override fun sortCursorBackwardNeighbors(query: QPinModel): QPinModel =
+        override fun sortCursorAndBackwardNeighbors(query: QPinModel): QPinModel =
             query
                 .orderBy()
                 .whenCreated

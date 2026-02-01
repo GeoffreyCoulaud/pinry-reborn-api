@@ -9,21 +9,21 @@ abstract class ModelSortStrategy<M : BaseModel, Q : QueryBean<M, Q>> {
     /**
      * Adapt the query to find the cursor's pivot and neighbors
      */
-    fun filterCursorNeighbors(
+    fun filterCursorAndNeighbors(
         query: Q,
         cursor: ModelCursor<M>?,
     ): Q {
         if (cursor == null) return query
         return when (cursor.direction) {
-            FORWARD -> filterCursorForwardNeighbors(cursor, query)
-            BACKWARD -> filterCursorBackwardNeighbors(cursor, query)
+            FORWARD -> filterCursorAndForwardNeighbors(cursor, query)
+            BACKWARD -> filterCursorAndBackwardNeighbors(cursor, query)
         }
     }
 
     /**
      * Adapt the query to find the cursor's pivot and its forward neighbors
      */
-    protected abstract fun filterCursorForwardNeighbors(
+    protected abstract fun filterCursorAndForwardNeighbors(
         cursor: ModelCursor<M>,
         query: Q,
     ): Q
@@ -31,7 +31,7 @@ abstract class ModelSortStrategy<M : BaseModel, Q : QueryBean<M, Q>> {
     /**
      * Adapt the query to find the cursor's pivot and its backward neighbors
      */
-    protected abstract fun filterCursorBackwardNeighbors(
+    protected abstract fun filterCursorAndBackwardNeighbors(
         cursor: ModelCursor<M>,
         query: Q,
     ): Q
@@ -44,17 +44,17 @@ abstract class ModelSortStrategy<M : BaseModel, Q : QueryBean<M, Q>> {
         cursor: ModelCursor<M>?,
     ): Q =
         when (cursor?.direction ?: FORWARD) {
-            FORWARD -> sortCursorForwardNeighbors(query)
-            BACKWARD -> sortCursorBackwardNeighbors(query)
+            FORWARD -> sortCursorAndForwardNeighbors(query)
+            BACKWARD -> sortCursorAndBackwardNeighbors(query)
         }
 
     /**
      * Adapt the query to sort the result according to the strategy when going forward
      */
-    protected abstract fun sortCursorForwardNeighbors(query: Q): Q
+    protected abstract fun sortCursorAndForwardNeighbors(query: Q): Q
 
     /**
      * Adapt the query to sort the result according to the strategy when going backward
      */
-    protected abstract fun sortCursorBackwardNeighbors(query: Q): Q
+    protected abstract fun sortCursorAndBackwardNeighbors(query: Q): Q
 }

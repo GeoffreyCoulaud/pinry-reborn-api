@@ -21,7 +21,7 @@ class ModelPaginationHelper<M : BaseModel, Q : QueryBean<M, Q>> {
         var hasMoreInDirection: Boolean = false
         val elements =
             baseQuery
-                .let { sortStrategy.filterCursorNeighbors(query = it, cursor = cursor) }
+                .let { sortStrategy.filterCursorAndNeighbors(query = it, cursor = cursor) }
                 .let { sortStrategy.sortCursorNeighbors(query = it, cursor = cursor) }
                 .setMaxRows(maxRows)
                 .findList()
