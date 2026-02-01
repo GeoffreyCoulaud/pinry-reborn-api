@@ -5,6 +5,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinCreationInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinSortStrategyInputEnum
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinTagsInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
@@ -14,12 +15,16 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.serialization.Base64Json
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinCreator
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinGetter
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinTagger
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinRetrievalPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinRetrievalPinDoesNotExistError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPermissionError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPinDoesNotExistError
 import io.quarkus.security.Authenticated
 import io.quarkus.security.identity.SecurityIdentity
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.QueryParam
 import org.jboss.resteasy.reactive.RestResponse
@@ -31,6 +36,7 @@ import java.util.UUID
 class PinController(
     private val pinCreator: PinCreator,
     private val pinGetter: PinGetter,
+    private val pinTagger: PinTagger,
     private val securityIdentity: SecurityIdentity,
     private val apiConfig: ApiConfig,
 ) {
@@ -93,6 +99,26 @@ class PinController(
         } catch (_: PinRetrievalPermissionError) {
             ResponseBuilder
                 .create<PinListOutputDto>(RestResponse.Status.FORBIDDEN)
+                .build()
+        }
+    }
+
+    @PUT
+    @Authenticated
+    @Path("/{pinId}/tags")
+    fun setTags(pinId: UUID, tagsDto: PinTagsInputDto): RestResponse<PinOutputDto> {
+        val user = securityIdentity.getUser()
+
+        return try {
+            pinTagger
+                .setTags(pinId = pinId, tagNames = tagsDto.tags, user = user)
+                .toDto()
+                .let { RestResponse.ok(it) }
+        } catch (_: PinTaggingPinDoesNotExistError) {
+            RestResponse.notFound()
+        } catch (_: PinTaggingPermissionError) {
+            ResponseBuilder
+                .create<PinOutputDto>(RestResponse.Status.FORBIDDEN)
                 .build()
         }
     }
