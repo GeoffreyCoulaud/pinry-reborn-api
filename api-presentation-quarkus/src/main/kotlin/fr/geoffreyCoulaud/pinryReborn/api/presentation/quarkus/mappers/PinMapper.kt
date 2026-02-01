@@ -1,7 +1,11 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Page
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PaginationOutputDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.TagMapper.toDto
 
 object PinMapper {
@@ -12,6 +16,14 @@ object PinMapper {
         sourceMediaUrl = sourceMediaUrl,
         description = description,
         tags = tags.map { it.toDto() }
+    )
+
+    fun Page<Pin>.toDto() = PinListOutputDto(
+        pins = this.items.map { it.toDto() },
+        pagination = PaginationOutputDto(
+            previousCursor = this.previousCursor?.toDto(),
+            nextCursor = this.nextCursor?.toDto(),
+        ),
     )
 }
 

@@ -18,6 +18,7 @@ import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.notNullValue
 import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import java.util.UUID
 import kotlin.io.encoding.Base64
 
@@ -258,7 +259,37 @@ class PinListIntegrationTest : IntegrationTest() {
             .body("pagination.previousCursor", nullValue())
     }
 
-    // ======= User isolation tests =======
+    @Test
+    fun `cursors are returned as base64 encoded strings`() {
+        val username = "base64cursoruser"
+        val user = userCreator.createUserWithPassword(username, defaultPassword)
+        createPinsForUser(user, 3)
+
+        val response = given()
+            .authenticatedAs(username)
+            .queryParam("pageSize", 2)
+            .`when`()
+            .get("/api/v1/pins")
+            .then()
+            .statusCode(200)
+            .extract()
+            .response()
+
+        val nextCursor = response.jsonPath().getString("pagination.nextCursor")
+        val previousCursor = response.jsonPath().getString("pagination.previousCursor")
+
+        // Verify cursors are present
+        assertNotNull(previousCursor)
+        assertNotNull(nextCursor)
+
+        // Verify cursors are valid Base64 that decode to JSON with expected structure
+        listOf(nextCursor, previousCursor).forEach { cursor ->
+            val decoded = Base64.decode(cursor).decodeToString()
+            val json = objectMapper.readTree(decoded)
+            assert(json.has("pivotId")) { "Decoded cursor should have pivotId field" }
+            assert(json.has("direction")) { "Decoded cursor should have direction field" }
+        }
+    }
 
     @Test
     fun `getting pins returns only pins for the requesting user`() {
@@ -285,5 +316,20 @@ class PinListIntegrationTest : IntegrationTest() {
             .then()
             .statusCode(200)
             .body("pins", hasSize<Any>(1))
+    }
+
+    @Test
+    fun `getting pins with a cursor pivot from another user should return 403`() {
+        val reader = userCreator.createUserWithPassword("reader", defaultPassword)
+        val author = userCreator.createUserWithPassword("author", defaultPassword)
+        val authorPinIds = createPinsForUser(author, 1)
+
+        given()
+            .authenticatedAs(reader.name)
+            .withCursor(pivotId = authorPinIds.first())
+            .`when`()
+            .get("/api/v1/pins")
+            .then()
+            .statusCode(403)
     }
 }
