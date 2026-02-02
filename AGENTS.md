@@ -13,18 +13,30 @@ This file provides guidance to AI Agents when working with code in this reposito
 
 ## Architecture
 
-This is a Kotlin API server following **Clean Architecture** with these submodules:
+This is a Kotlin API server following **Clean Architecture** with strict layer boundaries.
+
+### Modules
 
 ```
-api-domain/              # Domain entities & repository interfaces (no dependencies)
-api-usecases/            # Business logic use cases (depends on domain)
-api-persistence-sqlite/  # Ebean ORM implementations (depends on domain, utilities)
-api-presentation-quarkus/# REST controllers & DTOs (depends on domain, usecases)
-api-application/         # Entry point & integration tests (depends on all)
+api-domain/              # Domain entities & repository interfaces
+api-usecases/            # Business logic use cases
+api-persistence-sqlite/  # Ebean ORM implementations
+api-presentation-quarkus/# REST controllers & DTOs
+api-application/         # Entry point & integration tests
 api-utilities/           # Shared utilities & test fixtures
 ```
 
-**Dependency flow**: presentation → usecases → domain ← persistence
+### Dependency Rules (STRICT)
+
+| Module | May Depend On |
+|--------|---------------|
+| `api-domain` | Nothing (pure). May use `api-utilities` if absolutely necessary. |
+| `api-usecases` | `api-domain` only |
+| `api-persistence-sqlite` | `api-domain`, `api-utilities` |
+| `api-presentation-quarkus` | `api-usecases`, `api-domain` |
+| `api-application` | All modules (composition root) |
+
+**Never poke holes through layers.** Presentation must not call persistence directly. Use cases must not depend on persistence implementations.
 
 ## Key Technologies
 
@@ -42,12 +54,61 @@ entity models:
 ./gradlew :api-persistence-sqlite:generateDbMigration
 ```
 
-## Testing Patterns
+## Development Workflow (TDD)
 
-- **Unit tests**: Use MockK for mocking, located in `api-usecases` and `api-presentation-quarkus`
-- **Integration tests**: Extend `IntegrationTest` base class in `api-application`, which provides clean DB state per
-  test
-- **Repository tests**: Ebean-based tests in `api-persistence-sqlite`
+Follow the user's instructions, but always suggest Test-Driven Development.
+
+### Testing Order
+
+Write tests in this order, each failing before moving to implementation:
+
+1. **Integration tests** (`api-application`) - REST Assured end-to-end tests
+2. **Use-case unit tests** (`api-usecases`) - MockK-based business logic tests
+3. **Repository tests** (`api-persistence-sqlite`) - Ebean database tests
+
+### Red-Green-Refactor Cycle
+
+1. **Red**: Write a failing test
+2. **Green**: Write minimal code to make it pass
+3. **Refactor**: Clean up while keeping tests green
+
+### Test Naming Convention
+
+Test names use backticks with **"Given..., Then..."** format (no "when" in the name):
+
+```kotlin
+@Test
+fun `Given a valid user, Then creation succeeds`() { ... }
+
+@Test
+fun `Given duplicate username, Then throws UserCreationError`() { ... }
+```
+
+### Test Body Structure
+
+Tests follow **Given-When-Then** structure with explicit comments:
+
+```kotlin
+@Test
+fun `Given valid credentials, Then authentication succeeds`() {
+    // Given
+    val username = "testuser"
+    val password = "password123"
+
+    // When
+    val result = authenticator.authenticate(username, password)
+
+    // Then
+    assertNotNull(result)
+}
+```
+
+### Test Maintainability
+
+- **Create helper methods** for repeated setup (e.g., `createAndSaveUser()`)
+- **Use test variables** with meaningful names, not inline literals
+- **Leverage `createRandomString()`** from utilities for unique test data
+- **Extend base test classes**: `IntegrationTest`, `BaseTest`, `RepositoryTest`
 
 ## Module Conventions
 
