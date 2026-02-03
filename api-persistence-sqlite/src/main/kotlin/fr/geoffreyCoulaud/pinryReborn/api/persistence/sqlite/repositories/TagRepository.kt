@@ -29,4 +29,11 @@ class TagRepository(
             .equalTo(user.id)
             .findOne()
             ?.toDomain()
+
+    override fun findAllTagsForUser(user: User): List<Tag> =
+        QTagModel()
+            .author.id
+            .equalTo(user.id)
+            .findList()
+            .map { it.toDomain() }
 }

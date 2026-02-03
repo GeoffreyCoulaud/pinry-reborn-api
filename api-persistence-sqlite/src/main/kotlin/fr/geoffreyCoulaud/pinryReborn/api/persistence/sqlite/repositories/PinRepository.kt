@@ -110,4 +110,11 @@ class PinRepository(
             previousCursor = modelPage.previousCursor?.toDomain(),
         )
     }
+
+    override fun findAllPinsForUser(user: User): List<Pin> =
+        QPinModel()
+            .author.id
+            .equalTo(user.id)
+            .findList()
+            .map { it.toDomain(getTagsForPin(it.id)) }
 }

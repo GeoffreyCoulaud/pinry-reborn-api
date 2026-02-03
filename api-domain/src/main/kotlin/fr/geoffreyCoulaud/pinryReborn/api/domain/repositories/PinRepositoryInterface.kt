@@ -31,4 +31,9 @@ interface PinRepositoryInterface {
         pageSize: Int,
         sortStrategy: PinSortStrategy,
     ): Page<Pin>
+
+    /**
+     * Find all pins for a user
+     */
+    fun findAllPinsForUser(user: User): List<Pin>
 }

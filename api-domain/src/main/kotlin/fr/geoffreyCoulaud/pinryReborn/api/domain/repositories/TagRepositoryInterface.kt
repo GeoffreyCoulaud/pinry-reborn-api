@@ -16,4 +16,9 @@ interface TagRepositoryInterface {
         user: User,
         name: String,
     ): Tag?
+
+    /**
+     * Find all tags for a user
+     */
+    fun findAllTagsForUser(user: User): List<Tag>
 }
