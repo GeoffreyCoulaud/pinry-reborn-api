@@ -16,7 +16,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
     fun `creating a user returns the created user`() {
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "testuser"}""")
+            .body("""{"name": "testuser", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
@@ -29,7 +29,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
     fun `creating a user with different name returns the created user`() {
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "another_user"}""")
+            .body("""{"name": "another_user", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
@@ -45,7 +45,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
         // Create first user
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "user1"}""")
+            .body("""{"name": "user1", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
@@ -55,7 +55,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
         // Create second user with different name
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "user2"}""")
+            .body("""{"name": "user2", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
@@ -68,7 +68,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
         // Create user first time
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "duplicate_user"}""")
+            .body("""{"name": "duplicate_user", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
@@ -78,7 +78,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
         // Try to create user with same name
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "duplicate_user"}""")
+            .body("""{"name": "duplicate_user", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
@@ -89,7 +89,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
     fun `creating a user with special characters in name succeeds`() {
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "user_with-special.chars123"}""")
+            .body("""{"name": "user_with-special.chars123", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
@@ -102,12 +102,42 @@ class UserCreationIntegrationTest : IntegrationTest() {
     fun `creating a user with unicode name succeeds`() {
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "用户名"}""")
+            .body("""{"name": "用户名", "password": "password123"}""")
             .`when`()
             .post("/api/v1/users")
             .then()
             .statusCode(200)
             .body("id", notNullValue())
             .body("name", equalTo("用户名"))
+    }
+
+    @Test
+    fun `Given a created user with password, Then authentication with that password succeeds`() {
+        // Given
+        val username = "authuser"
+        val password = "mysecretpassword"
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"name": "$username", "password": "$password"}""")
+            .`when`()
+            .post("/api/v1/users")
+            .then()
+            .statusCode(200)
+
+        // When / Then - authentication with correct password succeeds
+        given()
+            .auth().preemptive().basic(username, password)
+            .`when`()
+            .get("/api/v1/pins")
+            .then()
+            .statusCode(200)
+
+        // When / Then - authentication with wrong password fails
+        given()
+            .auth().preemptive().basic(username, "wrongpassword")
+            .`when`()
+            .get("/api/v1/pins")
+            .then()
+            .statusCode(401)
     }
 }

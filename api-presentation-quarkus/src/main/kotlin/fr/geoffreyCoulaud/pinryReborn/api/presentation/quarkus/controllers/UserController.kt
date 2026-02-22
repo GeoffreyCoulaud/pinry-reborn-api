@@ -16,7 +16,7 @@ class UserController(
     @POST
     @PermitAll
     fun createUser(userDto: UserInputDto): RestResponse<UserOutputDto> {
-        val userOutputDto = userCreator.createUser(name = userDto.name).toDto()
+        val userOutputDto = userCreator.createUserWithPassword(name = userDto.name, password = userDto.password).toDto()
         return RestResponse.ok(userOutputDto)
     }
 }
