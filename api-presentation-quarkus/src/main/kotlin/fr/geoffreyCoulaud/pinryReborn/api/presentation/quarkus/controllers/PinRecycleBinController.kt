@@ -2,12 +2,12 @@ package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinSortStrategyInputEnum
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinRecycleBinSortStrategyInputEnum
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinRecycleBinSortStrategyMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.serialization.Base64Json
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinRecycleBin
@@ -39,11 +39,11 @@ class PinRecycleBinController(
     fun listRecycledPins(
         @QueryParam("cursor") @Base64Json cursorInput: CursorDto? = null,
         @QueryParam("pageSize") pageSizeInput: Int? = null,
-        @QueryParam("sort") sortInput: PinSortStrategyInputEnum? = null,
+        @QueryParam("sort") sortInput: PinRecycleBinSortStrategyInputEnum? = null,
     ): RestResponse<PinListOutputDto> {
         val user = securityIdentity.getUser()
         val pageSize = pageSizeInput ?: DEFAULT_PAGE_SIZE
-        val sort = sortInput?.toDomain() ?: PinSortStrategy.CREATED_AT_ASC
+        val sort = sortInput?.toDomain() ?: PinSortStrategy.DELETED_AT_DESC
         val cursor = cursorInput?.toDomain()
 
         return try {

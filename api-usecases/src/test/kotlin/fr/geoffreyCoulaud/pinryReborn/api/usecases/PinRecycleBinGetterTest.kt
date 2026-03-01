@@ -75,6 +75,32 @@ class PinRecycleBinGetterTest {
     }
 
     @Test
+    fun `Given DELETED_AT_DESC sort, Then sort strategy is passed to repository`() {
+        // Given
+        val user = User(id = randomUUID(), name = "John Doe")
+        val expectedPage = Page<Pin>(items = emptyList(), previousCursor = null, nextCursor = null)
+        every {
+            pinRepository.findSoftDeletedPinsForUser(
+                reader = user,
+                cursor = null,
+                pageSize = 20,
+                sortStrategy = PinSortStrategy.DELETED_AT_DESC,
+            )
+        } returns expectedPage
+
+        // When
+        val result = useCase.listSoftDeletedPinsPaginatedForUser(
+            reader = user,
+            cursor = null,
+            pageSize = 20,
+            sort = PinSortStrategy.DELETED_AT_DESC,
+        )
+
+        // Then
+        assertEquals(expectedPage, result)
+    }
+
+    @Test
     fun `Given cursor pointing to another user's pin, Then throws permission error`() {
         // Given
         val user = User(id = randomUUID(), name = "John Doe")

@@ -226,6 +226,119 @@ class PinSoftDeleteIntegrationTest : IntegrationTest() {
             .body("pins", hasSize<Any>(2))
     }
 
+    @Test
+    fun `Given soft-deleted pins, Then default sort is most recently deleted first`() {
+        // Given
+        val username = "recyclesortdefault"
+        val password = "password123"
+        val user = userCreator.createUserWithPassword(username, password)
+        val pin1 = pinCreator.createPin(
+            author = user,
+            sourceContextUrl = "https://example.com/1",
+            sourceMediaUrl = "https://example.com/img1.jpg",
+            description = "Deleted first",
+            tags = emptyList(),
+        )
+        val pin2 = pinCreator.createPin(
+            author = user,
+            sourceContextUrl = "https://example.com/2",
+            sourceMediaUrl = "https://example.com/img2.jpg",
+            description = "Deleted second",
+            tags = emptyList(),
+        )
+
+        given().auth().preemptive().basic(username, password).delete("/api/v1/pins/${pin1.id}")
+        Thread.sleep(2)
+        given().auth().preemptive().basic(username, password).delete("/api/v1/pins/${pin2.id}")
+
+        // When / Then - default sort should be DELETED_AT_DESC (most recently deleted first)
+        given()
+            .auth().preemptive().basic(username, password)
+            .`when`()
+            .get("/api/v1/pins/recycled")
+            .then()
+            .statusCode(200)
+            .body("pins", hasSize<Any>(2))
+            .body("pins[0].id", equalTo(pin2.id.toString()))
+            .body("pins[1].id", equalTo(pin1.id.toString()))
+    }
+
+    @Test
+    fun `Given soft-deleted pins, Then explicit DELETED_AT_DESC sort works`() {
+        // Given
+        val username = "recyclesortexplicit"
+        val password = "password123"
+        val user = userCreator.createUserWithPassword(username, password)
+        val pin1 = pinCreator.createPin(
+            author = user,
+            sourceContextUrl = "https://example.com/1",
+            sourceMediaUrl = "https://example.com/img1.jpg",
+            description = "Deleted first",
+            tags = emptyList(),
+        )
+        val pin2 = pinCreator.createPin(
+            author = user,
+            sourceContextUrl = "https://example.com/2",
+            sourceMediaUrl = "https://example.com/img2.jpg",
+            description = "Deleted second",
+            tags = emptyList(),
+        )
+
+        given().auth().preemptive().basic(username, password).delete("/api/v1/pins/${pin1.id}")
+        Thread.sleep(2)
+        given().auth().preemptive().basic(username, password).delete("/api/v1/pins/${pin2.id}")
+
+        // When / Then
+        given()
+            .auth().preemptive().basic(username, password)
+            .queryParam("sort", "DELETED_AT_DESC")
+            .`when`()
+            .get("/api/v1/pins/recycled")
+            .then()
+            .statusCode(200)
+            .body("pins", hasSize<Any>(2))
+            .body("pins[0].id", equalTo(pin2.id.toString()))
+            .body("pins[1].id", equalTo(pin1.id.toString()))
+    }
+
+    @Test
+    fun `Given soft-deleted pins, Then CREATED_AT_ASC sort still works on recycle bin`() {
+        // Given
+        val username = "recyclesortcreated"
+        val password = "password123"
+        val user = userCreator.createUserWithPassword(username, password)
+        val pin1 = pinCreator.createPin(
+            author = user,
+            sourceContextUrl = "https://example.com/1",
+            sourceMediaUrl = "https://example.com/img1.jpg",
+            description = "Created first",
+            tags = emptyList(),
+        )
+        Thread.sleep(2)
+        val pin2 = pinCreator.createPin(
+            author = user,
+            sourceContextUrl = "https://example.com/2",
+            sourceMediaUrl = "https://example.com/img2.jpg",
+            description = "Created second",
+            tags = emptyList(),
+        )
+
+        given().auth().preemptive().basic(username, password).delete("/api/v1/pins/${pin2.id}")
+        given().auth().preemptive().basic(username, password).delete("/api/v1/pins/${pin1.id}")
+
+        // When / Then - CREATED_AT_ASC should sort by creation date regardless of deletion order
+        given()
+            .auth().preemptive().basic(username, password)
+            .queryParam("sort", "CREATED_AT_ASC")
+            .`when`()
+            .get("/api/v1/pins/recycled")
+            .then()
+            .statusCode(200)
+            .body("pins", hasSize<Any>(2))
+            .body("pins[0].id", equalTo(pin1.id.toString()))
+            .body("pins[1].id", equalTo(pin2.id.toString()))
+    }
+
     // --- Restore ---
 
     @Test

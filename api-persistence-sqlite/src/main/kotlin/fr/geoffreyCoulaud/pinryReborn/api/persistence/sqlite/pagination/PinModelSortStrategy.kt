@@ -59,11 +59,39 @@ sealed class PinModelSortStrategy : ModelSortStrategy<PinModel, QPinModel>() {
                 .asc()
     }
 
+    /**
+     * Sort strategy used to get pages of `PinModel`s in descending soft-deletion date.
+     */
+    class DeletedAtDesc : PinModelSortStrategy() {
+        override fun filterCursorAndForwardNeighbors(
+            cursor: ModelCursor<PinModel>,
+            query: QPinModel,
+        ): QPinModel = query.softDeletedAt.lessOrEqualTo(cursor.pivot.softDeletedAt)
+
+        override fun filterCursorAndBackwardNeighbors(
+            cursor: ModelCursor<PinModel>,
+            query: QPinModel,
+        ): QPinModel = query.softDeletedAt.greaterOrEqualTo(cursor.pivot.softDeletedAt)
+
+        override fun sortCursorAndForwardNeighbors(query: QPinModel): QPinModel =
+            query
+                .orderBy()
+                .softDeletedAt
+                .desc()
+
+        override fun sortCursorAndBackwardNeighbors(query: QPinModel): QPinModel =
+            query
+                .orderBy()
+                .softDeletedAt
+                .asc()
+    }
+
     companion object {
         fun fromDomain(strategy: PinSortStrategy) =
             when (strategy) {
                 PinSortStrategy.CREATED_AT_ASC -> CreatedAtAsc()
                 PinSortStrategy.CREATED_AT_DESC -> CreatedAtDesc()
+                PinSortStrategy.DELETED_AT_DESC -> DeletedAtDesc()
             }
     }
 }

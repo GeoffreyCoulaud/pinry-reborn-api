@@ -8,9 +8,4 @@ object PinSortStrategyMapper {
         PinSortStrategyInputEnum.CREATED_AT_ASC -> PinSortStrategy.CREATED_AT_ASC
         PinSortStrategyInputEnum.CREATED_AT_DESC -> PinSortStrategy.CREATED_AT_DESC
     }
-
-    fun PinSortStrategy.toDto(): PinSortStrategyInputEnum = when (this) {
-        PinSortStrategy.CREATED_AT_ASC -> PinSortStrategyInputEnum.CREATED_AT_ASC
-        PinSortStrategy.CREATED_AT_DESC -> PinSortStrategyInputEnum.CREATED_AT_DESC
-    }
 }
