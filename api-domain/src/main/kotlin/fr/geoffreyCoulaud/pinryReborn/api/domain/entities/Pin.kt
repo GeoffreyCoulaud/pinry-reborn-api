@@ -1,5 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.domain.entities
 
+import java.time.Instant
 import java.util.UUID
 
 data class Pin(
@@ -9,4 +10,5 @@ data class Pin(
     val sourceMediaUrl: String,
     val description: String,
     val tags: List<Tag>,
+    val softDeletedAt: Instant? = null,
 ) : Identifiable

@@ -16,3 +16,8 @@ class PinTaggingPermissionError : PinTaggingError(
     "Insufficient permissions",
     ErrorCode.PIN_INSUFFICIENT_PERMISSIONS
 )
+
+class PinTaggingSoftDeletedPinError : PinTaggingError(
+    "Cannot tag a soft-deleted pin",
+    ErrorCode.PIN_ALREADY_SOFT_DELETED
+)

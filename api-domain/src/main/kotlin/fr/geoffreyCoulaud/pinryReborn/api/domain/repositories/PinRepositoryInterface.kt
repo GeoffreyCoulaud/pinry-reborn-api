@@ -33,7 +33,37 @@ interface PinRepositoryInterface {
     ): Page<Pin>
 
     /**
-     * Find all pins for a user
+     * Find all active pins for a user (excludes soft-deleted)
      */
     fun findAllPinsForUser(user: User): List<Pin>
+
+    /**
+     * Soft-delete a pin by setting its softDeletedAt timestamp
+     */
+    fun softDeletePin(pin: Pin): Pin
+
+    /**
+     * Restore a soft-deleted pin by clearing its softDeletedAt timestamp
+     */
+    fun restorePin(pin: Pin): Pin
+
+    /**
+     * Permanently delete a pin and its tag associations
+     */
+    fun permanentlyDeletePin(pin: Pin)
+
+    /**
+     * Permanently delete all soft-deleted pins for a user
+     */
+    fun permanentlyDeleteAllSoftDeletedPinsForUser(user: User)
+
+    /**
+     * Find soft-deleted pins for a user with pagination support
+     */
+    fun findSoftDeletedPinsForUser(
+        reader: User,
+        cursor: Cursor?,
+        pageSize: Int,
+        sortStrategy: PinSortStrategy,
+    ): Page<Pin>
 }

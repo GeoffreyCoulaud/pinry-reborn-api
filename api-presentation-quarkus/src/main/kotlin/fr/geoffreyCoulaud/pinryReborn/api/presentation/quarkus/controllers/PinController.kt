@@ -15,13 +15,19 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.serialization.Base64Json
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinCreator
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinGetter
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinRecycleBin
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinTagger
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinDeletionPermissionError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinDeletionPinAlreadySoftDeletedError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinDeletionPinDoesNotExistError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinRetrievalPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinRetrievalPinDoesNotExistError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPinDoesNotExistError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingSoftDeletedPinError
 import io.quarkus.security.Authenticated
 import io.quarkus.security.identity.SecurityIdentity
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
@@ -37,6 +43,7 @@ class PinController(
     private val pinCreator: PinCreator,
     private val pinGetter: PinGetter,
     private val pinTagger: PinTagger,
+    private val pinRecycleBin: PinRecycleBin,
     private val securityIdentity: SecurityIdentity,
     private val apiConfig: ApiConfig,
 ) {
@@ -103,6 +110,27 @@ class PinController(
         }
     }
 
+    @DELETE
+    @Authenticated
+    @Path("/{pinId}")
+    fun softDeletePin(pinId: UUID): RestResponse<Void> {
+        val user = securityIdentity.getUser()
+        return try {
+            pinRecycleBin.softDelete(pinId = pinId, user = user)
+            RestResponse.noContent()
+        } catch (_: PinDeletionPinDoesNotExistError) {
+            RestResponse.notFound()
+        } catch (_: PinDeletionPermissionError) {
+            ResponseBuilder
+                .create<Void>(RestResponse.Status.FORBIDDEN)
+                .build()
+        } catch (_: PinDeletionPinAlreadySoftDeletedError) {
+            ResponseBuilder
+                .create<Void>(RestResponse.Status.fromStatusCode(409))
+                .build()
+        }
+    }
+
     @PUT
     @Authenticated
     @Path("/{pinId}/tags")
@@ -119,6 +147,10 @@ class PinController(
         } catch (_: PinTaggingPermissionError) {
             ResponseBuilder
                 .create<PinOutputDto>(RestResponse.Status.FORBIDDEN)
+                .build()
+        } catch (_: PinTaggingSoftDeletedPinError) {
+            ResponseBuilder
+                .create<PinOutputDto>(RestResponse.Status.fromStatusCode(409))
                 .build()
         }
     }

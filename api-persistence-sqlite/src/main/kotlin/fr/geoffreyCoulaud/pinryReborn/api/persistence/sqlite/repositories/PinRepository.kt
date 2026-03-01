@@ -20,6 +20,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.ModelPag
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.pagination.PinModelSortStrategy
 import io.ebean.Database
 import jakarta.enterprise.context.ApplicationScoped
+import java.time.Instant
 import java.util.UUID
 
 @ApplicationScoped
@@ -101,7 +102,7 @@ class PinRepository(
             pinModelPaginationHelper.getPage(
                 cursor = modelCursor,
                 pageSize = pageSize,
-                baseQuery = QPinModel().author.id.equalTo(reader.id),
+                baseQuery = QPinModel().author.id.equalTo(reader.id).softDeletedAt.isNull,
                 sortStrategy = PinModelSortStrategy.fromDomain(sortStrategy),
             )
         return Page(
@@ -115,6 +116,61 @@ class PinRepository(
         QPinModel()
             .author.id
             .equalTo(user.id)
+            .softDeletedAt.isNull
             .findList()
             .map { it.toDomain(getTagsForPin(it.id)) }
+
+    override fun softDeletePin(pin: Pin): Pin {
+        val model = QPinModel().id.equalTo(pin.id).findOne()!!
+        model.softDeletedAt = Instant.now()
+        database.save(model)
+        return model.toDomain(getTagsForPin(model.id))
+    }
+
+    override fun restorePin(pin: Pin): Pin {
+        val model = QPinModel().id.equalTo(pin.id).findOne()!!
+        model.softDeletedAt = null
+        database.save(model)
+        return model.toDomain(getTagsForPin(model.id))
+    }
+
+    override fun permanentlyDeletePin(pin: Pin) {
+        QPinTagModel().pin.id.equalTo(pin.id).delete()
+        QPinModel().id.equalTo(pin.id).delete()
+    }
+
+    override fun permanentlyDeleteAllSoftDeletedPinsForUser(user: User) {
+        val softDeletedPinIds = QPinModel()
+            .author.id.equalTo(user.id)
+            .softDeletedAt.isNotNull
+            .findList()
+            .map { it.id }
+        if (softDeletedPinIds.isEmpty()) return
+        QPinTagModel().pin.id.isIn(softDeletedPinIds).delete()
+        QPinModel().id.isIn(softDeletedPinIds).delete()
+    }
+
+    override fun findSoftDeletedPinsForUser(
+        reader: User,
+        cursor: Cursor?,
+        pageSize: Int,
+        sortStrategy: PinSortStrategy,
+    ): Page<Pin> {
+        val modelCursor =
+            cursor
+                ?.let { QPinModel().id.equalTo(it.pivotId).findOne() }
+                ?.let { ModelCursor(pivot = it, direction = cursor.direction) }
+        val modelPage =
+            pinModelPaginationHelper.getPage(
+                cursor = modelCursor,
+                pageSize = pageSize,
+                baseQuery = QPinModel().author.id.equalTo(reader.id).softDeletedAt.isNotNull,
+                sortStrategy = PinModelSortStrategy.fromDomain(sortStrategy),
+            )
+        return Page(
+            items = modelPage.items.map { it.toDomain(getTagsForPin(it.id)) },
+            nextCursor = modelPage.nextCursor?.toDomain(),
+            previousCursor = modelPage.previousCursor?.toDomain(),
+        )
+    }
 }

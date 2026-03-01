@@ -15,7 +15,8 @@ object PinMapper {
         sourceContextUrl = sourceContextUrl,
         sourceMediaUrl = sourceMediaUrl,
         description = description,
-        tags = tags.map { it.toDto() }
+        tags = tags.map { it.toDto() },
+        softDeletedAt = softDeletedAt,
     )
 
     fun Page<Pin>.toDto() = PinListOutputDto(

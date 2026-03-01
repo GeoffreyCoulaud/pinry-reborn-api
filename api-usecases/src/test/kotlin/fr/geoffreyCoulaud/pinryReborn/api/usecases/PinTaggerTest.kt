@@ -6,11 +6,13 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.PinRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPinDoesNotExistError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingSoftDeletedPinError
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.Instant
 import java.util.UUID.randomUUID
 
 class PinTaggerTest {
@@ -129,6 +131,28 @@ class PinTaggerTest {
         // When, Then
         assertThrows<PinTaggingPermissionError> {
             useCase.setTags(pinId = pin.id, tagNames = listOf("tag"), user = otherUser)
+        }
+    }
+
+    @Test
+    fun `Given soft-deleted pin, Then throws PinTaggingSoftDeletedPinError`() {
+        // Given
+        val user = User(id = randomUUID(), name = "John Doe")
+        val pin = Pin(
+            id = randomUUID(),
+            author = user,
+            sourceContextUrl = "https://example.com",
+            sourceMediaUrl = "https://example.com/img.jpg",
+            description = "A pin",
+            tags = emptyList(),
+            softDeletedAt = Instant.now(),
+        )
+
+        every { pinRepository.findPinById(pin.id) } returns pin
+
+        // When, Then
+        assertThrows<PinTaggingSoftDeletedPinError> {
+            useCase.setTags(pinId = pin.id, tagNames = listOf("tag"), user = user)
         }
     }
 }
