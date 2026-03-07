@@ -16,6 +16,7 @@ dependencies {
 
     // Quarkus
     implementation(libs.bundles.quarkus.runtime)
+    implementation(libs.quarkus.smallrye.openapi)
     implementation(libs.kotlin.stdlib)
 
     // Logging

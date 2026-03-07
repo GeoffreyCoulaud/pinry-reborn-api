@@ -1,6 +1,7 @@
 **/build
 .kotlin
 .gradle
+docs/openapi.yaml
 *.db
 .idea/dataSources*
 .idea/workspace.xml

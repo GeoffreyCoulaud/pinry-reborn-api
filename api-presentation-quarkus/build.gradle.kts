@@ -21,6 +21,7 @@ dependencies {
     compileOnly(platform(libs.quarkus.bom))
     compileOnly(libs.bundles.quarkus.compileOnly)
     compileOnly(libs.quarkus.security)
+    compileOnly(libs.quarkus.smallrye.openapi)
 
     // Tests
     testImplementation(testFixtures(project(":api-utilities")))
