@@ -224,8 +224,9 @@ class TaskProcessorTest {
 
     @Test
     fun `Given a handler that heartbeats, Then its lease is renewed by one duration from now`() {
-        // Given
+        // Given: the queue grants the renewal, so the handler runs on to its success
         every { clock.now() } returns now
+        every { queue.renewLease(any(), any(), any()) } returns true
         val c = claimed()
         val p = processorWith(object : TaskHandler {
             override val kind = "k"

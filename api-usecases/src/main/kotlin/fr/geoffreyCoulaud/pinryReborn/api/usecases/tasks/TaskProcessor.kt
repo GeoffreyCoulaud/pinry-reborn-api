@@ -5,6 +5,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.tasks.BackoffPolicy
 import fr.geoffreyCoulaud.pinryReborn.api.domain.tasks.ClaimedTask
 import fr.geoffreyCoulaud.pinryReborn.api.domain.time.Clock
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.PermanentTaskException
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.TaskLeaseLostException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.Duration
@@ -24,9 +25,13 @@ class TaskProcessor(
     private val clock: Clock,
 ) {
     private sealed interface Outcome
-    private data object Success : Outcome
-    private data class Retryable(val message: String) : Outcome
-    private data class Permanent(val message: String) : Outcome
+    private sealed interface Settled : Outcome
+    private data object Success : Settled
+    private data class Retryable(val message: String) : Settled
+    private data class Permanent(val message: String) : Settled
+
+    /** The lease is another attempt's or nobody's: every mark would be refused by its own guard. */
+    private data class Abandoned(val taskId: UUID) : Outcome
 
     fun execute(claimed: ClaimedTask, leaseDuration: Duration) {
         if (claimed.cancelRequested) {
@@ -37,24 +42,31 @@ class TaskProcessor(
         if (handler == null) {
             logger.warn { "task ${claimed.id} has no handler for kind ${claimed.kind}, marking dead" }
             taskQueue.markDead(claimed.id, claimed.leaseId, clock.now(), "no handler for kind ${claimed.kind}")
-        } else {
-            val context =
-                TaskContext(claimed.attempts, claimed.maxAttempts).apply {
-                    // The handler can push its lease back by one full duration; the fenced renewLease
-                    // no-ops if the task is no longer RUNNING under this lease (already reaped/settled).
-                    renewLease = { taskQueue.renewLease(claimed.id, claimed.leaseId, clock.now().plus(leaseDuration)) }
+            return
+        }
+        val context =
+            TaskContext(claimed.attempts, claimed.maxAttempts).apply {
+                // The handler pushes its lease back by one full duration; a refusal means the task is no
+                // longer RUNNING under this lease, and the handler is told so by exception (docs/adr/0022).
+                renewLease = {
+                    if (!taskQueue.renewLease(claimed.id, claimed.leaseId, clock.now().plus(leaseDuration))) {
+                        throw TaskLeaseLostException(claimed.id)
+                    }
                 }
-            val outcome = runHandler(handler, claimed.id, claimed.payload, context)
-            val now = clock.now()
-            if (taskQueue.markCancelledIfRequested(claimed.id, claimed.leaseId, now)) {
-                return
             }
-            settle(claimed, outcome, now, handler.retryFloor)
+        when (val outcome = runHandler(handler, claimed.id, claimed.payload, context)) {
+            is Abandoned -> logger.warn { "task ${outcome.taskId} lost its lease ${claimed.leaseId}, settling nothing" }
+            is Settled -> {
+                val now = clock.now()
+                if (!taskQueue.markCancelledIfRequested(claimed.id, claimed.leaseId, now)) {
+                    settle(claimed, outcome, now, handler.retryFloor)
+                }
+            }
         }
     }
 
     /** [retryFloor] is the handler's, not the queue's: the floor belongs to the kind being settled. */
-    private fun settle(claimed: ClaimedTask, outcome: Outcome, now: Instant, retryFloor: Duration) {
+    private fun settle(claimed: ClaimedTask, outcome: Settled, now: Instant, retryFloor: Duration) {
         when (outcome) {
             is Success -> taskQueue.markSucceeded(claimed.id, claimed.leaseId, now)
             is Permanent -> {
@@ -77,6 +89,8 @@ class TaskProcessor(
         try {
             handler.handle(payload, context)
             Success
+        } catch (e: TaskLeaseLostException) {
+            Abandoned(e.taskId)
         } catch (e: PermanentTaskException) {
             Permanent(e.reason)
         } catch (e: Exception) {

@@ -103,13 +103,12 @@ internal class UserDataImportCompletionTest : UserDataImportRunnerFixtures() {
 
     @Test
     fun `Given a lost lease on the last attempt, Then the row stays RUNNING under its run and the archive stays`() {
-        // Given: the heartbeat throws before the first pin, as TaskProcessor's does once the queue refuses
+        // Given: the heartbeat throws before the first pin, as TaskProcessor's does once the queue refuses,
+        // so nothing of the pin walk runs, and the archive is not deleted either: no release stub
         val source =
             FakeArchiveSource(manifest = aManifest(), pins = listOf(TestLine(1, aPin())), media = everyMedium)
-        stubWalk(source)
-        stubDigest()
-        stubHashLookup()
-        stubArchiveRelease()
+        stubOpen(source)
+        every { issueRepository.countForImport(any()) } returns 0
 
         // When / Then: the net rethrows it before its FAILED arm, another attempt possibly holding the row
         assertThrows(TaskLeaseLostException::class.java) {

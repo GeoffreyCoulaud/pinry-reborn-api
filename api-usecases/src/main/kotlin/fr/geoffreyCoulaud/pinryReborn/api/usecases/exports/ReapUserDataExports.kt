@@ -65,8 +65,8 @@ class ReapUserDataExports(
     }
 
     /**
-     * The grace dominates the longest plausible staging, since `claimNext` kills a task without regard
-     * for a handler still running: condemning early writes FAILED under a builder holding an archive.
+     * The grace dominates the longest plausible staging: a builder that lost its lease stops at its next
+     * heartbeat, one image stream at most, and condemning early writes FAILED under one still building.
      */
     private fun failInterruptedBuilds(now: Instant): Int {
         val condemnedBefore = now.minus(interruptedGrace)

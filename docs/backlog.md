@@ -12,7 +12,7 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*
   *Features* is the roadmap, unsequenced. A limit is not debt and is not counted as debt.
 - **Open work is grouped by priority**, not by module. `P0` = product decisions that shape the data model and
   the UI. `P1` = client ergonomics needed for the web UI and the browser extension. `P2` = operational debt
-  (not UI blockers). A priority may hold nothing; `P0` holds nothing today.
+  (not UI blockers). A priority may hold nothing; `P0` and `P2` hold nothing today.
 - **An item holds in two lines**: the symptom and where it lives, plus a pointer to the dated document that
   carries the reasoning. Never a copy of that reasoning (`agents/writing.md`, Rules). The exception is an item
   whose reasoning was only ever written here, which keeps it: dated documents are append-only, so compressing
@@ -47,26 +47,9 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*
 
 ### P2: Operational debt
 
-Every item below is taken by `docs/specs/2026-09-05-p2-debt-elimination.md`; the branch on each item is the
-block that closes it.
-
-- **A task handler is never told it lost its lease**: `TaskContext.renewLease` is `() -> Unit` where the queue
-  answers `Boolean`. Its reach, and why it was not done in the lot that found it:
-  `docs/specs/2026-08-27-export-build-completion.md` section 8, first item. Branch `fix/p2-debt-lost-lease`.
-- **`EbeanTaskQueue.claimNext` kills a task whose handler may still hold a live lease**, which the export sweep's
-  `PT6H` grace only makes improbable. `docs/specs/2026-08-27-export-build-completion.md` section 8, fourth item.
-  Branch `fix/p2-debt-lost-lease`.
-- **`TaskQueueBootIntegrationTest` counts every row in `tasks` and expects exactly one**, in a shared profile where
-  another class enqueues one (`docs/handoffs/2026-08-27 - handoff - export-build-completion.md`, pitfall 7).
-  Counting its own kind removes the coupling. Left open on purpose: the mechanism was never reproduced, and
-  repairing an unexplained symptom hides the next one. *(Last sentence: reasoning is only here.)* Refused by
-  `docs/specs/2026-09-05-p2-debt-elimination.md` D7; leaves with the handoff, branch `fix/p2-debt-lost-lease`.
-- **Measure what review costs and what it returns**, from the session transcripts: the share of
-  spend that goes to reviews, and the findings per review by kind. Re-scoped from ADR 0014's
-  re-measurement by `docs/adr/0018-a-block-is-a-pull-request.md`, which changed the regime without
-  answering it and dropped the third quantity (hours between consecutive implementers) as meaningless
-  once Act runs inline. Refused by `docs/specs/2026-09-05-p2-debt-elimination.md` D2; leaves with the handoff,
-  branch `fix/p2-debt-lost-lease`.
+`P2` holds nothing today: the lot of `docs/specs/2026-09-05-p2-debt-elimination.md` closed its
+twenty-three items, and `docs/handoffs/2026-09-05 - handoff - p2-debt-elimination.md` names each exit,
+the two refusals included.
 
 ## Known limits
 
