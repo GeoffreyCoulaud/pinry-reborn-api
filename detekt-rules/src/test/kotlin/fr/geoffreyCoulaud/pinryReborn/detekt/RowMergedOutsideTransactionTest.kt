@@ -5,8 +5,8 @@ import dev.detekt.test.lint
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class ImportStateMergedOutsideTransactionTest {
-    private val rule = ImportStateMergedOutsideTransaction(Config.empty)
+class RowMergedOutsideTransactionTest {
+    private val rule = RowMergedOutsideTransaction(Config.empty)
 
     @Test
     fun `Given a save handed to a fence as its write, Then nothing is reported`() {
@@ -19,6 +19,60 @@ class ImportStateMergedOutsideTransactionTest {
 
             internal fun Repo.saveFencedOver(runner: TransactionRunner, id: UUID, held: (Row) -> Boolean) =
                 runner.fencedOver({ findById(id) }, held, { it.copy(state = 2) }) { save(it) }
+            """.trimIndent()
+
+        // When
+        val findings = rule.lint(code)
+
+        // Then
+        assertEquals(0, findings.size)
+    }
+
+    @Test
+    fun `Given the same lambda under a call that is no fence, Then it is reported`() {
+        // Given: the boundary names are spellings; any other call around the write is no transaction
+        val code =
+            """
+            internal fun Repo.saveLater(runner: Scheduler, id: UUID) =
+                runner.later({ findById(id) }) { save(it) }
+            """.trimIndent()
+
+        // When
+        val findings = rule.lint(code)
+
+        // Then
+        assertEquals(1, findings.size)
+    }
+
+    @Test
+    fun `Given a savePin handed a named local, Then it is reported like a save`() {
+        // Given: the pin and board repositories spell their writes savePin and saveBoard
+        val code =
+            """
+            class Tagger {
+                fun setTags(pin: Pin, tags: List<Tag>) {
+                    val updated = pin.copy(tags = tags)
+                    pinRepository.savePin(updated)
+                }
+            }
+            """.trimIndent()
+
+        // When
+        val findings = rule.lint(code)
+
+        // Then
+        assertEquals(1, findings.size)
+    }
+
+    @Test
+    fun `Given a save taking two arguments, Then nothing is reported`() {
+        // Given: saveSessionToken(token, hash) and saveUserPasswordHash(user, hash) name no row that
+        // was read, and are not the shape
+        val code =
+            """
+            class Creator {
+                fun create(token: SessionToken, hash: String) = repository.saveSessionToken(token, hash)
+            }
             """.trimIndent()
 
         // When

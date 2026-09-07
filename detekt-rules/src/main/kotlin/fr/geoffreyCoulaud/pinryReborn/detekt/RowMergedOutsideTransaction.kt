@@ -51,7 +51,7 @@ import org.jetbrains.kotlin.psi.psiUtil.parents
  * through `saveFenced` or `saveFencedOver`, and the completer's hand-over opens its own block. What it
  * guards is the next writer added to this package, which is why it stays after the fences landed.
  */
-class ImportStateMergedOutsideTransaction(
+class RowMergedOutsideTransaction(
     config: Config,
 ) : Rule(
         config,

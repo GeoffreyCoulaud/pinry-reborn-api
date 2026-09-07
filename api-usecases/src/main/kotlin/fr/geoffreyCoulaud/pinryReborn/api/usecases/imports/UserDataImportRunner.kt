@@ -499,7 +499,7 @@ class UserDataImportRunner(
      * Names are resolved here, inside the settling transaction. One that resolves to nothing is dropped:
      * a name the metadata walk refused must not come back through a membership.
      */
-    @Suppress("ImportStateMergedOutsideTransaction")
+    @Suppress("RowMergedOutsideTransaction")
     // An insert of a row this walk built two frames up, which the rule cannot see from here: it reads
     // one call and the argument is a property. The transaction is `advance`'s, one frame out.
     private fun createPin(walk: PinWalk, created: CreatedPin) {
