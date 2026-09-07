@@ -51,11 +51,24 @@ Decisions already taken are under Design invariants in `agents/engineering.md`.
 
 ## Phases
 
-A work session produces a `lot`, composed of autonomous `blocks`.
+A work session produces a `lot`, composed of autonomous `blocks`. Two agents share it
+(`docs/adr/0023-act-in-a-teammate-per-block.md`): the **lead**, the main loop the operator talks to, which keeps the
+lot's thread and writes no block of a tier Spec lot; and one **teammate** per block, a named background agent that
+implements it and is stopped when its pull request merges.
 
 **Each block is its own branch off `main`**.   
 Branch before the first file is written.   
 Committing is cheap: commit autonomously.
+
+### Tiers
+
+The tier is the operator's decision: state the recommended tier and its trigger, then wait. Recommend the higher when
+both fit; if the higher trigger surfaces mid-task, stop and ask again.
+
+| Tier   | Trigger                                                                    | What runs                                                                       | Reviews                                                                 |
+|--------|----------------------------------------------------------------------------|---------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| Direct | One block: no design decision, no new dependency, no public-surface change | Act, Verify, Integrate and Wrap, written inline by the lead                     | None by default; the operator may still ask for one                     |
+| Spec   | Anything else                                                              | Discuss, Spec, then Act, Verify and Integrate per block in a teammate, then Wrap | The specification review, and the holistic review on the last code block |
 
 ### What a block is
 
@@ -78,27 +91,39 @@ request is merged before the next block starts. Wrap closes the lot.
 
 1. **Discuss** : Explore the project, read the backlog, and ask the user questions to align. No code, no files.
 2. **Spec** : One document, `docs/specs/<ISO date>-<slug>.md` describing in detail the work to do, its block table
-   included. Reviewed once by an adversarial subagent on `agents/reviews/spec.md`, its findings closed, then by the
-   user. It is delivered in the first block's pull request and freezes when the lot's last block merges
-   (`agents/writing.md`). A lot whose subject is this process writes its ADR and no separate spec.
-3. **Act.** One block, written inline by the main loop, never dispatched: a subagent cannot stop to ask, and tier 2
-   requires it (`docs/adr/0020-two-reviews-and-an-inline-act.md`). Strict TDD as `agents/engineering.md` states it. An
-   adjacent defect found here takes one of the three tiers under Scope, and tier 2 stops the work to ask.
-4. **Verify, entirely on the local branch. No pull request exists yet.** Run the full gate. **On the last code block of
-   the lot, write the handoff first**, then dispatch the holistic review (`agents/reviews/holistic.md`) over the whole
-   lot, `git diff <lot base>..HEAD`, merged blocks included: it reads the handoff, and its findings become the closing
-   block, the lot's last, with its own pull request. Tier Direct skips it.
-5. **Integrate.** Push and open the pull request. It is merged only after the human has reviewed it (rebase only, no
-   local-merge exemption), approval never assumed. **A red run, or a change the human asks for, returns the block to
-   Verify**: commit the fix, re-run the gate. Then clean up the branch or worktree, and the next block starts from
-   `main`.
+   included. Reviewed once by an adversarial subagent the lead dispatches on `agents/reviews/spec.md`, its findings
+   closed, then by the user. It is delivered in the first block's pull request and freezes when the lot's last block
+   merges (`agents/writing.md`). A lot whose subject is this process writes its ADR and no separate spec.
+3. **Act.** One block, in a teammate the lead spawns from `main` once the previous pull request has merged; one
+   teammate lives at a time. Its brief points at the block's row in the spec, the spec, `AGENTS.md`, the branch name
+   and the report shape under Integrate, and restates nothing. Strict TDD as `agents/engineering.md` states it. An
+   adjacent defect found here takes one of the three tiers under Scope, and **tier 2 stops the teammate**: it sends the
+   question to `main`, which the operator reads, and ends its turn. The operator's answer reaches it through the lead,
+   by name and verbatim; the lead never answers a tier-2 question itself. A blocker takes the same path, a denied
+   permission included, which is never routed through the lead. The teammate speaks only when it stops: tier-2
+   question, blocker, pull request ready.
+4. **Verify, entirely on the local branch. No pull request exists yet.** The teammate runs the full gate. **On the last
+   code block of the lot, it writes the handoff first**, from the bodies of the lot's merged pull requests
+   (`gh pr view`) and its own block, then reports. The lead dispatches the holistic review
+   (`agents/reviews/holistic.md`) over the whole lot, `git diff <lot base>..<that block's head>`, merged blocks
+   included: it reads the handoff, its findings against the current block go back to its teammate, and the rest
+   become the closing block, the lot's last, with its own pull request. Tier Direct skips it.
+5. **Integrate.** The teammate pushes, opens the pull request as a draft, waits for continuous integration, marks it
+   ready and sends the link to `main`. The pull request's body is the block's report, in five parts: evidence (gate,
+   continuous integration, the diff against the budget), tier-1 fixes, tier-2 questions with their answers, pitfalls,
+   departures from the block table. It is merged only after the human has reviewed it (rebase only, no local-merge
+   exemption), approval never assumed. **A red run, or a change the human asks for, returns the block to Verify**: the
+   lead forwards it by name, the teammate commits the fix, re-runs the gate and reports ready again. On the operator's
+   "merged", the lead stops the teammate by name and never messages it again, brings the shared working tree back to
+   `main` (`git switch main && git pull --ff-only && git branch -d <branch>`), and the next block starts from `main`.
 6. **Wrap.** Once per lot. The first half is the closing block: (a) the holistic findings fixed, each named in the
    handoff with its exit, and the count of those against an already merged block stated, that number being what series
    costs in rework; (b) the backlog reconciled, an item closed by a block having been deleted in that block's own pull
-   request; (c) the handoff in `docs/handoffs/<ISO date> - handoff - <context>.md`, written in the last code block and
-   corrected here: current state, what was built, pitfalls, what is not validated, next step. The second half runs
-   after that pull request merges: (d) tag if the spec called for a release; (e) report what was done and the friction
-   points, and every tier-2 question asked with the answer it got. That report is the input to Improve.
+   request; (c) the handoff in `docs/handoffs/<ISO date> - handoff - <context>.md`, written in the last code block from
+   the lot's pull requests and corrected here: current state, what was built, pitfalls, what is not validated, next
+   step. The second half runs after that pull request merges: (d) tag if the spec called for a release; (e) report
+   what was done and the friction points, and every tier-2 question asked with the answer it got. That report is the
+   input to Improve.
 
 ## The backlog
 

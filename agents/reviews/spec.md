@@ -1,7 +1,8 @@
 # Review mandate: specification
 
-**Artefact: a specification**, block table included. Run once, in a fresh subagent, before the
-operator reads it; the findings are closed in the document before that reading.
+**Artefact: a specification**, block table included. Run once, in a fresh subagent the lead
+dispatches, before the operator reads it; the findings are closed in the document before that
+reading.
 
 You judge two things and settle a third. What the document **claims to be true**, because a design
 derived from a false premise is wrong in the most expensive way, planned around before anyone

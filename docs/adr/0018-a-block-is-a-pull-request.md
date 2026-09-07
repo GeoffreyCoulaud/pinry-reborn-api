@@ -4,8 +4,10 @@ Status: Accepted; decision 8 is amended by `docs/adr/0019-review-before-the-pull
 counts: the placement of the two reviews, which move off the pull request and onto the branch, and
 two of its cuts to the block mandate, branch coverage and commit-range pinning, which are restored.
 Then by `docs/adr/0020-two-reviews-and-an-inline-act.md`: decision 4 loses its dispatch exemption,
-and decision 8's block review is removed, its three spec angles becoming one review. Decisions 1 to
-3 and 5 to 7 stand as written.
+and decision 8's block review is removed, its three spec angles becoming one review. Then by
+`docs/adr/0023-act-in-a-teammate-per-block.md`: decision 4's inline Act moves to a named teammate
+per block in tier Spec, and the consequence on the session boundary is corrected. Decisions 1 to 3
+and 5 to 7 stand as written.
 Date: 2026-09-04
 Amends: `docs/adr/0014-review-budget-upstream.md`, whose block review this keeps, whose plan pass
 this folds into the spec pass, and whose spec pass this cuts from six angles to three.

@@ -3,7 +3,8 @@
 **Artefact: a whole lot**, from its base to the head of its last code block, after that block's
 gate has passed and its handoff is written. The earlier blocks are on `main`; the last is on its
 branch, and nothing is pushed for it until your findings are closed. Run once per lot in tier Spec,
-in a fresh subagent. **Your findings become the lot's closing block**, with its own pull request: a
+in a fresh subagent the lead dispatches. **Your findings become the lot's closing block**, with its
+own pull request: a
 finding against a merged block is still a finding, and the handoff counts it.
 
 Each pull request was read alone, by the human. Your value is what that reading cannot see: what
