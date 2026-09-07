@@ -9,6 +9,26 @@ class ImportStateMergedOutsideTransactionTest {
     private val rule = ImportStateMergedOutsideTransaction(Config.empty)
 
     @Test
+    fun `Given a save handed to a fence as its write, Then nothing is reported`() {
+        // Given: the generic fence opens the transaction, and the write is a lambda so the rule sees
+        // a call; a callable reference would leave its sight
+        val code =
+            """
+            internal fun Repo.saveFenced(runner: TransactionRunner, id: UUID, held: (Row) -> Boolean) =
+                runner.fenced({ findById(id) }, held, { it.copy(state = 2) }) { save(it) }
+
+            internal fun Repo.saveFencedOver(runner: TransactionRunner, id: UUID, held: (Row) -> Boolean) =
+                runner.fencedOver({ findById(id) }, held, { it.copy(state = 2) }) { save(it) }
+            """.trimIndent()
+
+        // When
+        val findings = rule.lint(code)
+
+        // Then
+        assertEquals(0, findings.size)
+    }
+
+    @Test
     fun `Given a state transition saved on a copy read elsewhere, Then it is reported`() {
         // Given: the shape every site of this defect took, a row read before the write and merged back
         val code =

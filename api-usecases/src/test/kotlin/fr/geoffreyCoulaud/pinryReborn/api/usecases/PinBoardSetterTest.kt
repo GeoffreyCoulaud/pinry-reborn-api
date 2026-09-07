@@ -2,6 +2,7 @@ package fr.geoffreyCoulaud.pinryReborn.api.usecases
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Board
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Tag
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.BoardRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.PinRepositoryInterface
@@ -10,6 +11,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinBoardSettingInv
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinBoardSettingPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinBoardSettingPinDoesNotExistError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinBoardSettingSoftDeletedPinError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.imports.PassthroughTransactionRunner
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
 import io.mockk.every
 import io.mockk.mockk
@@ -26,7 +28,12 @@ class PinBoardSetterTest {
     private val clockInstant = Instant.parse("2026-07-23T10:00:00Z")
     private val clock = mockk<Clock> { every { now() } returns clockInstant }
     private val useCase =
-        PinBoardSetter(pinRepository = pinRepository, boardRepository = boardRepository, clock = clock)
+        PinBoardSetter(
+            pinRepository = pinRepository,
+            boardRepository = boardRepository,
+            clock = clock,
+            transactionRunner = PassthroughTransactionRunner(),
+        )
 
     @Test
     fun `Given an owned active pin and valid owned boards, Then setBoards replaces the pin's boards`() {
@@ -213,4 +220,55 @@ class PinBoardSetterTest {
         // Then
         assertEquals(emptyList<Board>(), result.boards)
     }
+
+    @Test
+    fun `Given a pin recycled between the read and the fence, Then setBoards refuses and saves nothing`() {
+        // Given: the first read answers an active pin, the fence's re-read a recycled one
+        val user = User(id = randomUUID(), name = "John Doe", createdAt = TestTime.now)
+        val board = Board(id = randomUUID(), author = user, name = "B", description = "",
+            createdAt = TestTime.now, updatedAt = TestTime.now)
+        val pin = pin(user)
+        every { pinRepository.findPinById(pin.id) } returnsMany listOf(pin, pin.copy(softDeletedAt = TestTime.now))
+        every { boardRepository.findActiveBoardById(board.id) } returns board
+        every { pinRepository.savePin(any()) } answers { firstArg() }
+
+        // When, Then
+        assertThrows<PinBoardSettingSoftDeletedPinError> {
+            useCase.setBoards(pinId = pin.id, boardIds = listOf(board.id), user = user)
+        }
+        verify(exactly = 0) { pinRepository.savePin(any()) }
+    }
+
+    @Test
+    fun `Given tags set between the read and the fence, Then the saved pin carries them`() {
+        // Given: the fence's re-read carries a tag the first read did not
+        val user = User(id = randomUUID(), name = "John Doe", createdAt = TestTime.now)
+        val board = Board(id = randomUUID(), author = user, name = "B", description = "",
+            createdAt = TestTime.now, updatedAt = TestTime.now)
+        val tag = Tag(id = randomUUID(), name = "tag", author = user, createdAt = TestTime.now)
+        val pin = pin(user)
+        every { pinRepository.findPinById(pin.id) } returnsMany listOf(pin, pin.copy(tags = listOf(tag)))
+        every { boardRepository.findActiveBoardById(board.id) } returns board
+        every { pinRepository.savePin(any()) } answers { firstArg() }
+
+        // When
+        val result = useCase.setBoards(pinId = pin.id, boardIds = listOf(board.id), user = user)
+
+        // Then
+        assertEquals(listOf(tag), result.tags)
+        assertEquals(listOf(board), result.boards)
+    }
+
+    private fun pin(author: User) =
+        Pin(
+            id = randomUUID(),
+            author = author,
+            sourceContextUrl = "https://example.com",
+            sourceMediaUrl = "https://example.com/img.jpg",
+            description = "A pin",
+            tags = emptyList(),
+            boards = emptyList(),
+            createdAt = TestTime.now,
+            updatedAt = TestTime.now,
+        )
 }

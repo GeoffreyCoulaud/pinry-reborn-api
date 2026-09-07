@@ -1,5 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.usecases
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Board
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Tag
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
@@ -8,9 +9,11 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.time.Clock
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPinDoesNotExistError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingSoftDeletedPinError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.imports.PassthroughTransactionRunner
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -22,7 +25,13 @@ class PinTaggerTest {
     private val pinRepository = mockk<PinRepositoryInterface>()
     private val clockInstant = Instant.parse("2026-07-23T10:00:00Z")
     private val clock = mockk<Clock> { every { now() } returns clockInstant }
-    private val useCase = PinTagger(tagCreator = tagCreator, pinRepository = pinRepository, clock = clock)
+    private val useCase =
+        PinTagger(
+            tagCreator = tagCreator,
+            pinRepository = pinRepository,
+            clock = clock,
+            transactionRunner = PassthroughTransactionRunner(),
+        )
 
     @Test
     fun `Setting tags replaces existing tags`() {
@@ -174,4 +183,54 @@ class PinTaggerTest {
             useCase.setTags(pinId = pin.id, tagNames = listOf("tag"), user = user)
         }
     }
+
+    @Test
+    fun `Given a pin recycled between the read and the fence, Then setTags refuses and saves nothing`() {
+        // Given: the first read answers an active pin, the fence's re-read a recycled one
+        val user = User(id = randomUUID(), name = "John Doe", createdAt = TestTime.now)
+        val pin = pin(user)
+        val tag = Tag(id = randomUUID(), name = "tag", author = user, createdAt = TestTime.now)
+        every { pinRepository.findPinById(pin.id) } returnsMany listOf(pin, pin.copy(softDeletedAt = TestTime.now))
+        every { tagCreator.findOrCreate(name = "tag", user = user) } returns tag
+        every { pinRepository.savePin(any()) } answers { firstArg() }
+
+        // When, Then
+        assertThrows<PinTaggingSoftDeletedPinError> {
+            useCase.setTags(pinId = pin.id, tagNames = listOf("tag"), user = user)
+        }
+        verify(exactly = 0) { pinRepository.savePin(any()) }
+    }
+
+    @Test
+    fun `Given boards set between the read and the fence, Then the saved pin carries them`() {
+        // Given: the fence's re-read carries a board the first read did not
+        val user = User(id = randomUUID(), name = "John Doe", createdAt = TestTime.now)
+        val board = Board(id = randomUUID(), author = user, name = "B", description = "",
+            createdAt = TestTime.now, updatedAt = TestTime.now)
+        val pin = pin(user)
+        val tag = Tag(id = randomUUID(), name = "tag", author = user, createdAt = TestTime.now)
+        every { pinRepository.findPinById(pin.id) } returnsMany listOf(pin, pin.copy(boards = listOf(board)))
+        every { tagCreator.findOrCreate(name = "tag", user = user) } returns tag
+        every { pinRepository.savePin(any()) } answers { firstArg() }
+
+        // When
+        val result = useCase.setTags(pinId = pin.id, tagNames = listOf("tag"), user = user)
+
+        // Then
+        assertEquals(listOf(board), result.boards)
+        assertEquals(listOf(tag), result.tags)
+    }
+
+    private fun pin(author: User) =
+        Pin(
+            id = randomUUID(),
+            author = author,
+            sourceContextUrl = "https://example.com",
+            sourceMediaUrl = "https://example.com/img.jpg",
+            description = "A pin",
+            tags = emptyList(),
+            boards = emptyList(),
+            createdAt = TestTime.now,
+            updatedAt = TestTime.now,
+        )
 }
