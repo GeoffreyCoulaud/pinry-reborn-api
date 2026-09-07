@@ -28,6 +28,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.QueryParam
+import org.eclipse.microprofile.openapi.annotations.Operation
 import org.jboss.resteasy.reactive.RestResponse
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder
 import java.net.URI
@@ -102,6 +103,12 @@ class PinController(
     @PUT
     @Authenticated
     @Path("/{pinId}/tags")
+    @Operation(
+        summary = "Replace the pin's tags",
+        description = "A tag name is an identity per author under an ASCII fold: `Landscape` and `landscape` " +
+            "are one tag, and the response carries the stored spelling, not the one sent. The fold is SQLite's " +
+            "collate nocase, A to Z only, so `ÉTÉ` and `été` stay two tags.",
+    )
     fun setTags(pinId: UUID, @Valid tagsDto: PinTagsInputDto): RestResponse<PinOutputDto> {
         val user = securityIdentity.getUser()
         return pinTagger

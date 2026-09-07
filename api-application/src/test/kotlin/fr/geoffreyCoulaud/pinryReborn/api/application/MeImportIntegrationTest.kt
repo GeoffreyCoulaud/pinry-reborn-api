@@ -353,6 +353,26 @@ class MeImportIntegrationTest : IntegrationTest() {
     }
 
     @Test
+    fun `Given a chunk sent with no offset, Then it lands at the start of the upload`() {
+        // Given: the parameter's default is the framework's, so only the wire can pin it
+        val auth = createAuthenticatedUser()
+        val importId = openImport(auth)
+        val bytes = "the first bytes".toByteArray()
+
+        // When: no offset at all
+        given()
+            .authenticatedAs(auth)
+            .contentType("application/octet-stream")
+            .body(bytes)
+            .`when`().put("/api/v1/me/imports/$importId/archive")
+            .then().statusCode(200)
+            .body("uploadedBytes", equalTo(bytes.size))
+
+        // Then
+        assertEquals(bytes.size.toLong(), importRepository.findById(importId)?.uploadedBytes)
+    }
+
+    @Test
     fun `Given a chunk carrying the upload past the maximum, Then it is refused and the length holds`() {
         // Given: the upload filled to imports.max_archive_bytes exactly
         val auth = createAuthenticatedUser()
