@@ -148,28 +148,30 @@ class UserDataExportBuilder(
      * a handle that cannot name the winner's bytes.
      */
     private fun publish(exportId: UUID, storageKey: String, staged: StagedFile) {
-        val published = transactionRunner.inTransaction { promoteIfStillPending(exportId, storageKey, staged) }
+        val published = promoteIfStillPending(exportId, storageKey, staged)
         // Best-effort, as everywhere else: a refusal is the correct outcome, and a temp file that
         // will not unlink must not turn it into a task failure (`docs/adr/0003`).
         if (!published) archiveStore.discardQuietly(staged)
     }
 
-    private fun promoteIfStillPending(exportId: UUID, storageKey: String, staged: StagedFile): Boolean {
-        val current = exportRepository.findById(exportId)?.takeIf(::stillPending) ?: return false
-        archiveStore.promote(staged, storageKey)
-        exportRepository.save(
-            current.copy(
-                state = UserDataExportState.READY,
-                completedAt = clock.now(),
-                expiresAt = clock.now().plus(retention),
-                byteSize = staged.byteSize,
-                sha256 = staged.contentHash,
-                mediaType = archiveStore.format.mediaType,
-                fileExtension = archiveStore.format.fileExtension,
-            ),
-        )
-        return true
-    }
+    // The function that saves is the function that opens the transaction: the fence is lexical, and so is the rule.
+    private fun promoteIfStillPending(exportId: UUID, storageKey: String, staged: StagedFile): Boolean =
+        transactionRunner.inTransaction {
+            val current = exportRepository.findById(exportId)?.takeIf(::stillPending) ?: return@inTransaction false
+            archiveStore.promote(staged, storageKey)
+            exportRepository.save(
+                current.copy(
+                    state = UserDataExportState.READY,
+                    completedAt = clock.now(),
+                    expiresAt = clock.now().plus(retention),
+                    byteSize = staged.byteSize,
+                    sha256 = staged.contentHash,
+                    mediaType = archiveStore.format.mediaType,
+                    fileExtension = archiveStore.format.fileExtension,
+                ),
+            )
+            true
+        }
 
     /**
      * Writes every archive entry for [export]/[user] into a freshly staged file, in the load-bearing

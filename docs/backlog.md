@@ -50,11 +50,6 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*
 Every item below is taken by `docs/specs/2026-09-05-p2-debt-elimination.md`; the branch on each item is the
 block that closes it.
 
-- **`PinModel` and `BoardModel` keep a dangerous read-then-write pair unfenced, and the `exports` package has no
-  static guard.** `docs/adr/0016-fence-by-compare-and-set.md`; `docs/specs/2026-08-15-export-row-fencing.md`
-  section 8 (the two models, and the seven entities that need no fence);
-  `docs/specs/2026-08-27-export-build-completion.md` section 8, "the `exports` package still has no static guard".
-  Branches `fix/p2-debt-fences`, `fix/p2-debt-fence-rule`.
 - **A task handler is never told it lost its lease**: `TaskContext.renewLease` is `() -> Unit` where the queue
   answers `Boolean`. Its reach, and why it was not done in the lot that found it:
   `docs/specs/2026-08-27-export-build-completion.md` section 8, first item. Branch `fix/p2-debt-lost-lease`.
@@ -66,9 +61,6 @@ block that closes it.
   Counting its own kind removes the coupling. Left open on purpose: the mechanism was never reproduced, and
   repairing an unexplained symptom hides the next one. *(Last sentence: reasoning is only here.)* Refused by
   `docs/specs/2026-09-05-p2-debt-elimination.md` D7; leaves with the handoff, branch `fix/p2-debt-lost-lease`.
-- **`ImportStateMergedOutsideTransaction` reads a construction as an insert**, so a row rebuilt from an earlier
-  read walks through untouched. The inversion is deliberate and the rule's own KDoc says why; open is whether a
-  second condition can tell a rebuild from an insert without type resolution. Branch `fix/p2-debt-fence-rule`.
 - **Measure what review costs and what it returns**, from the session transcripts: the share of
   spend that goes to reviews, and the findings per review by kind. Re-scoped from ADR 0014's
   re-measurement by `docs/adr/0018-a-block-is-a-pull-request.md`, which changed the regime without
@@ -80,6 +72,9 @@ block that closes it.
 
 Recorded where the decision lives. None is a copy: follow the pointer.
 
+- **`RowMergedOutsideTransaction` reads a construction as an insert**, so a row rebuilt field by field
+  from an earlier read walks through it. The rule's KDoc, "Three limits, each accepted";
+  `docs/specs/2026-09-05-p2-debt-elimination.md` D8.
 - **Soft-delete read isolation leaves residuals.**
   `docs/adr/0008-structural-soft-delete-read-isolation.md`, and
   `docs/specs/2026-07-29-single-representation-soft-delete.md` section 4.6.

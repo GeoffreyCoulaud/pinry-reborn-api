@@ -45,7 +45,7 @@ class UserDataExportRequester(
 ) {
     fun request(user: User, factor: String): UserDataExport {
         reauthenticator.reauthenticate(user, factor)
-        val (export, supersededKey) = transactionRunner.inTransaction { createPending(user) }
+        val (export, supersededKey) = createPending(user)
         // Outside the transaction on purpose: deleting inside means a later rollback leaves a READY
         // row pointing at bytes that no longer exist, which serves a 500 instead of a clean error.
         // Best-effort: the transaction has committed, so a disk failure here must not 500 a request
@@ -54,27 +54,29 @@ class UserDataExportRequester(
         return export
     }
 
-    private fun createPending(user: User): Pair<UserDataExport, String?> {
-        val now = clock.now()
-        if (repository.findPendingForUser(user.id) != null) throw ExportAlreadyInProgressError()
-        val last = repository.findLastRequestedAtForUser(user.id)
-        val earliest = now.minus(minimumInterval)
-        if (last != null && last.isAfter(earliest)) {
-            throw ExportTooSoonError(ThrottledError.wholeSecondsBetween(earliest, last))
+    // The function that saves is the function that opens the transaction: the fence is lexical, and so is the rule.
+    private fun createPending(user: User): Pair<UserDataExport, String?> =
+        transactionRunner.inTransaction {
+            val now = clock.now()
+            if (repository.findPendingForUser(user.id) != null) throw ExportAlreadyInProgressError()
+            val last = repository.findLastRequestedAtForUser(user.id)
+            val earliest = now.minus(minimumInterval)
+            if (last != null && last.isAfter(earliest)) {
+                throw ExportTooSoonError(ThrottledError.wholeSecondsBetween(earliest, last))
+            }
+            val ready = repository.findReadyForUser(user.id)
+            // The key stays: a delete that fails leaves the residue named by the only column pass 3 of
+            // the sweep can select on. Nulling it hid the bytes from every sweep (spec section 2.4).
+            ready?.let { repository.save(it.copy(state = UserDataExportState.SUPERSEDED)) }
+            val export = savePending(user, now)
+            val task =
+                enqueueTask.enqueue(
+                    kind = UserDataExportTask.KIND,
+                    payload = export.id.toString(),
+                    maxAttempts = UserDataExportTask.MAX_ATTEMPTS,
+                )
+            repository.save(export.copy(taskId = task.id)) to ready?.storageKey
         }
-        val ready = repository.findReadyForUser(user.id)
-        // The key stays: a delete that fails leaves the residue named by the only column pass 3 of
-        // the sweep can select on. Nulling it hid the bytes from every sweep (spec section 2.4).
-        ready?.let { repository.save(it.copy(state = UserDataExportState.SUPERSEDED)) }
-        val export = savePending(user, now)
-        val task =
-            enqueueTask.enqueue(
-                kind = UserDataExportTask.KIND,
-                payload = export.id.toString(),
-                maxAttempts = UserDataExportTask.MAX_ATTEMPTS,
-            )
-        return repository.save(export.copy(taskId = task.id)) to ready?.storageKey
-    }
 
     /**
      * The `findPendingForUser` check above handles the ordinary case, but it loses the race between

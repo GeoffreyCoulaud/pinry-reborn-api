@@ -58,12 +58,7 @@ class SetPinImage(
 
         val imageId = randomUUID()
         val storageKey = "originals/${requester.id}/$pinId/$imageId.${probeResult.format.extension}"
-        val image = Image(
-            id = imageId, pinId = pinId, mimeType = probeResult.format.mimeType,
-            width = probeResult.width, height = probeResult.height, animated = probeResult.animated,
-            byteSize = staged.byteSize, contentHash = staged.contentHash, storageKey = storageKey,
-            createdAt = clock.now(),
-        )
+        val createdAt = clock.now()
         val existing = imageRepository.findByPinId(pinId)
         // Promote/save can fail for many reasons: an I/O failure during promote (disk full,
         // permission denied -- FilesystemImageStore.promote throws java.io.IOException, a
@@ -75,7 +70,14 @@ class SetPinImage(
         @Suppress("TooGenericExceptionCaught")
         val saved = try {
             imageStore.promote(staged, storageKey)
-            imageRepository.save(image)
+            imageRepository.save(
+                Image(
+                    id = imageId, pinId = pinId, mimeType = probeResult.format.mimeType,
+                    width = probeResult.width, height = probeResult.height, animated = probeResult.animated,
+                    byteSize = staged.byteSize, contentHash = staged.contentHash, storageKey = storageKey,
+                    createdAt = createdAt,
+                ),
+            )
         } catch (e: Exception) {
             imageStore.discardQuietly(staged)
             // Best-effort: a cleanup failure here must not mask `e`, which is the cause the caller

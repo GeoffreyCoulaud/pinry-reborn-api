@@ -32,13 +32,11 @@ class UserCreator(
             user
         }
 
-    private fun saveUser(name: String): User {
-        val user = User(id = UUID.randomUUID(), name = name.trim(), createdAt = clock.now())
-        // The index is the sole authority on the name being free, case and tombstones included: no read here.
-        return try {
-            userRepository.saveUser(user)
+    // The index is the sole authority on the name being free, case and tombstones included: no read here.
+    private fun saveUser(name: String): User =
+        try {
+            userRepository.saveUser(User(id = UUID.randomUUID(), name = name.trim(), createdAt = clock.now()))
         } catch (error: UsernameAlreadyTakenException) {
             throw UsernameAlreadyTakenError(error)
         }
-    }
 }

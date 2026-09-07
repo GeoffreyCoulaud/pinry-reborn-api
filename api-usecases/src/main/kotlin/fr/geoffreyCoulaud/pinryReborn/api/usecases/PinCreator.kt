@@ -23,17 +23,18 @@ class PinCreator(
 
         val resolvedTags = tags.map { tagCreator.findOrCreate(name = it, user = author) }
         val now = clock.now()
-        val pin = Pin(
-            id = randomUUID(),
-            author = author,
-            sourceContextUrl = sourceContextUrl,
-            sourceMediaUrl = sourceMediaUrl,
-            description = description,
-            tags = resolvedTags,
-            boards = emptyList(),
-            createdAt = now,
-            updatedAt = now,
+        return pinRepository.savePin(
+            Pin(
+                id = randomUUID(),
+                author = author,
+                sourceContextUrl = sourceContextUrl,
+                sourceMediaUrl = sourceMediaUrl,
+                description = description,
+                tags = resolvedTags,
+                boards = emptyList(),
+                createdAt = now,
+                updatedAt = now,
+            ),
         )
-        return pinRepository.savePin(pin)
     }
 }
