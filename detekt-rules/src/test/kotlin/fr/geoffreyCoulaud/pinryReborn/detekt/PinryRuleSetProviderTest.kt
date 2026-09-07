@@ -29,8 +29,8 @@ class PinryRuleSetProviderTest {
             listOf(
                 "CommentCarriesDocumentation",
                 "DatabaseStaticFacadeCall",
-                "RowMergedOutsideTransaction",
                 "QueryBeanConstructedByQualifiedName",
+                "RowMergedOutsideTransaction",
                 "SoftDeleteStateFilteredOutsideQueries",
                 "WallClockRead",
             ),

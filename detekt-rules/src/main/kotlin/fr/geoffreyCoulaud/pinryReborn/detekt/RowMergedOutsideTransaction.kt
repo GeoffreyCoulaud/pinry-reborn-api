@@ -11,45 +11,53 @@ import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
- * A state transition is decided on the row as it is, inside the transaction that writes it.
+ * A row is written inside the transaction that read it.
  *
  * `Persistor.merge` writes every column and only `TaskModel` carries a version, so saving a row read
  * earlier restores that row's whole state, including whatever another actor committed in between. The
- * import row is written from two directions at once, a request and a worker, and this lot found nine
- * sites of that one defect before making the read and the write a single fenced pair.
+ * import lot found nine sites of that one defect before making the read and the write a single fenced
+ * pair; the P2 lot found three more on pins and boards (`docs/specs/2026-09-05-p2-debt-elimination.md`,
+ * 4.6) and put one generic fence under every feature (`usecases/Fences.kt`).
  *
  * ## Reach
  *
- * The test is **inverted**, and this is the rule's whole shape: a save is reported unless its argument
- * is a construction. An insert is legal because a fresh row has no earlier state to restore; everything
- * else names a row that was read somewhere the transaction does not cover. Chasing the shapes that do
- * merge is what the first version tried, keying on a `copy` call written where the save is, and a named
- * local, a scoping function around the copy or one around the save all walked past it.
+ * The test is **inverted**, and this is the rule's whole shape: a `save*` handed one argument is
+ * reported unless that argument is a construction. An insert is legal because a fresh row has no
+ * earlier state to restore; everything else names a row that was read somewhere the transaction does
+ * not cover. Chasing the shapes that do merge is what the first version tried, keying on a `copy` call
+ * written where the save is, and a named local, a scoping function around the copy or one around the
+ * save all walked past it. A save taking two arguments (`saveSessionToken(token, hash)`) names no row
+ * that was read, and is not the shape.
  *
  * A construction is told from a call by its name starting upper case, Kotlin's own convention, since
- * this rule set runs without type resolution. So does the rest: `save` and `inTransaction` are
- * spellings, not resolved members. The scope is set in `detekt.yml`, by path, over the import use
- * cases; the exports took the same fence by hand without this rule seeing them
- * (`docs/adr/0016-fence-by-compare-and-set.md`), and widening the filter is the open half of the
- * backlog item. **The message therefore names no helper**: there are two `saveFenced` now, one per
- * feature, and naming either would be wrong advice from the other.
+ * this rule set runs without type resolution. So does the rest: `save*`, `inTransaction`, `fenced` and
+ * `fencedOver` are spellings, not resolved members, and a function named `fenced` elsewhere is taken
+ * for the helper. The scope is set in `detekt.yml`, by path, over every use case.
  *
- * Two boundaries follow. A row built somewhere else and handed over through a property is reported all
- * the same (`imageRepository.save(created.image)` in `UserDataImportRunner`, suppressed inline with its
- * reason): the rule cannot see where that value came from, and the answer that keeps its reach is to
- * report and let the site say why.
+ * ## Three limits, each accepted
  *
- * The second is the one to know. The rule sees where the write is, not where the read was, so a row
- * read outside and saved inside a transaction passes it: opening a transaction around a row taken
- * before it changes nothing about what the merge restores. That half is a behaviour, and it is held by
- * behaviour tests, whose transaction fake answers a read taken outside one with a cancelled row
- * (`UserDataImportRunnerTest`, `UserDataImportCancellerTest`). This rule is the other half: it fails
- * the build on a writer that never opened a transaction at all, which is the shape every one of the
- * nine sites took.
+ * **A construction is an insert to the rule, whatever it rebuilds.** A row rebuilt field by field from
+ * an earlier read, `Pin(id = old.id, ...)`, is a construction here and a merge to the database. No
+ * lexical criterion separates the two; type resolution would, at a cost on every gate for a shape
+ * nobody writes here (spec D8, `docs/backlog.md` Known limits).
  *
- * None of them is left, so the rule holds no current violation open: every import-row write now goes
- * through `saveFenced` or `saveFencedOver`, and the completer's hand-over opens its own block. What it
- * guards is the next writer added to this package, which is why it stays after the fences landed.
+ * **A `save*` passed as a callable reference is outside its sight**, `::save` being no call the rule
+ * visits. The four `saveFenced` delegations spell their write as a lambda, `{ save(it) }`, for that
+ * reason, and so must the next one.
+ *
+ * **The rule sees where the write is, not where the read was.** A row read outside and saved inside a
+ * transaction passes it: opening a transaction around a row taken before it changes nothing about
+ * what the merge restores. That half is a behaviour, held by behaviour tests whose transaction fake
+ * answers a read taken outside one with a cancelled row (`UserDataImportRunnerTest`,
+ * `UserDataImportCancellerTest`), and by the pin and board sites' cases, whose fence re-reads a
+ * recycled row. This rule is the other half: it fails the build on a writer that never opened a
+ * transaction at all, which is the shape every one of the twelve sites took.
+ *
+ * A row built somewhere else and handed over through a property is reported all the same
+ * (`imageRepository.save(created.image)` in `UserDataImportRunner`, suppressed inline with its reason):
+ * the rule cannot see where that value came from, and the answer that keeps its reach is to report and
+ * let the site say why. That suppression is the rule's only one, and the function that saves is the
+ * function that opens the transaction everywhere else, which is what keeps the fence lexical.
  */
 class RowMergedOutsideTransaction(
     config: Config,
@@ -70,10 +78,11 @@ class RowMergedOutsideTransaction(
         )
     }
 
-    /** A `save` handed one thing that is not a fresh row, which is every way of merging an old one. */
+    /** A `save*` handed one thing that is not a fresh row, which is every way of merging an old one. */
     private fun KtCallExpression.mergesARowReadElsewhere(): Boolean {
         val argument = valueArguments.singleOrNull() ?: return false
-        return calleeExpression.endsOnName() == SAVE && !argument.getArgumentExpression().constructsARow()
+        return SAVE.containsMatchIn(calleeExpression.endsOnName()) &&
+            !argument.getArgumentExpression().constructsARow()
     }
 
     /** Upper case is Kotlin's own mark of a constructor, and the only one available without types. */
@@ -89,7 +98,8 @@ class RowMergedOutsideTransaction(
         parents.filterIsInstance<KtCallExpression>().any { it.calleeExpression.endsOnName() in BOUNDARIES }
 
     private companion object {
-        private const val SAVE = "save"
+        /** `save`, `savePin`, `saveBoard`, `saveTag`, `saveUser`: every repository write starts so. */
+        private val SAVE = Regex("^save")
 
         /**
          * `TransactionRunner`'s member and the two generic fences of `usecases/Fences.kt` that open it: a

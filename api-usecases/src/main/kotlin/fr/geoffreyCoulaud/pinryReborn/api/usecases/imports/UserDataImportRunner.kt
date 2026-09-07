@@ -388,16 +388,17 @@ class UserDataImportRunner(
     private fun createBoard(user: User, board: ImportedBoard, clamp: ImportInstantClamp, tally: MetadataTally) {
         val createdAt = clamp.clamp(board.createdAt)
         val created =
-            Board(
-                id = randomUUID(),
-                author = user,
-                name = board.name,
-                description = board.description,
-                createdAt = createdAt,
-                updatedAt = clamp.clampUpdate(board.updatedAt, createdAt),
-                softDeletedAt = board.deletedAt?.let { clamp.clamp(it) },
+            boardRepository.saveBoard(
+                Board(
+                    id = randomUUID(),
+                    author = user,
+                    name = board.name,
+                    description = board.description,
+                    createdAt = createdAt,
+                    updatedAt = clamp.clampUpdate(board.updatedAt, createdAt),
+                    softDeletedAt = board.deletedAt?.let { clamp.clamp(it) },
+                ),
             )
-        boardRepository.saveBoard(created)
         if (created.softDeletedAt != null) tally.recycled += created.id
         tally.created++
     }
