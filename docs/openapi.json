@@ -1640,14 +1640,14 @@
           }
         }, {
           "description" : "Where this chunk starts. Absent means the start of the upload.",
+          "required" : false,
           "name" : "offset",
           "in" : "query",
           "schema" : {
             "type" : "integer",
             "format" : "int64",
             "default" : 0
-          },
-          "required" : true
+          }
         } ],
         "requestBody" : {
           "content" : {

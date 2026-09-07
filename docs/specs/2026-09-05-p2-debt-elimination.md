@@ -538,7 +538,11 @@ Each names the output that fails it.
   description states the fold and its reach, A to Z, without naming the collation that implements
   it; section 4.4's "its limit" sentence is read the same way.)*
 - A16. `jq -r '.paths["/api/v1/me/imports/{id}/archive"].put.parameters[] | select(.name=="offset")
-  | .schema.default' docs/openapi.json` prints `0`; today it prints `null`.
+  | .schema.default' docs/openapi.json` prints `0`; today it prints `null`. *(Corrected in block 10, a
+  holistic finding: the same selection's `.required` prints `false` or `null`. Block 5's
+  `@DefaultValue` on a primitive let SmallRye publish `required: true`, an optional parameter made
+  required, which `agents/engineering.md` names a breaking change; `@Parameter(required = false)`
+  undoes it.)*
 
 **Block 6**
 
@@ -683,8 +687,14 @@ Each names how a reader would notice if it changed anyway.
   `docs/specs/2026-08-15-export-row-fencing.md` section 8 named for the two-attempts race, is not
   taken: the promote inside the publishing fence made the race harmless, and this lot adds no column.
   Noticed by: `git diff main -- EbeanTaskQueue.kt` touching only the comment at lines 108-111, and
-  `UserDataExportModel` gaining no column.
+  `UserDataExportModel` gaining no column. *(Corrected in block 10: block 3's `reapExpired(limit)` sits
+  in the same file, so the diff touches that method and the comment, and nothing else; the holistic
+  review read it so.)*
 - **The `PT6H` grace.** Unchanged (D3). Noticed by: `grep -c PT6H ExportsConfig.kt` still `2`.
+- *(Added in block 10, a holistic finding.)* **A store that refuses every delete turns a sweep into
+  a full scan.** Under D5 a refused row is behind the cursor, so a sweep reads past every refused
+  row, one logged error each, until the selection empties: a page of 500 becomes the whole table.
+  Accepted; `SweepPages.MAX_PAGES` bounds it and stops loudly a selection that does not advance.
 - **`findPending(limit)`'s head.** A `PENDING` row past the grace whose task is live stays at the
   head of pass 1 forever. The partial index allows one such row per user, so the head is bounded by
   the number of users with a live build, and the page is 500. Not paged, and said here so the

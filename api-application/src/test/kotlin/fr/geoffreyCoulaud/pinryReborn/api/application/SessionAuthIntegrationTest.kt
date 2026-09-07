@@ -152,6 +152,15 @@ class SessionAuthIntegrationTest : IntegrationTest() {
     }
 
     @Test
+    fun `Given a path value the framework cannot read, Then the response is 404 UNKNOWN_ROUTE saying so`() {
+        // Given: JAX-RS 3.2 makes a path parameter it cannot convert a NotFoundException carrying the cause
+        val auth = createAuthenticatedUser()
+        given().authenticatedAs(auth).get("/api/v1/pins/not-a-uuid")
+            .then().statusCode(404).contentType(PROBLEM_JSON).body("code", equalTo("UNKNOWN_ROUTE"))
+            .body("detail", equalTo("A path or query value could not be read"))
+    }
+
+    @Test
     fun `Given a method the path does not serve, Then the response is 405 METHOD_NOT_ALLOWED`() {
         given().delete("/api/v1/pins")
             .then().statusCode(405).contentType(PROBLEM_JSON).body("code", equalTo("METHOD_NOT_ALLOWED"))

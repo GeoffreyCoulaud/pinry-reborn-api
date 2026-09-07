@@ -10,8 +10,8 @@ class PinryRuleSetProviderTest {
      * Three of the six rules earn an activation red against the real sources, which is what proves
      * they are loaded. `QueryBeanConstructedByQualifiedName`, `DatabaseStaticFacadeCall` and
      * `RowMergedOutsideTransaction` cannot: no production source constructs a query bean by
-     * qualified name, calls `io.ebean.DB`, or merges an import state transition outside its
-     * transaction unsuppressed, so each reports nothing whether it is registered or absent from the
+     * qualified name, calls `io.ebean.DB`, or merges a row outside its transaction unsuppressed, so
+     * each reports nothing whether it is registered or absent from the
      * rule set entirely, and detekt fails the build for neither. Their registration is asserted here
      * or nowhere.
      */

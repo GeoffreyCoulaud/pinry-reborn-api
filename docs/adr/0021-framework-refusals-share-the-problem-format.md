@@ -68,7 +68,12 @@ response at all. Neither reaches a mapper.
    The two body rows are one row of the specification split by the first fact above: one mapper on
    the class the reader rethrows, and the umbrella reading its cause for the classes it wraps.
    `InvalidDefinitionException`, rethrown too, is a definition problem on the server's side and lands
-   on the last row.
+   on the last row. *(Corrected in block 10, a holistic finding: it lands on the `IOException` row,
+   since `JsonProcessingException` extends `JacksonException` extends `java.io.IOException` and
+   resolution takes the nearest class. That row therefore logs by whose failure it is: a
+   `JacksonException`, definition or serialisation, at ERROR with its stack; an `EOFException` or
+   `ClosedChannelException`, the client leaving, at DEBUG as Quarkus did; any other `IOException`, a
+   disk among them, at WARN with its stack, where DEBUG hid a full disk.)*
 
 2. **Two tables.** `BaseErrorMapper.statusFor` maps a use case's `ErrorCode`. `FrameworkErrorCode`,
    in the `mappers` package, holds every code the presentation layer mints itself: the seven above and

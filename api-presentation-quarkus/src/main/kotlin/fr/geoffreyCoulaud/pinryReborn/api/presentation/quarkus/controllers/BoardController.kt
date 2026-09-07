@@ -13,6 +13,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.BoardMapp
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.ProblemResponses.PROBLEM_JSON_MEDIA_TYPE as PROBLEM_JSON
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.serialization.Base64Json
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.BoardCreator
@@ -153,7 +154,6 @@ class BoardController(
     companion object {
         const val DEFAULT_PAGE_SIZE = 20
 
-        private const val PROBLEM_JSON = "application/problem+json"
         private const val BOARD_NAME_ALREADY_EXISTS =
             "BOARD_NAME_ALREADY_EXISTS: this account already holds a board of that name, ASCII case " +
                 "folded, and a recycled board holds its name until the bin is emptied"
