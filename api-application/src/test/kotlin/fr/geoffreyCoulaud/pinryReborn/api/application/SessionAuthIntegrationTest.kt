@@ -6,8 +6,12 @@ import io.ebean.DB
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.matchesPattern
+import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -130,5 +134,64 @@ class SessionAuthIntegrationTest : IntegrationTest() {
 
         given().authenticatedAs(auth).get("/api/v1/me")
             .then().statusCode(401).body("code", org.hamcrest.Matchers.equalTo("SESSION_EXPIRED"))
+    }
+
+    // What the framework refuses before a use case runs shares the problem format: one case per row of
+    // docs/specs/2026-09-05-p2-debt-elimination.md section 4.5.
+
+    @Test
+    fun `Given a body that is not JSON, Then POST sessions returns 400 MALFORMED_BODY`() {
+        given().contentType(ContentType.JSON).body("{not json").post("/api/v1/sessions")
+            .then().statusCode(400).contentType(PROBLEM_JSON).body("code", equalTo("MALFORMED_BODY"))
+    }
+
+    @Test
+    fun `Given a path no resource serves, Then the response is 404 UNKNOWN_ROUTE`() {
+        given().get("/api/v1/nowhere")
+            .then().statusCode(404).contentType(PROBLEM_JSON).body("code", equalTo("UNKNOWN_ROUTE"))
+    }
+
+    @Test
+    fun `Given a method the path does not serve, Then the response is 405 METHOD_NOT_ALLOWED`() {
+        given().delete("/api/v1/pins")
+            .then().statusCode(405).contentType(PROBLEM_JSON).body("code", equalTo("METHOD_NOT_ALLOWED"))
+    }
+
+    @Test
+    fun `Given a content type the route does not read, Then the response is 415 UNSUPPORTED_MEDIA_TYPE`() {
+        given().contentType(ContentType.TEXT).body("name=x").post("/api/v1/sessions")
+            .then().statusCode(415).contentType(PROBLEM_JSON).body("code", equalTo("UNSUPPORTED_MEDIA_TYPE"))
+    }
+
+    @Test
+    fun `Given an Accept the route cannot produce, Then the response is 406 NOT_ACCEPTABLE`() {
+        given().accept(ContentType.TEXT).get("/test/failures/json-only")
+            .then().statusCode(406).contentType(PROBLEM_JSON).body("code", equalTo("NOT_ACCEPTABLE"))
+    }
+
+    @Test
+    fun `Given a WebApplicationException no mapper names, Then the response keeps its status under HTTP_ERROR`() {
+        given().get("/test/failures/service-unavailable")
+            .then().statusCode(503).contentType(PROBLEM_JSON).body("code", equalTo("HTTP_ERROR"))
+    }
+
+    @Test
+    fun `Given an unmapped exception, Then the response is 500 INTERNAL_ERROR and tells nothing of it`() {
+        given().get("/test/failures/illegal-state")
+            .then().statusCode(500).contentType(PROBLEM_JSON)
+            .body("code", equalTo("INTERNAL_ERROR")).body("detail", nullValue())
+            .body(not(containsString(TestFailuresResource.MARKER)))
+    }
+
+    @Test
+    fun `Given an IOException, Then the response is 500 INTERNAL_ERROR and tells nothing of it`() {
+        given().get("/test/failures/io")
+            .then().statusCode(500).contentType(PROBLEM_JSON)
+            .body("code", equalTo("INTERNAL_ERROR")).body("detail", nullValue())
+            .body(not(containsString(TestFailuresResource.MARKER)))
+    }
+
+    private companion object {
+        const val PROBLEM_JSON = "application/problem+json"
     }
 }

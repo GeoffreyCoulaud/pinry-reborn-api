@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import jakarta.inject.Inject
+import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -43,7 +44,7 @@ class JsonBindingIntegrationTest : IntegrationTest() {
     fun `Given a null where a non-nullable property is expected, Then the request is refused naming it`() {
         // Given: `description` is a non-nullable String carrying no @NotBlank, so it is where the
         // Kotlin module changes what a client sees. The status was already 400 without the module,
-        // from Kotlin's constructor null check, but the body was empty.
+        // from Kotlin's constructor null check, but the refusal named nothing.
         val auth = createAuthenticatedUser()
 
         // When / Then
@@ -55,6 +56,8 @@ class JsonBindingIntegrationTest : IntegrationTest() {
             .post("/api/v1/boards")
             .then()
             .statusCode(400)
-            .body("attributeName", equalTo("description"))
+            .contentType("application/problem+json")
+            .body("code", equalTo("MALFORMED_BODY"))
+            .body("detail", containsString("description"))
     }
 }
