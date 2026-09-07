@@ -24,7 +24,7 @@ class PinryRuleSetProvider : RuleSetProvider {
                 ::WallClockRead,
                 ::DatabaseStaticFacadeCall,
                 ::CommentCarriesDocumentation,
-                ::ImportStateMergedOutsideTransaction,
+                ::RowMergedOutsideTransaction,
             ),
         )
 
