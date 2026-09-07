@@ -72,7 +72,8 @@ class FencesTest {
 
     @Test
     fun `Given a row the predicate refuses, Then fencedOver writes nothing and answers null`() {
-        val result = runner.fencedOver({ Row(active = false, version = 0) }, { it.active }, { it }) { written += it; it }
+        val refused = Row(active = false, version = 0)
+        val result = runner.fencedOver({ refused }, { it.active }, { it }) { written += it; it }
         assertNull(result)
         assertEquals(emptyList<Row>(), written)
     }

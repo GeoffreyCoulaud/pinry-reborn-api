@@ -8,6 +8,8 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.UserDataImportRepo
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.ImportDoesNotExistError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.ImportNotAwaitingArchiveError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.ImportPermissionError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.fenced
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.fencedOver
 import java.util.UUID
 
 /** The one existence-then-ownership check, so no use case can answer either question differently. */
@@ -29,33 +31,21 @@ internal fun UserDataImportRepositoryInterface.findAwaitingArchive(
         if (it.state != UserDataImportState.AWAITING_ARCHIVE) throw ImportNotAwaitingArchiveError()
     }
 
-/**
- * The one write of an import row two actors can reach: read and written in one transaction, since a
- * save of a copy read earlier restores every column that copy carried. A refused [held] answers null.
- */
+/** The import row's fence, a request and a worker both writing it. The write is a lambda for the rule's sake. */
 internal fun UserDataImportRepositoryInterface.saveFenced(
     transactionRunner: TransactionRunner,
     importId: UUID,
     held: (UserDataImport) -> Boolean,
     update: (UserDataImport) -> UserDataImport,
-): UserDataImport? =
-    transactionRunner.inTransaction {
-        findById(importId)?.takeIf(held)?.let { save(update(it)) }
-    }
+): UserDataImport? = transactionRunner.fenced({ findById(importId) }, held, update) { save(it) }
 
-/**
- * The same write, answering the row it replaced rather than the one it wrote: a caller whose release
- * depends on the phase reads it here, since the phase it saw before the fence may be one phase old.
- */
+/** The same fence answering the row it replaced: a caller whose release depends on the phase reads it here. */
 internal fun UserDataImportRepositoryInterface.saveFencedOver(
     transactionRunner: TransactionRunner,
     importId: UUID,
     held: (UserDataImport) -> Boolean,
     update: (UserDataImport) -> UserDataImport,
-): UserDataImport? =
-    transactionRunner.inTransaction {
-        findById(importId)?.takeIf(held)?.also { save(update(it)) }
-    }
+): UserDataImport? = transactionRunner.fencedOver({ findById(importId) }, held, update) { save(it) }
 
 /**
  * The fence the upload writes take (spec §6): their windows are wide, a chunk streaming to disk and a

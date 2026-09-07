@@ -3,6 +3,7 @@ package fr.geoffreyCoulaud.pinryReborn.api.usecases
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.PinRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.TransactionRunner
 import fr.geoffreyCoulaud.pinryReborn.api.domain.time.Clock
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.PinTaggingPinDoesNotExistError
@@ -15,6 +16,7 @@ class PinTagger(
     private val tagCreator: TagCreator,
     private val pinRepository: PinRepositoryInterface,
     private val clock: Clock,
+    private val transactionRunner: TransactionRunner,
 ) {
     fun setTags(
         pinId: UUID,
@@ -26,7 +28,14 @@ class PinTagger(
         if (pin.softDeletedAt != null) throw PinTaggingSoftDeletedPinError()
 
         val tags = tagNames.map { tagCreator.findOrCreate(name = it, user = user) }
-        val updatedPin = pin.copy(tags = tags, updatedAt = clock.now())
-        return pinRepository.savePin(updatedPin)
+        // The fence re-reads the pin, so a recycling or a setBoards landed since the read is kept, not restored.
+        return pinRepository.saveFenced(transactionRunner, pinId, held = ::activeOrRefused) {
+            it.copy(tags = tags, updatedAt = clock.now())
+        } ?: throw PinTaggingPinDoesNotExistError()
+    }
+
+    private fun activeOrRefused(pin: Pin): Boolean {
+        if (pin.softDeletedAt != null) throw PinTaggingSoftDeletedPinError()
+        return true
     }
 }
