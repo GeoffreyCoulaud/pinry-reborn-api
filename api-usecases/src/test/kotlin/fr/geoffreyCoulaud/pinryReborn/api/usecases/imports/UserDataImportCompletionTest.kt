@@ -2,11 +2,13 @@ package fr.geoffreyCoulaud.pinryReborn.api.usecases.imports
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.UserDataImportState
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.PermanentTaskException
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.TaskLeaseLostException
 import io.mockk.every
 import io.mockk.verify
 import java.io.IOException
 import java.util.zip.ZipException
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -97,6 +99,25 @@ internal class UserDataImportCompletionTest : UserDataImportRunnerFixtures() {
         assertEquals("IMPORT_FAILED", stored.failureCode)
         assertEquals(0, stored.processedPins)
         assertEquals(listOf(storageKey), deletedArchives)
+    }
+
+    @Test
+    fun `Given a lost lease on the last attempt, Then the row stays RUNNING under its run and the archive stays`() {
+        // Given: the heartbeat throws before the first pin, as TaskProcessor's does once the queue refuses
+        val source =
+            FakeArchiveSource(manifest = aManifest(), pins = listOf(TestLine(1, aPin())), media = everyMedium)
+        stubWalk(source)
+        stubDigest()
+        stubHashLookup()
+        stubArchiveRelease()
+
+        // When / Then: the net rethrows it before its FAILED arm, another attempt possibly holding the row
+        assertThrows(TaskLeaseLostException::class.java) {
+            runner.run(importId, isLastAttempt = true) { throw TaskLeaseLostException(importId) }
+        }
+        assertEquals(UserDataImportState.RUNNING, stored.state)
+        assertNotNull(stored.runToken)
+        assertEquals(emptyList<String>(), deletedArchives)
     }
 
     @Test
