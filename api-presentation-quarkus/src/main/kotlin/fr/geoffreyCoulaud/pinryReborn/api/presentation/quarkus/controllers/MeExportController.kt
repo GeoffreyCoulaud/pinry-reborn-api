@@ -59,8 +59,6 @@ class MeExportController(
         description = "Queued, not built: the archive is downloadable once the export reads READY. " +
             "Needs the reauthentication header.",
     )
-    // SmallRye reads the status off the return type, and a runtime ResponseBuilder carries none, so
-    // every status this class answers is declared by hand or published wrong (import spec section 7).
     @APIResponse(
         responseCode = "202",
         description = "Export requested and queued",
