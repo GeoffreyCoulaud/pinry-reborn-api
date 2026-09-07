@@ -4,6 +4,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.ImageDownloadRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.ImageRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.PinRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.TransactionRunner
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.ImagePermissionError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.ImagePinDoesNotExistError
 import jakarta.enterprise.context.ApplicationScoped
@@ -14,10 +15,14 @@ class ResolvePinImageState(
     private val pinRepository: PinRepositoryInterface,
     private val imageRepository: ImageRepositoryInterface,
     private val imageDownloadRepository: ImageDownloadRepositoryInterface,
+    private val transactionRunner: TransactionRunner,
 ) {
     fun resolve(pinId: UUID, requester: User): PinImageState {
         val pin = pinRepository.findPinById(pinId) ?: throw ImagePinDoesNotExistError()
         if (pin.author.id != requester.id) throw ImagePermissionError()
-        return PinImageState.derive(imageRepository.findByPinId(pinId), imageDownloadRepository.findByPinId(pinId))
+        // One snapshot for both reads: the swap commits the new image and the replacement's removal together.
+        return transactionRunner.inTransaction {
+            PinImageState.derive(imageRepository.findByPinId(pinId), imageDownloadRepository.findByPinId(pinId))
+        }
     }
 }
