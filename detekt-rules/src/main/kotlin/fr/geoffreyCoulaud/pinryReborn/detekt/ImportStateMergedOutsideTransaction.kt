@@ -86,13 +86,16 @@ class ImportStateMergedOutsideTransaction(
 
     /** Lexical, which is what the fence is: the read and the write are one pair or they are not. */
     private fun KtElement.insideATransaction(): Boolean =
-        parents.filterIsInstance<KtCallExpression>().any { it.calleeExpression.endsOnName() == TRANSACTION }
+        parents.filterIsInstance<KtCallExpression>().any { it.calleeExpression.endsOnName() in BOUNDARIES }
 
     private companion object {
         private const val SAVE = "save"
 
-        /** `TransactionRunner`'s single member, and this project's only transaction boundary. */
-        private const val TRANSACTION = "inTransaction"
+        /**
+         * `TransactionRunner`'s member and the two generic fences of `usecases/Fences.kt` that open it: a
+         * write handed to them as a lambda is inside. Spellings, not resolved members, like `save`.
+         */
+        private val BOUNDARIES = setOf("inTransaction", "fenced", "fencedOver")
 
         /** A callee with no name matches nothing here, which is the reading that reports it. */
         private val CONSTRUCTION = Regex("^\\p{Lu}")

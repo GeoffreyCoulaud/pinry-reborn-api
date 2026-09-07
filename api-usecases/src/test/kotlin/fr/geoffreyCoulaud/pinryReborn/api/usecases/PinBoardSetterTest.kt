@@ -240,6 +240,19 @@ class PinBoardSetterTest {
     }
 
     @Test
+    fun `Given a pin gone between the read and the fence, Then setBoards refuses it as absent`() {
+        // Given: the fence's re-read finds no row
+        val user = User(id = randomUUID(), name = "John Doe", createdAt = TestTime.now)
+        val pin = pin(user)
+        every { pinRepository.findPinById(pin.id) } returnsMany listOf(pin, null)
+
+        // When, Then
+        assertThrows<PinBoardSettingPinDoesNotExistError> {
+            useCase.setBoards(pinId = pin.id, boardIds = emptyList(), user = user)
+        }
+    }
+
+    @Test
     fun `Given tags set between the read and the fence, Then the saved pin carries them`() {
         // Given: the fence's re-read carries a tag the first read did not
         val user = User(id = randomUUID(), name = "John Doe", createdAt = TestTime.now)
