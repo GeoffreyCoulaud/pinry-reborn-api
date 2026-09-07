@@ -18,25 +18,20 @@ class AuthenticationFailedExceptionMapper : ExceptionMapper<AuthenticationFailed
 
     override fun toResponse(exception: AuthenticationFailedException): Response {
         val (code, detail) = describe(exception)
-        return problemResponse(
+        return ProblemResponses.problemResponse(
             status = Response.Status.UNAUTHORIZED,
             detail = detail,
             code = code,
             uriInfo = uriInfo,
-        ).header("WWW-Authenticate", WWW_AUTHENTICATE_BEARER).build()
+        ).header("WWW-Authenticate", ProblemResponses.WWW_AUTHENTICATE_BEARER).build()
     }
 
     // Cause-inspection lives here (not in a mapped subtype): a subtype of the final
     // AuthenticationFailedException never reached this chain at runtime (see BearerTokenIdentityProvider).
     private fun describe(exception: AuthenticationFailedException): Pair<String, String> =
         if (exception.cause is SessionTokenExpiredError) {
-            SESSION_EXPIRED_CODE to "Session expired"
+            FrameworkErrorCode.SESSION_EXPIRED.name to "Session expired"
         } else {
-            AUTHENTICATION_FAILED_CODE to "Authentication failed"
+            FrameworkErrorCode.AUTHENTICATION_FAILED.name to "Authentication failed"
         }
-
-    private companion object {
-        const val SESSION_EXPIRED_CODE = "SESSION_EXPIRED"
-        const val AUTHENTICATION_FAILED_CODE = "AUTHENTICATION_FAILED"
-    }
 }

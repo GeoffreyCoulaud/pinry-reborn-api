@@ -25,8 +25,14 @@ class BaseErrorMapper : ExceptionMapper<BaseError> {
         // The one refusal a client acts on with a number: it resumes from this length rather than
         // parsing it out of the sentence that also names it.
         val currentLength = (exception as? ImportChunkOffsetMismatchError)?.currentLength
-        val builder =
-            problemResponse(status, title, exception.message, exception.code.name, uriInfo, currentLength)
+        val builder = ProblemResponses.problemResponse(
+            status = status,
+            title = title,
+            detail = exception.message,
+            code = exception.code.name,
+            uriInfo = uriInfo,
+            currentLength = currentLength,
+        )
         if (exception is ThrottledError) {
             builder.header("Retry-After", exception.retryAfterSeconds)
         }

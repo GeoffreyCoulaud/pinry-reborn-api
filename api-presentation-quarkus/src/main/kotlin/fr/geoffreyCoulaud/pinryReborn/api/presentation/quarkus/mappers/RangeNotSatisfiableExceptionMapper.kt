@@ -17,14 +17,10 @@ class RangeNotSatisfiableExceptionMapper : ExceptionMapper<RangeNotSatisfiableEx
     lateinit var uriInfo: UriInfo
 
     override fun toResponse(exception: RangeNotSatisfiableException): Response =
-        problemResponse(
+        ProblemResponses.problemResponse(
             status = Response.Status.REQUESTED_RANGE_NOT_SATISFIABLE,
             detail = exception.message,
-            code = RANGE_NOT_SATISFIABLE_CODE,
+            code = FrameworkErrorCode.RANGE_NOT_SATISFIABLE.name,
             uriInfo = uriInfo,
         ).header("Content-Range", "bytes */${exception.totalSize}").build()
-
-    private companion object {
-        const val RANGE_NOT_SATISFIABLE_CODE = "RANGE_NOT_SATISFIABLE"
-    }
 }

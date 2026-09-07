@@ -15,10 +15,8 @@ class ConstraintViolationExceptionMapper : ExceptionMapper<ConstraintViolationEx
     override fun toResponse(exception: ConstraintViolationException): Response {
         val detail = exception.constraintViolations
             .joinToString(separator = "; ") { "${it.propertyPath}: ${it.message}" }
-        return problemResponse(Response.Status.BAD_REQUEST, detail, VALIDATION_ERROR_CODE, uriInfo).build()
-    }
-
-    companion object {
-        const val VALIDATION_ERROR_CODE = "VALIDATION_ERROR"
+        return ProblemResponses
+            .problemResponse(Response.Status.BAD_REQUEST, detail, FrameworkErrorCode.VALIDATION_ERROR.name, uriInfo)
+            .build()
     }
 }
