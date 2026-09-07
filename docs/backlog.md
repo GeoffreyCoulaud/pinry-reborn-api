@@ -12,7 +12,7 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*
   *Features* is the roadmap, unsequenced. A limit is not debt and is not counted as debt.
 - **Open work is grouped by priority**, not by module. `P0` = product decisions that shape the data model and
   the UI. `P1` = client ergonomics needed for the web UI and the browser extension. `P2` = operational debt
-  (not UI blockers). A priority may hold nothing; `P0` and `P2` hold nothing today.
+  (not UI blockers). A priority may hold nothing.
 - **An item holds in two lines**: the symptom and where it lives, plus a pointer to the dated document that
   carries the reasoning. Never a copy of that reasoning (`agents/writing.md`, Rules). The exception is an item
   whose reasoning was only ever written here, which keeps it: dated documents are append-only, so compressing
@@ -47,9 +47,7 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*
 
 ### P2: Operational debt
 
-`P2` holds nothing today: the lot of `docs/specs/2026-09-05-p2-debt-elimination.md` closed its
-twenty-three items, and `docs/handoffs/2026-09-05 - handoff - p2-debt-elimination.md` names each exit,
-the two refusals included.
+Nothing open.
 
 ## Known limits
 
