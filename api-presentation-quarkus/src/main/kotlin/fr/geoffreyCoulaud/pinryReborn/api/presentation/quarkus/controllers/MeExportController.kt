@@ -2,6 +2,7 @@ package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.ProblemDetail
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.UserDataExportListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.UserDataExportOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.http.ByteRange
@@ -25,7 +26,12 @@ import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.StreamingOutput
+import org.eclipse.microprofile.openapi.annotations.Operation
+import org.eclipse.microprofile.openapi.annotations.media.Content
+import org.eclipse.microprofile.openapi.annotations.media.Schema
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.jboss.resteasy.reactive.RestResponse
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder
 import java.io.InputStream
@@ -48,6 +54,44 @@ class MeExportController(
     private val securityIdentity: SecurityIdentity,
 ) {
     @POST
+    @Operation(
+        summary = "Request an export of the caller's data",
+        description = "Queued, not built: the archive is downloadable once the export reads READY. " +
+            "Needs the reauthentication header.",
+    )
+    // SmallRye reads the status off the return type, and a runtime ResponseBuilder carries none, so
+    // every status this class answers is declared by hand or published wrong (import spec section 7).
+    @APIResponse(
+        responseCode = "202",
+        description = "Export requested and queued",
+        content = [
+            Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = Schema(implementation = UserDataExportOutputDto::class),
+            ),
+        ],
+    )
+    @APIResponse(
+        responseCode = "400",
+        description = "UNSUPPORTED_REAUTHENTICATION_FACTOR: the reauthentication header names no password factor",
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "403",
+        description = "REAUTHENTICATION_FAILED: the reauthentication header is absent or its password is wrong",
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "409",
+        description = "EXPORT_ALREADY_IN_PROGRESS: this account already has a pending export",
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "429",
+        description = "EXPORT_TOO_SOON: the last request is inside exports.minimum_interval, and Retry-After " +
+            "names the wait",
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
     fun requestExport(
         @HeaderParam(ReauthenticationHeader.HEADER) reauthHeader: String?,
     ): RestResponse<UserDataExportOutputDto> {
@@ -58,6 +102,16 @@ class MeExportController(
     }
 
     @GET
+    @APIResponse(
+        responseCode = "200",
+        description = "One page of the caller's exports, every state included",
+        content = [
+            Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = Schema(implementation = UserDataExportListOutputDto::class),
+            ),
+        ],
+    )
     fun listExports(
         @QueryParam("cursor") @Base64Json cursorInput: CursorDto? = null,
         @QueryParam("pageSize") pageSizeInput: Int? = null,
@@ -70,6 +124,26 @@ class MeExportController(
 
     @GET
     @Path("/{id}")
+    @APIResponse(
+        responseCode = "200",
+        description = "The export's state and, once READY, its size, digest and expiry",
+        content = [
+            Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = Schema(implementation = UserDataExportOutputDto::class),
+            ),
+        ],
+    )
+    @APIResponse(
+        responseCode = "403",
+        description = EXPORT_INSUFFICIENT_PERMISSIONS,
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "404",
+        description = EXPORT_DOES_NOT_EXIST,
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
     fun getExport(id: UUID): RestResponse<UserDataExportOutputDto> {
         val user = securityIdentity.getUser()
         return RestResponse.ok(getter.get(user, id).toDto())
@@ -77,6 +151,45 @@ class MeExportController(
 
     @GET
     @Path("/{id}/download")
+    @Operation(
+        summary = "Download the archive",
+        description = "Whole, or one byte range through the Range header. ETag carries the archive's SHA-256.",
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "The whole archive",
+        content = [Content(mediaType = ARCHIVE_MEDIA_TYPE)],
+    )
+    @APIResponse(
+        responseCode = "206",
+        description = "The requested byte range, Content-Range set",
+        content = [Content(mediaType = ARCHIVE_MEDIA_TYPE)],
+    )
+    @APIResponse(
+        responseCode = "403",
+        description = EXPORT_INSUFFICIENT_PERMISSIONS,
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "404",
+        description = EXPORT_DOES_NOT_EXIST,
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "409",
+        description = "EXPORT_NOT_READY: the export is still pending or has failed",
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "410",
+        description = "EXPORT_GONE: the archive expired, was deleted or was superseded by a newer export",
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "416",
+        description = "RANGE_NOT_SATISFIABLE: the Range header names bytes past the archive's end",
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
     fun downloadExport(id: UUID, @HeaderParam("Range") rangeHeader: String?): RestResponse<StreamingOutput> {
         val user = securityIdentity.getUser()
         // Opened at 0 always: the size needed to parse the Range header is only known once the
@@ -92,6 +205,17 @@ class MeExportController(
 
     @DELETE
     @Path("/{id}")
+    @APIResponse(responseCode = "204", description = "Export deleted, its archive released")
+    @APIResponse(
+        responseCode = "403",
+        description = EXPORT_INSUFFICIENT_PERMISSIONS,
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
+    @APIResponse(
+        responseCode = "404",
+        description = EXPORT_DOES_NOT_EXIST,
+        content = [Content(mediaType = PROBLEM_JSON, schema = Schema(implementation = ProblemDetail::class))],
+    )
     fun deleteExport(id: UUID): RestResponse<Void> {
         val user = securityIdentity.getUser()
         deleter.delete(user, id)
@@ -150,5 +274,11 @@ class MeExportController(
         private const val ISO_DATE_LENGTH = 10
         private const val COPY_BUFFER_SIZE = 8192
         private const val FALLBACK_FILE_STEM = "export"
+
+        private const val PROBLEM_JSON = "application/problem+json"
+        private const val ARCHIVE_MEDIA_TYPE = "application/zip"
+        private const val EXPORT_DOES_NOT_EXIST = "EXPORT_DOES_NOT_EXIST: no export of the caller carries this id"
+        private const val EXPORT_INSUFFICIENT_PERMISSIONS =
+            "EXPORT_INSUFFICIENT_PERMISSIONS: this export belongs to another account"
     }
 }

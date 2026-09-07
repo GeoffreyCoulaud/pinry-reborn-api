@@ -66,9 +66,6 @@ block that closes it.
   Counting its own kind removes the coupling. Left open on purpose: the mechanism was never reproduced, and
   repairing an unexplained symptom hides the next one. *(Last sentence: reasoning is only here.)* Refused by
   `docs/specs/2026-09-05-p2-debt-elimination.md` D7; leaves with the handoff, branch `fix/p2-debt-lost-lease`.
-- **`MeExportController` declares no `@APIResponse`**, so `docs/openapi.json` publishes `200` where the endpoint
-  answers `202` and carries none of the export refusals a client must handle. The import half is done and shows
-  the shape to copy: `docs/specs/2026-08-14-user-data-import.md` section 7. Branch `fix/p2-debt-openapi`.
 - **A request body that fails to deserialize gets Quarkus's own `400`, not a `ProblemDetail`**, and the import put
   every REST body through `KotlinModule` (`docs/specs/2026-08-14-user-data-import.md` section 5), which moved
   which bodies land there. To decide: a mapper over `JsonProcessingException` and which `code` it publishes.
@@ -76,12 +73,6 @@ block that closes it.
 - **`ImportStateMergedOutsideTransaction` reads a construction as an insert**, so a row rebuilt from an earlier
   read walks through untouched. The inversion is deliberate and the rule's own KDoc says why; open is whether a
   second condition can tell a rebuild from an insert without type resolution. Branch `fix/p2-debt-fence-rule`.
-- **The tag respelling is a contract change nobody published.** `PUT /api/v1/pins/{pinId}/tags` answers the stored
-  spelling and `docs/openapi.json` says nothing: no `@Operation`, no summary of the ASCII fold.
-  `docs/specs/2026-08-14-user-data-import.md` section 12. Branch `fix/p2-debt-openapi`.
-- **An absent `offset` on a chunk upload defaults to 0, undocumented.** `PUT /api/v1/me/imports/{id}/archive`;
-  `docs/specs/2026-08-14-user-data-import.md` section 7 writes the parameter as `?offset=N` and states no default.
-  Branch `fix/p2-debt-openapi`.
 - **Measure what review costs and what it returns**, from the session transcripts: the share of
   spend that goes to reviews, and the findings per review by kind. Re-scoped from ADR 0014's
   re-measurement by `docs/adr/0018-a-block-is-a-pull-request.md`, which changed the regime without

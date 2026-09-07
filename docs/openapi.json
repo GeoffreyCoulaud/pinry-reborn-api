@@ -1149,6 +1149,8 @@
     },
     "/api/v1/me/exports" : {
       "post" : {
+        "summary" : "Request an export of the caller's data",
+        "description" : "Queued, not built: the archive is downloadable once the export reads READY. Needs the reauthentication header.",
         "parameters" : [ {
           "name" : "X-Reauthentication",
           "in" : "header",
@@ -1158,8 +1160,8 @@
           "required" : true
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK",
+          "202" : {
+            "description" : "Export requested and queued",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1168,14 +1170,50 @@
               }
             }
           },
-          "401" : {
-            "description" : "Not Authorized"
+          "400" : {
+            "description" : "UNSUPPORTED_REAUTHENTICATION_FACTOR: the reauthentication header names no password factor",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
           },
           "403" : {
-            "description" : "Not Allowed"
+            "description" : "REAUTHENTICATION_FAILED: the reauthentication header is absent or its password is wrong",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "EXPORT_ALREADY_IN_PROGRESS: this account already has a pending export",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "EXPORT_TOO_SOON: the last request is inside exports.minimum_interval, and Retry-After names the wait",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
           }
         },
-        "summary" : "Request Export",
         "tags" : [ "Me Export Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -1202,7 +1240,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "One page of the caller's exports, every state included",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1237,7 +1275,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "The export's state and, once READY, its size, digest and expiry",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1246,11 +1284,28 @@
               }
             }
           },
+          "403" : {
+            "description" : "EXPORT_INSUFFICIENT_PERMISSIONS: this export belongs to another account",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "EXPORT_DOES_NOT_EXIST: no export of the caller carries this id",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Export",
@@ -1270,13 +1325,30 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "No Content"
+            "description" : "Export deleted, its archive released"
+          },
+          "403" : {
+            "description" : "EXPORT_INSUFFICIENT_PERMISSIONS: this export belongs to another account",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "EXPORT_DOES_NOT_EXIST: no export of the caller carries this id",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
         },
         "summary" : "Delete Export",
@@ -1288,6 +1360,8 @@
     },
     "/api/v1/me/exports/{id}/download" : {
       "get" : {
+        "summary" : "Download the archive",
+        "description" : "Whole, or one byte range through the Range header. ETag carries the archive's SHA-256.",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -1305,23 +1379,71 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "The whole archive",
             "content" : {
-              "application/json" : {
+              "application/zip" : { }
+            }
+          },
+          "206" : {
+            "description" : "The requested byte range, Content-Range set",
+            "content" : {
+              "application/zip" : { }
+            }
+          },
+          "403" : {
+            "description" : "EXPORT_INSUFFICIENT_PERMISSIONS: this export belongs to another account",
+            "content" : {
+              "application/problem+json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/StreamingOutput"
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "EXPORT_DOES_NOT_EXIST: no export of the caller carries this id",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "EXPORT_NOT_READY: the export is still pending or has failed",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "EXPORT_GONE: the archive expired, was deleted or was superseded by a newer export",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "416" : {
+            "description" : "RANGE_NOT_SATISFIABLE: the Range header names bytes past the archive's end",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
                 }
               }
             }
           },
           "401" : {
             "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
         },
-        "summary" : "Download Export",
         "tags" : [ "Me Export Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -1517,12 +1639,15 @@
             "$ref" : "#/components/schemas/UUID"
           }
         }, {
+          "description" : "Where this chunk starts. Absent means the start of the upload.",
           "name" : "offset",
           "in" : "query",
           "schema" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64"
-          }
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0
+          },
+          "required" : true
         } ],
         "requestBody" : {
           "content" : {
@@ -2348,6 +2473,8 @@
     },
     "/api/v1/pins/{pinId}/tags" : {
       "put" : {
+        "summary" : "Replace the pin's tags",
+        "description" : "A tag name is an identity per author under an ASCII fold: `Landscape` and `landscape` are one tag, and the response carries the stored spelling, not the one sent. The fold is SQLite's collate nocase, A to Z only, so `ÉTÉ` and `été` stay two tags.",
         "parameters" : [ {
           "name" : "pinId",
           "in" : "path",
@@ -2387,7 +2514,6 @@
             "description" : "Bad Request"
           }
         },
-        "summary" : "Set Tags",
         "tags" : [ "Pin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]

@@ -21,6 +21,7 @@ import io.quarkus.security.identity.SecurityIdentity
 import io.smallrye.common.annotation.Blocking
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
@@ -30,6 +31,7 @@ import jakarta.ws.rs.core.MediaType
 import org.eclipse.microprofile.openapi.annotations.Operation
 import org.eclipse.microprofile.openapi.annotations.media.Content
 import org.eclipse.microprofile.openapi.annotations.media.Schema
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.jboss.resteasy.reactive.RestResponse
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder
@@ -131,13 +133,13 @@ class MeImportController(
     )
     fun uploadChunk(
         id: UUID,
-        @QueryParam("offset") offsetInput: Long? = null,
+        @QueryParam("offset")
+        @DefaultValue("0")
+        @Parameter(description = "Where this chunk starts. Absent means the start of the upload.")
+        offset: Long,
         body: InputStream,
     ): RestResponse<UserDataImportOutputDto> {
         val user = securityIdentity.getUser()
-        // An absent offset means the start of the upload, and a client that got that wrong reads the
-        // current length off the refusal rather than a second error vocabulary.
-        val offset = offsetInput ?: 0
         val userDataImport = chunkReceiver.receive(user, id, offset, body)
         return RestResponse.ok(userDataImport.toDto())
     }

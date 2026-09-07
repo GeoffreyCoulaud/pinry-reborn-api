@@ -147,30 +147,12 @@ class MeImportControllerTest {
             userDataImport.copy(uploadedBytes = 20L)
 
         // When
-        val response = controller.uploadChunk(userDataImport.id, offsetInput = 16L, body = body)
+        val response = controller.uploadChunk(userDataImport.id, offset = 16L, body = body)
 
         // Then
         assertEquals(200, response.status)
         assertEquals(20L, (response.entity as UserDataImportOutputDto).uploadedBytes)
         assertEquals(bytes.size, body.available())
-    }
-
-    @Test
-    fun `Given no offset, Then uploadChunk appends at the start of the upload`() {
-        // Given
-        val user = aUser()
-        val userDataImport = awaitingImport(user.id)
-        val body = ByteArrayInputStream(byteArrayOf(1, 2, 3, 4))
-        every { securityIdentity.getAttribute<User>("user") } returns user
-        every { chunkReceiver.receive(user, userDataImport.id, 0L, body) } returns
-            userDataImport.copy(uploadedBytes = 4L)
-
-        // When
-        val response = controller.uploadChunk(userDataImport.id, offsetInput = null, body = body)
-
-        // Then
-        assertEquals(200, response.status)
-        assertEquals(4L, (response.entity as UserDataImportOutputDto).uploadedBytes)
     }
 
     @Test
