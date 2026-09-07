@@ -620,6 +620,7 @@ Each names the output that fails it.
 | 5 | `fix/p2-debt-openapi` | Export `@APIResponse`, tag `@Operation`, offset default | `MeExportController.kt`, `PinController.kt`, `MeImportController.kt`, `docs/openapi.json` (hook) | A14 to A16 |
 | 6 | `fix/p2-debt-problem-responses` | `ProblemResponses` object, `FrameworkErrorCode` with the five codes the existing mappers minted, the five mappers on them *(Corrected in block 6: the block as first written measured 669 lines and 376 of production against 600 and 200, and split here, the block-2 precedent below; this half is the refactor, covered by the existing mapper tests)* | `mappers/ProblemResponses.kt`, `mappers/FrameworkErrorCode.kt`, `mappers/MediaTypes.kt` (deleted), the five existing `mappers/*ExceptionMapper.kt` and `BaseErrorMapper.kt` | A20 (top-level and qualified-call halves) |
 | 6b | `fix/p2-debt-error-format` | ADR 0021, the mapper family, the seven codes it mints, the property, the engineering sentence *(Corrected in block 6b: 526 lines and 233 of production, over the 200. Eight mapper classes of one shape carry fourteen lines of declaration each, and a split by rows of the 4.5 table would ship ADR 0021's contract in pieces; the block does not split again.)* | `docs/adr/0021-*.md`, `mappers/*.kt`, `application.properties`, `agents/engineering.md`, a test resource and integration cases in `api-application/src/test` | A17 to A21 |
+| 6c | `fix/p2-debt-image-state-read` | `ResolvePinImageState` reads the image and its replacement in one transaction *(Corrected in block 6c: an adjacent defect, tier 2, taken as its own block on the operator's answer of 2026-09-07; section 7 names it)* | `usecases/ResolvePinImageState.kt` and its test | The torn-pair unit case: the old image with no replacement is never answered |
 | 7 | `fix/p2-debt-fences` | Generic fence, four delegations, two new extensions, three sites | `usecases/Fences.kt`, `ExportAccess.kt`, `ImportAccess.kt`, `PinAccess.kt`, `BoardAccess.kt`, `PinTagger.kt`, `PinBoardSetter.kt`, `BoardUpdater.kt`, their tests | A22 to A24 |
 | 8 | `fix/p2-debt-fence-rule` | The rule renamed, widened, `save*`, boundary names; four inlinings; two transaction moves; the limit | `detekt-rules/.../RowMergedOutsideTransaction.kt` and test, `PinryRuleSetProvider.kt`, `detekt.yml`, `PinCreator.kt`, `SetPinImage.kt`, `UserCreator.kt`, `UserDataImportRunner.kt`, `UserDataExportRequester.kt`, `UserDataExportBuilder.kt`, `docs/backlog.md` | A25 to A28 |
 | 9 | `fix/p2-debt-lost-lease` | ADR 0022, `TaskLeaseLostException`, processor, two nets, comments, the handoff, two refusals | `docs/adr/0022-*.md`, `tasks/exceptions/TaskLeaseLostException.kt`, `TaskProcessor.kt`, `TaskContext.kt`, `UserDataExportBuilder.kt`, `UserDataImportRunner.kt`, `EbeanTaskQueue.kt` comment, `ReapUserDataExports.kt` KDoc, tests, `docs/handoffs/2026-09-05 - handoff - p2-debt-elimination.md`, `docs/backlog.md` | A29 to A32 |
@@ -652,6 +653,11 @@ files under tier 1 of `agents/workflow.md` Scope, and listed here so no diff hun
   joining `FrameworkErrorCode`, block 6 (4.5).
 - The four inlinings and the two transaction moves, block 8 (4.6): the widened rule demands them.
 - ADRs 0016 and 0017 still `Proposed`, block 1 (4.1).
+- *(Added in block 6c, tier 2, not tier 1.)* `ResolvePinImageState` read a pin's image and its
+  replacement in two autocommit reads where `DownloadPinImage.promoteAndSwap` commits both in one
+  transaction; pull request #83's first CI run read the old image with no replacement in
+  `ModeBImageHostingIntegrationTest`. Outside the lot's files, so a question; the operator's answer of
+  2026-09-07 made it block 6c, its own pull request.
 
 ## 8. Out of scope, accepted limits
 
