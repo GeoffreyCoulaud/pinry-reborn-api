@@ -5,7 +5,10 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.PinRepositoryInter
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.TransactionRunner
 import java.util.UUID
 
-/** `savePin` writes every column and both link tables from the copy, so the read it merges is taken here. */
+/**
+ * Reads the pin, checks it, and saves [update] of it in one transaction; null when it is absent or
+ * refused. `savePin` writes every column and both link tables from the copy, so the copy is read here.
+ */
 internal fun PinRepositoryInterface.saveFenced(
     transactionRunner: TransactionRunner,
     pinId: UUID,

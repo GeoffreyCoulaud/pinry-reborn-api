@@ -31,7 +31,10 @@ internal fun UserDataImportRepositoryInterface.findAwaitingArchive(
         if (it.state != UserDataImportState.AWAITING_ARCHIVE) throw ImportNotAwaitingArchiveError()
     }
 
-/** The import row's fence, a request and a worker both writing it. The write is a lambda for the rule's sake. */
+/**
+ * Reads the import, checks it, and saves [update] of it in one transaction; null when it is absent or
+ * refused. The write is a lambda, not `::save`, so the detekt rule sees a call inside the fence.
+ */
 internal fun UserDataImportRepositoryInterface.saveFenced(
     transactionRunner: TransactionRunner,
     importId: UUID,
@@ -39,7 +42,7 @@ internal fun UserDataImportRepositoryInterface.saveFenced(
     update: (UserDataImport) -> UserDataImport,
 ): UserDataImport? = transactionRunner.fenced({ findById(importId) }, held, update) { save(it) }
 
-/** The same fence answering the row it replaced: a caller whose release depends on the phase reads it here. */
+/** [saveFenced], answering the import as it was read rather than as saved: the phase before this write. */
 internal fun UserDataImportRepositoryInterface.saveFencedOver(
     transactionRunner: TransactionRunner,
     importId: UUID,
