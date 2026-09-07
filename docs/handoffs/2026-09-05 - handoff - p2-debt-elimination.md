@@ -1,7 +1,8 @@
 # Handoff: the P2 band empties
 
 Date: 2026-09-07 (the lot's specification is dated 2026-09-05, and this file carries its name)
-Branch of this block: `fix/p2-debt-lost-lease`, block 9 of eleven pull requests
+Branch of this block: `fix/p2-debt-lost-lease`, the eleventh of twelve pull requests, the closing block
+being the twelfth
 Specification: `docs/specs/2026-09-05-p2-debt-elimination.md`
 Decisions: `docs/adr/0020-two-reviews-and-an-inline-act.md` (the regime), `docs/adr/0021-framework-refusals-share-the-problem-format.md`,
 `docs/adr/0022-a-lost-lease-is-an-exception.md`
@@ -86,9 +87,22 @@ Blocks 6b and 8 stayed over the 200 production lines with the one-line reason th
    throws before the pin walk leaves every pin-walk stub unused. Stub what runs, not what the
    neighbouring case stubs.
 
+## Not validated
+
+Two of the specification's checks are a reader's, not a test's, and stay so:
+
+- **The oversize body (A19)** was measured once, by a throwaway test with a 3 GiB test heap: a
+  multipart body one byte over `32M` answers a bare `413`, a JSON one has its connection closed. No
+  test holds it; `quarkus.http.limits.max-body-size` changing would not fail the gate.
+- **`StorageLayout` as the only spelling of the three segments (A7)** is a grep run in block 2's
+  commit, not a Konsist test, since a string literal is not a declaration Konsist sees.
+
 ## Next step
 
-Block 10, `fix/p2-debt-closing`: dispatch the holistic review (`agents/reviews/holistic.md`) over
-the lot on this branch once this block's pull request is merged and the branch cut from `main`; fix
-the findings; correct this handoff with each finding's exit and the count against merged blocks;
-reconcile `docs/backlog.md` (A33). The dated documents of the lot freeze when that block merges.
+The holistic review (`agents/reviews/holistic.md`) ran on this branch on 2026-09-07, over
+`git diff 23b07d10..HEAD`, once this block's gate was green and this handoff written: thirteen
+findings, two of them against this block (the backlog's band wording, this document's count and
+this section), closed here before the pull request left draft; eleven against merged blocks. Block
+10, `fix/p2-debt-closing`, cut from `main` once this block merges, fixes those eleven, corrects this
+handoff with each finding's exit and the count against merged blocks, and reconciles
+`docs/backlog.md` (A33). The dated documents of the lot freeze when that block merges.
