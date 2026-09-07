@@ -11,12 +11,11 @@ closing block over this branch with this handoff in its diff (ADR 0020, decision
 
 ## Current state
 
-`./gradlew gate` green at this block's tip after `./gradlew --stop`. Blocks 1 to 8 are merged
-(pull requests #76 to #86, rebase-only); this block is the last code block and waits for its pull
-request. Block 10, the closing block, runs the holistic review over `git diff <lot base>..HEAD`
-with the merged blocks included, fixes the findings, and corrects this handoff: each finding's exit,
-and how many touched an already merged block (A33). Until it merges, this document is not frozen
-(ADR 0020, decision 3).
+`./gradlew gate` green at the closing block's tip. Blocks 1 to 9 are merged (pull requests #76 to
+#87, rebase-only); block 10, `fix/p2-debt-closing`, closes the holistic review's findings (the table
+below) and is the lot's last pull request. Until it merges, this document is not frozen (ADR 0020,
+decision 3). *(Corrected in block 10: written in block 9 as "this block is the last code block and
+waits for its pull request".)*
 
 The backlog's `P2` band holds nothing (A32). The twenty-three items of the specification's section
 2 left by three exits: fixed (nineteen), accepted limit (one: the rule's construction blindness,
@@ -87,6 +86,32 @@ Blocks 6b and 8 stayed over the 200 production lines with the one-line reason th
    throws before the pin walk leaves every pin-walk stub unused. Stub what runs, not what the
    neighbouring case stubs.
 
+## The holistic review's findings, and the closing block (block 10, `fix/p2-debt-closing`)
+
+Thirteen findings, two MAJOR and eleven MINOR; **eleven of the thirteen touched an already merged
+block**, which is what series cost this lot in rework (ADR 0020, decision 4). Each with its exit:
+
+| # | Severity | Against | Finding | Exit |
+|---|---|---|---|---|
+| 1 | MAJOR | block 5, #81 | `@DefaultValue("0")` on a primitive `Long` made `offset` `required: true` in `docs/openapi.json`, a breaking change 4.4 promised not to make | Fixed: `@Parameter(required = false)`; A16 gains the `required` check |
+| 2 | MAJOR | block 6b, #83 | `JsonProcessingException` is an `IOException`, so `InvalidDefinitionException` and serialisation failures landed on the `IOException` row at DEBUG, and so did a disk failure | Fixed: the row logs by whose failure it is (ERROR, DEBUG, WARN); ADR 0021 corrected |
+| 3 | MINOR | block 3, #78 | `SweepPages` loops until an empty page with no guard; a selection that forgets its key spins forever | Fixed: `MAX_PAGES` stops it loudly; the full-scan cost of a refusing store is in spec section 8 |
+| 4 | MINOR | block 8, #86 | `PinryRuleSetProviderTest`'s KDoc still described the rule's import-only reach | Fixed |
+| 5 | MINOR | block 8, #86 | `agents/engineering.md` pointed at `UserDataExportRequester.kt:58`, a line block 8 moved | Fixed: named by function |
+| 6 | MINOR | block 9, #87 | The backlog's `P2` band carried a shipped log and line 15 a self-dating count | Fixed in block 9 |
+| 7 | MINOR | block 9, #87 | This handoff said "of eleven pull requests" and lacked "Not validated" | Fixed in block 9 |
+| 8 | MINOR | block 6b, #83 | `TestFailuresResource`'s KDoc named "spec 4.5" without the file | Fixed |
+| 9 | MINOR | block 6b, #83 | The conversion-failure detail of `UNKNOWN_ROUTE` was never read off the wire | Fixed: one integration case, `GET /api/v1/pins/not-a-uuid` |
+| 10 | MINOR | block 3, #78, process | The red commit's failing run was a compile error; A10 and A12 were never observed failing | Recorded: block 10's commit carries both mutation runs (first page only: two cases fail; `setMaxRows` removed: one case fails) |
+| 11 | MINOR | blocks 6b and 7, process | Five unit cases arrived in green commits, written after the code they cover | Recorded here: the branches are spec-demanded, nothing deleted; a coverage gap found at the gate goes back through a red commit from now on |
+| 12 | MINOR | block 5, #81 | A third private `PROBLEM_JSON` literal beside `ProblemResponses.PROBLEM_JSON_MEDIA_TYPE` | Fixed: the three controllers import the constant under that name |
+| 13 | MINOR | block 1, #76 | Spec section 8's observable on `EbeanTaskQueue.kt` was made false by block 3 | Fixed: `(Corrected: ...)` in section 8 |
+
+Nothing was found under criterion 1 (layering) or 6 (unrequested code). The closing block's own
+tests are coverage, not red: the `IOException` row's observable is a log level no test reads, the
+conversion detail already answered before its case, and a red run of the page cap against the old
+loop would not terminate.
+
 ## Not validated
 
 Two of the specification's checks are a reader's, not a test's, and stay so:
@@ -99,10 +124,9 @@ Two of the specification's checks are a reader's, not a test's, and stay so:
 
 ## Next step
 
-The holistic review (`agents/reviews/holistic.md`) ran on this branch on 2026-09-07, over
-`git diff 23b07d10..HEAD`, once this block's gate was green and this handoff written: thirteen
-findings, two of them against this block (the backlog's band wording, this document's count and
-this section), closed here before the pull request left draft; eleven against merged blocks. Block
-10, `fix/p2-debt-closing`, cut from `main` once this block merges, fixes those eleven, corrects this
-handoff with each finding's exit and the count against merged blocks, and reconciles
-`docs/backlog.md` (A33). The dated documents of the lot freeze when that block merges.
+The holistic review (`agents/reviews/holistic.md`) ran on block 9's branch on 2026-09-07, over
+`git diff 23b07d10..HEAD`, once that block's gate was green and this handoff written: thirteen
+findings, two against block 9, closed there before its pull request left draft; eleven against
+merged blocks, closed by block 10, the closing block, whose diff corrects this document and carries
+the table above (A33). `docs/backlog.md`'s `P2` band holds nothing. The lot ends when block 10
+merges, and its dated documents freeze then (ADR 0020, decision 3). Nothing is handed to a next lot.

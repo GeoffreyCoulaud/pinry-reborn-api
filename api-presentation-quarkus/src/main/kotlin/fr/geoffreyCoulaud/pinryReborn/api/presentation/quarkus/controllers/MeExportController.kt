@@ -9,6 +9,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.http.ByteRange
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.http.ContentDispositionFileName
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.http.RangeHeader
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.ProblemResponses.PROBLEM_JSON_MEDIA_TYPE as PROBLEM_JSON
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.UserDataExportDtoMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.ReauthenticationHeader
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
@@ -273,7 +274,6 @@ class MeExportController(
         private const val COPY_BUFFER_SIZE = 8192
         private const val FALLBACK_FILE_STEM = "export"
 
-        private const val PROBLEM_JSON = "application/problem+json"
         private const val ARCHIVE_MEDIA_TYPE = "application/zip"
         private const val EXPORT_DOES_NOT_EXIST = "EXPORT_DOES_NOT_EXIST: no export of the caller carries this id"
         private const val EXPORT_INSUFFICIENT_PERMISSIONS =

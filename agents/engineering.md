@@ -156,7 +156,7 @@ The failure mode is never one endpoint being wrong: it is one endpoint being **d
   holds its transaction; a new pair that does not is a defect.
 - **The database is the authority on uniqueness**: no read-before-write exists solely to answer a uniqueness question an
   index already answers; the adapter translates the violation into a domain exception. One written exception:
-  `UserDataExportRequester.kt:58`, which orders two refusals (409 ahead of 429).
+  `UserDataExportRequester.createPending`'s `findPendingForUser`, which orders two refusals (409 ahead of 429).
 - **A unique constraint is not complete until its outcome is named**: every one appears in
   `UniqueConstraintOutcomeTest`'s table with the answer a client gets, "no translation, deliberately" included.
 

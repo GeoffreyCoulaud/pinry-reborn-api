@@ -8,8 +8,8 @@ import jakarta.ws.rs.core.MediaType
 import java.io.IOException
 
 /**
- * Drives the rows of spec 4.5 that nothing in the API reaches on its own: the two `500`s, the umbrella
- * `WebApplicationException`, and the `406` (no production route declares `@Produces`). Runs nothing by itself.
+ * Drives the rows of `docs/specs/2026-09-05-p2-debt-elimination.md` 4.5 that the API reaches on its own nowhere:
+ * the two `500`s, the umbrella `WebApplicationException`, the `406` (no route declares `@Produces`). Runs nothing.
  */
 @Path("/test/failures")
 class TestFailuresResource {

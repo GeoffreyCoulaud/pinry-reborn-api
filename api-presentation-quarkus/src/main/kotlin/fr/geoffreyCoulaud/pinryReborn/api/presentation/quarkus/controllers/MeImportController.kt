@@ -6,6 +6,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.UserD
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.UserDataImportListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.UserDataImportOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.ProblemResponses.PROBLEM_JSON_MEDIA_TYPE as PROBLEM_JSON
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.UserDataImportDtoMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.UserDataImportIssueDtoMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
@@ -135,7 +136,8 @@ class MeImportController(
         id: UUID,
         @QueryParam("offset")
         @DefaultValue("0")
-        @Parameter(description = "Where this chunk starts. Absent means the start of the upload.")
+        // required = false: SmallRye derives `required: true` from the primitive, which the default contradicts.
+        @Parameter(description = "Where this chunk starts. Absent means the start of the upload.", required = false)
         offset: Long,
         body: InputStream,
     ): RestResponse<UserDataImportOutputDto> {
@@ -284,7 +286,6 @@ class MeImportController(
     companion object {
         const val DEFAULT_PAGE_SIZE = 20
 
-        private const val PROBLEM_JSON = "application/problem+json"
         private const val IMPORT_DOES_NOT_EXIST = "IMPORT_DOES_NOT_EXIST: no import of the caller carries this id"
         private const val IMPORT_INSUFFICIENT_PERMISSIONS =
             "IMPORT_INSUFFICIENT_PERMISSIONS: this import belongs to another account"
