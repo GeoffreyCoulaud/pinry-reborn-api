@@ -7,6 +7,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.CursorDirection
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.UserDataExportState
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.PermanentTaskException
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.TaskLeaseLostException
 import io.mockk.every
 import io.mockk.verify
 import java.io.ByteArrayInputStream
@@ -450,5 +451,18 @@ internal class UserDataExportBuilderTest : UserDataExportMockStoreFixtures() {
 
         // Then
         assertTrue(renewCount > 0, "the lease must be renewed while entries are written")
+    }
+
+    @Test
+    fun `Given a lost lease during the build on the last attempt, Then the export stays PENDING, nothing promoted`() {
+        // Given: the heartbeat throws, as TaskProcessor's does once the queue refuses the renewal
+        stubHappyPathBuild()
+
+        // When / Then: the net rethrows it before its FAILED arm, the winner still building this row
+        assertThrows(TaskLeaseLostException::class.java) {
+            builder.build(exportId, isLastAttempt = true, renewLease = { throw TaskLeaseLostException(randomUUID()) })
+        }
+        assertEquals(UserDataExportState.PENDING, stored()?.state)
+        verify(exactly = 0) { archiveStore.promote(any(), any()) }
     }
 }

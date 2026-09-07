@@ -6,6 +6,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.tasks.ClaimedTask
 import fr.geoffreyCoulaud.pinryReborn.api.domain.tasks.ExponentialBackoffWithJitter
 import fr.geoffreyCoulaud.pinryReborn.api.domain.time.Clock
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.PermanentTaskException
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.TaskLeaseLostException
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -191,6 +192,34 @@ class TaskProcessorTest {
         val (importRetryAt, downloadRetryAt) = retryAts
         assertEquals(now.plus(floor), importRetryAt, "the import waits out its floor, and no longer")
         assertEquals(now.plusSeconds(4), downloadRetryAt, "a kind declaring no floor keeps its window")
+    }
+
+    @Test
+    fun `Given a heartbeat the queue refuses, Then the handler is told by exception and nothing is settled`() {
+        // Given: the lease is another attempt's or nobody's, so every mark would be refused anyway
+        every { clock.now() } returns now
+        every { queue.renewLease(any(), any(), any()) } returns false
+        val c = claimed()
+        var told: TaskLeaseLostException? = null
+        val p = processorWith(object : TaskHandler {
+            override val kind = "k"
+            override fun handle(payload: String, context: TaskContext) {
+                try {
+                    context.renewLease()
+                } catch (e: TaskLeaseLostException) {
+                    told = e
+                    throw e
+                }
+            }
+        })
+        // When
+        p.execute(c, leaseDuration)
+        // Then
+        assertEquals(c.id, told?.taskId)
+        verify(exactly = 0) { queue.markSucceeded(any(), any(), any()) }
+        verify(exactly = 0) { queue.markPendingRetry(any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { queue.markDead(any(), any(), any(), any()) }
+        verify(exactly = 0) { queue.markCancelledIfRequested(any(), any(), any()) }
     }
 
     @Test
