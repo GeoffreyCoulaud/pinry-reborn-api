@@ -6,7 +6,9 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.BoardRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.time.Clock
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.BoardNameAlreadyExistsError
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.BoardRetrievalBoardDoesNotExistError
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exceptions.ErrorCode
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.imports.PassthroughTransactionRunner
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
 import io.mockk.every
@@ -23,7 +25,13 @@ class BoardUpdaterTest {
     private val boardGetter: BoardGetter = mockk()
     private val clockInstant = Instant.parse("2026-07-23T10:00:00Z")
     private val clock = mockk<Clock> { every { now() } returns clockInstant }
-    private val useCase = BoardUpdater(boardRepository = boardRepository, boardGetter = boardGetter, clock = clock)
+    private val useCase =
+        BoardUpdater(
+            boardRepository = boardRepository,
+            boardGetter = boardGetter,
+            clock = clock,
+            transactionRunner = PassthroughTransactionRunner(),
+        )
 
     @Test
     fun `Given an owned active board, Then update saves a copy with the new name and description`() {
@@ -40,6 +48,7 @@ class BoardUpdaterTest {
         val newName = createRandomString()
         val newDescription = createRandomString()
         every { boardGetter.getActiveBoardForUser(boardId = board.id, reader = user) } returns board
+        every { boardRepository.findBoardById(board.id) } returns board
         every { boardRepository.saveBoard(any()) } answers { firstArg() }
 
         // When
@@ -72,6 +81,7 @@ class BoardUpdaterTest {
         )
         val takenName = createRandomString()
         every { boardGetter.getActiveBoardForUser(boardId = board.id, reader = user) } returns board
+        every { boardRepository.findBoardById(board.id) } returns board
         every { boardRepository.saveBoard(any()) } throws BoardNameAlreadyTakenException(cause = Exception("boom"))
         every { boardRepository.findBoardForUserByName(user = user, name = takenName) } returns
             board.copy(id = randomUUID(), name = takenName)
@@ -83,5 +93,28 @@ class BoardUpdaterTest {
 
         // Then
         assertEquals(ErrorCode.BOARD_NAME_ALREADY_EXISTS, error.code)
+    }
+
+    @Test
+    fun `Given a board recycled between the read and the fence, Then update refuses it as absent and saves nothing`() {
+        // Given: the first read answers an active board, the fence's re-read a recycled one
+        val user = User(id = randomUUID(), name = createRandomString(), createdAt = TestTime.now)
+        val board = Board(
+            id = randomUUID(),
+            author = user,
+            name = createRandomString(),
+            description = createRandomString(),
+            createdAt = TestTime.now,
+            updatedAt = TestTime.now,
+        )
+        every { boardGetter.getActiveBoardForUser(boardId = board.id, reader = user) } returns board
+        every { boardRepository.findBoardById(board.id) } returns board.copy(softDeletedAt = TestTime.now)
+        every { boardRepository.saveBoard(any()) } answers { firstArg() }
+
+        // When, Then
+        assertThrows<BoardRetrievalBoardDoesNotExistError> {
+            useCase.update(boardId = board.id, name = createRandomString(), description = "", user = user)
+        }
+        verify(exactly = 0) { boardRepository.saveBoard(any()) }
     }
 }
