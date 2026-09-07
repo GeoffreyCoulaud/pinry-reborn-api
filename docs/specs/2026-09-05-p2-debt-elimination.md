@@ -605,7 +605,8 @@ Each names the output that fails it.
 | 3 | `fix/p2-debt-paged-sweeps` | Paged selections, `reapExpired` bound, `imports.sweep_batch_size` | the two repository interfaces and implementations, `ReapUserDataExports.kt`, `ReapUserDataImports.kt`, `ImportsConfig.kt`, `ImportProducers`, `TaskQueueInterface.kt`, `EbeanTaskQueue.kt`, `ReapExpiredTasks.kt`, their tests | A10 to A12 |
 | 4 | `test/p2-debt-export-fixtures` | One base, two siblings | `UserDataExportBuilderFixtures.kt` split in three, the test classes' `extends` | A13 |
 | 5 | `fix/p2-debt-openapi` | Export `@APIResponse`, tag `@Operation`, offset default | `MeExportController.kt`, `PinController.kt`, `MeImportController.kt`, `docs/openapi.json` (hook) | A14 to A16 |
-| 6 | `fix/p2-debt-error-format` | ADR 0021, the mapper family, `FrameworkErrorCode`, `ProblemResponses` object, the property, the engineering sentence | `docs/adr/0021-*.md`, `mappers/*.kt`, `application.properties`, `agents/engineering.md`, a test resource and integration cases in `api-application/src/test` | A17 to A21 |
+| 6 | `fix/p2-debt-problem-responses` | `ProblemResponses` object, `FrameworkErrorCode` with the five codes the existing mappers minted, the five mappers on them *(Corrected in block 6: the block as first written measured 669 lines and 376 of production against 600 and 200, and split here, the block-2 precedent below; this half is the refactor, covered by the existing mapper tests)* | `mappers/ProblemResponses.kt`, `mappers/FrameworkErrorCode.kt`, `mappers/MediaTypes.kt` (deleted), the five existing `mappers/*ExceptionMapper.kt` and `BaseErrorMapper.kt` | A20 (top-level and qualified-call halves) |
+| 6b | `fix/p2-debt-error-format` | ADR 0021, the mapper family, the seven codes it mints, the property, the engineering sentence | `docs/adr/0021-*.md`, `mappers/*.kt`, `application.properties`, `agents/engineering.md`, a test resource and integration cases in `api-application/src/test` | A17 to A21 |
 | 7 | `fix/p2-debt-fences` | Generic fence, four delegations, two new extensions, three sites | `usecases/Fences.kt`, `ExportAccess.kt`, `ImportAccess.kt`, `PinAccess.kt`, `BoardAccess.kt`, `PinTagger.kt`, `PinBoardSetter.kt`, `BoardUpdater.kt`, their tests | A22 to A24 |
 | 8 | `fix/p2-debt-fence-rule` | The rule renamed, widened, `save*`, boundary names; four inlinings; two transaction moves; the limit | `detekt-rules/.../RowMergedOutsideTransaction.kt` and test, `PinryRuleSetProvider.kt`, `detekt.yml`, `PinCreator.kt`, `SetPinImage.kt`, `UserCreator.kt`, `UserDataImportRunner.kt`, `UserDataExportRequester.kt`, `UserDataExportBuilder.kt`, `docs/backlog.md` | A25 to A28 |
 | 9 | `fix/p2-debt-lost-lease` | ADR 0022, `TaskLeaseLostException`, processor, two nets, comments, the handoff, two refusals | `docs/adr/0022-*.md`, `tasks/exceptions/TaskLeaseLostException.kt`, `TaskProcessor.kt`, `TaskContext.kt`, `UserDataExportBuilder.kt`, `UserDataImportRunner.kt`, `EbeanTaskQueue.kt` comment, `ReapUserDataExports.kt` KDoc, tests, `docs/handoffs/2026-09-05 - handoff - p2-debt-elimination.md`, `docs/backlog.md` | A29 to A32 |
@@ -613,7 +614,9 @@ Each names the output that fails it.
 
 Every block sits under 600 lines excluding dated documents by construction; block 2 is the one to
 watch, its renames touching many files, and `git mv` keeps a rename at zero lines where the content
-does not move. Block 1 counts the two mandates and the living documents, around 250 lines, the ADR
+does not move. *(Corrected in block 6: block 6 was the one to watch. Eight mappers of one shape, their
+tests and the object measured 669 lines and 376 of production; the table gained row 6b, and the
+integration cases and the ADR follow the family.)* Block 1 counts the two mandates and the living documents, around 250 lines, the ADR
 and the spec being dated. Block 8 grew by four files in review and stays under budget: each move is
 a few lines.
 

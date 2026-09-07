@@ -16,10 +16,10 @@ class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
     lateinit var uriInfo: UriInfo
 
     override fun toResponse(exception: UnauthorizedException): Response =
-        problemResponse(
+        ProblemResponses.problemResponse(
             status = Response.Status.UNAUTHORIZED,
             detail = "Authentication required",
-            code = "AUTHENTICATION_REQUIRED",
+            code = FrameworkErrorCode.AUTHENTICATION_REQUIRED.name,
             uriInfo = uriInfo,
-        ).header("WWW-Authenticate", WWW_AUTHENTICATE_BEARER).build()
+        ).header("WWW-Authenticate", ProblemResponses.WWW_AUTHENTICATE_BEARER).build()
 }
