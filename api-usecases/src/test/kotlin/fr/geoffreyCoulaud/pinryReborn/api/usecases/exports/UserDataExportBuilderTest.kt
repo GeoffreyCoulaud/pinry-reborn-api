@@ -455,8 +455,14 @@ internal class UserDataExportBuilderTest : UserDataExportMockStoreFixtures() {
 
     @Test
     fun `Given a lost lease during the build on the last attempt, Then the export stays PENDING, nothing promoted`() {
-        // Given: the heartbeat throws, as TaskProcessor's does once the queue refuses the renewal
-        stubHappyPathBuild()
+        // Given: the heartbeat throws at the first pin page, as TaskProcessor's does once the queue refuses
+        // the renewal, so the recycled walk and everything after it never run
+        stubBuildToStaging()
+        stubArchiveStore()
+        stubActivePins(emptyList())
+        every { boardRepository.findActiveBoardsForUser(user) } returns emptyList()
+        every { boardRepository.findRecycledBoardsForUser(user) } returns emptyList()
+        every { tagRepository.findAllTagsForUser(user) } returns emptyList()
 
         // When / Then: the net rethrows it before its FAILED arm, the winner still building this row
         assertThrows(TaskLeaseLostException::class.java) {

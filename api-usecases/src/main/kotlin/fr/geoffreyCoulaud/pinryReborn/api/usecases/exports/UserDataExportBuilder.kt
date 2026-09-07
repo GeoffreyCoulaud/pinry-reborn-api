@@ -22,6 +22,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.storage.StagedFile
 import fr.geoffreyCoulaud.pinryReborn.api.domain.time.Clock
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.discardQuietly
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.PermanentTaskException
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.TaskLeaseLostException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Duration
 import java.util.UUID
@@ -95,10 +96,14 @@ class UserDataExportBuilder(
         throw PermanentTaskException("not enough free space")
     }
 
-    @Suppress("TooGenericExceptionCaught")
+    // RethrowCaughtException: the first arm exists to keep a lost lease out of the second, which marks
+    // FAILED on a row that may be another attempt's now (docs/adr/0022).
+    @Suppress("TooGenericExceptionCaught", "RethrowCaughtException")
     private fun stageOrFail(export: UserDataExport, user: User, isLastAttempt: Boolean, renewLease: () -> Unit) =
         try {
             stageArchive(export, user, renewLease)
+        } catch (error: TaskLeaseLostException) {
+            throw error
         } catch (error: Throwable) {
             if (isLastAttempt) markFailed(export.id, "BUILD_FAILED")
             throw error

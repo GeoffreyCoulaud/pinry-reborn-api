@@ -105,10 +105,10 @@ class EbeanTaskQueue(
             if (model == null) {
                 return@inTransaction null
             }
-            // A task whose handler never returns is never settled, so its attempts are only ever
-            // spent by the reaper putting it back to PENDING. Without this guard such a task is
-            // claimed again forever. Killing it here (rather than skipping to the next candidate)
-            // keeps the claim a single-row operation: the next poll picks up whatever follows.
+            // A task whose handler never returns is never settled, so its attempts are only ever spent by
+            // the reaper putting it back to PENDING; without this guard it is claimed again forever. A
+            // handler still running stops at its next heartbeat (TaskLeaseLostException), so the one killed
+            // here is at most one heartbeat gap behind. Killing rather than skipping keeps the claim one row.
             if (model.attempts >= model.maxAttempts) {
                 model.state = TaskState.DEAD.name
                 model.lastError = "attempts exhausted"

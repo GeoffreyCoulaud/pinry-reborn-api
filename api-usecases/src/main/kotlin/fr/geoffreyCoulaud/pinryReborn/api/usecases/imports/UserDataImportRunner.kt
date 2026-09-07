@@ -34,6 +34,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.usecases.deleteQuietly
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.discardQuietly
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.exports.UserDataExportRequester
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.PermanentTaskException
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.tasks.exceptions.TaskLeaseLostException
 import java.io.IOException
 import java.io.InputStream
 import java.time.Instant
@@ -82,9 +83,10 @@ class UserDataImportRunner(
      * Steps 3 to 8. An unenumerated throw marks the row only on the last attempt, and always rethrows so
      * the queue counts the attempt; a permanent refusal already marked it, which the fence reads.
      */
-    @Suppress("TooGenericExceptionCaught")
+    @Suppress("TooGenericExceptionCaught", "RethrowCaughtException")
     // Caught as broadly as `UserDataExportBuilder.stageOrFail` does: a row left RUNNING for ever holds
-    // the account's only import slot, which outweighs anything this arm can catch by mistake.
+    // the account's only import slot, which outweighs anything this arm can catch by mistake. The first
+    // arm keeps a lost lease out of it: the row may be another attempt's now (docs/adr/0022).
     private fun replay(
         runnable: RunnableImport,
         user: User,
@@ -94,6 +96,8 @@ class UserDataImportRunner(
         try {
             walkArchive(runnable, user, renewLease)
             complete(runnable)
+        } catch (error: TaskLeaseLostException) {
+            throw error
         } catch (error: Throwable) {
             if (isLastAttempt) advance(runnable) { failed(it, IMPORT_FAILED) }
             throw error
