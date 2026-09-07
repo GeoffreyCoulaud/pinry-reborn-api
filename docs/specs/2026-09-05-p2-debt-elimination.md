@@ -268,7 +268,7 @@ mapped. The family becomes:
 
 | Exception | Status | `code` |
 |---|---|---|
-| `JsonProcessingException` | `400` | `MALFORMED_BODY` |
+| `JsonProcessingException` | `400` | `MALFORMED_BODY` *(Corrected in block 6: `ServerJacksonMessageBodyReader` rethrows only `MismatchedInputException` and `InvalidDefinitionException` as themselves and wraps every other read failure in a bare `400` `WebApplicationException` carrying it as cause, so a mapper on `JsonProcessingException` would see the first and never the rest. The mapper sits on `MismatchedInputException`, whose built-in is the one disabled below, and the umbrella row answers `MALFORMED_BODY` when its cause is a `JsonProcessingException`. `InvalidDefinitionException` is the server's own definition problem and lands on the last row. ADR 0021, decision 1.)* |
 | `jakarta.ws.rs.NotFoundException` | `404` | `UNKNOWN_ROUTE` |
 | `jakarta.ws.rs.NotAllowedException` | `405` | `METHOD_NOT_ALLOWED` |
 | `jakarta.ws.rs.NotSupportedException` | `415` | `UNSUPPORTED_MEDIA_TYPE` |
@@ -282,7 +282,9 @@ mapped. The family becomes:
 errors, and the codes above are not domain errors: the status is the framework's, decided before any
 use case ran. They live in a second table, `enum class FrameworkErrorCode` in the `mappers` package,
 one member per mapper, and `ConstraintViolationExceptionMapper`'s `VALIDATION_ERROR` string joins it
-so the presentation layer holds every framework code in one place. `agents/engineering.md`'s
+so the presentation layer holds every framework code in one place. *(Corrected in block 6: the four
+other strings the existing mappers minted join it for the same reason, `AUTHENTICATION_REQUIRED`,
+`AUTHENTICATION_FAILED`, `SESSION_EXPIRED` and `RANGE_NOT_SATISFIABLE`; no wire value changes.)* `agents/engineering.md`'s
 sentence is amended in block 6 to name both tables, in the same commit (`agents/writing.md`,
 living regime). **ADR 0021** records the contract, the two tables, and the library setting below.
 
@@ -313,7 +315,12 @@ in `application.properties`. Whether the `413` it produces reaches a JAX-RS mapp
 below it is not established by the documentation consulted. The block sends a body one byte over and
 reads the response: a mapper if it can see it, an accepted limit written here otherwise, and
 `MeImportController`'s `413` on `IMPORT_ARCHIVE_TOO_LARGE` stays the client's documented refusal
-either way, since `imports.max_chunk_bytes` sits under the HTTP bound on purpose.
+either way, since `imports.max_chunk_bytes` sits under the HTTP bound on purpose. *(Corrected in
+block 6: measured, and not reachable. A multipart body one byte over answers `413` with no body and
+no `Content-Type`, the server log showing "Response has already been written" where a mapper's
+response would go; a JSON body one byte over has its connection closed while the client is still
+sending, and the client reads no response at all. Both are answered below JAX-RS. Accepted limit,
+section 8; ADR 0021, context.)*
 
 **`ProblemResponses.kt`** holds two top-level functions and a top-level constant, and
 `MediaTypes.kt` a second constant, against `agents/engineering.md`'s "no top-level functions"
@@ -539,7 +546,13 @@ Each names the output that fails it.
   `@Path("/test/failures")`, that throws an `IllegalStateException` carrying a marker string on one
   route and an `IOException` on another. Each case's body has `detail` null and `code`
   `INTERNAL_ERROR`, and the test asserts the marker appears nowhere in the body. The resource runs
-  nothing on its own, so joining the default profile changes nothing that runs beside it.
+  nothing on its own, so joining the default profile changes nothing that runs beside it. *(Corrected
+  in block 6: four routes, not two. A `ServiceUnavailableException` drives the umbrella row, and a
+  route under `@Produces(application/json)` drives the `406`: no production route declares
+  `@Produces`, and Quarkus REST raises a `406` against a declared list only, so the API answers none
+  on its own. And since test mode indexes `src/test`, the resource would land in `docs/openapi.json`
+  at every test run: the test `application.properties` empties
+  `quarkus.smallrye-openapi.store-schema-directory`. ADR 0021, decision 6.)*
 - A19. The oversize case's outcome is written in 4.5 in `(Corrected: ...)` form if it differs from a
   mapped `413`. This one is a reader's check, not a test.
 - A20. `grep -rn "^fun \|^const " api-presentation-quarkus/src/main` lists only the three
@@ -606,7 +619,7 @@ Each names the output that fails it.
 | 4 | `test/p2-debt-export-fixtures` | One base, two siblings | `UserDataExportBuilderFixtures.kt` split in three, the test classes' `extends` | A13 |
 | 5 | `fix/p2-debt-openapi` | Export `@APIResponse`, tag `@Operation`, offset default | `MeExportController.kt`, `PinController.kt`, `MeImportController.kt`, `docs/openapi.json` (hook) | A14 to A16 |
 | 6 | `fix/p2-debt-problem-responses` | `ProblemResponses` object, `FrameworkErrorCode` with the five codes the existing mappers minted, the five mappers on them *(Corrected in block 6: the block as first written measured 669 lines and 376 of production against 600 and 200, and split here, the block-2 precedent below; this half is the refactor, covered by the existing mapper tests)* | `mappers/ProblemResponses.kt`, `mappers/FrameworkErrorCode.kt`, `mappers/MediaTypes.kt` (deleted), the five existing `mappers/*ExceptionMapper.kt` and `BaseErrorMapper.kt` | A20 (top-level and qualified-call halves) |
-| 6b | `fix/p2-debt-error-format` | ADR 0021, the mapper family, the seven codes it mints, the property, the engineering sentence | `docs/adr/0021-*.md`, `mappers/*.kt`, `application.properties`, `agents/engineering.md`, a test resource and integration cases in `api-application/src/test` | A17 to A21 |
+| 6b | `fix/p2-debt-error-format` | ADR 0021, the mapper family, the seven codes it mints, the property, the engineering sentence *(Corrected in block 6b: 526 lines and 233 of production, over the 200. Eight mapper classes of one shape carry fourteen lines of declaration each, and a split by rows of the 4.5 table would ship ADR 0021's contract in pieces; the block does not split again.)* | `docs/adr/0021-*.md`, `mappers/*.kt`, `application.properties`, `agents/engineering.md`, a test resource and integration cases in `api-application/src/test` | A17 to A21 |
 | 7 | `fix/p2-debt-fences` | Generic fence, four delegations, two new extensions, three sites | `usecases/Fences.kt`, `ExportAccess.kt`, `ImportAccess.kt`, `PinAccess.kt`, `BoardAccess.kt`, `PinTagger.kt`, `PinBoardSetter.kt`, `BoardUpdater.kt`, their tests | A22 to A24 |
 | 8 | `fix/p2-debt-fence-rule` | The rule renamed, widened, `save*`, boundary names; four inlinings; two transaction moves; the limit | `detekt-rules/.../RowMergedOutsideTransaction.kt` and test, `PinryRuleSetProvider.kt`, `detekt.yml`, `PinCreator.kt`, `SetPinImage.kt`, `UserCreator.kt`, `UserDataImportRunner.kt`, `UserDataExportRequester.kt`, `UserDataExportBuilder.kt`, `docs/backlog.md` | A25 to A28 |
 | 9 | `fix/p2-debt-lost-lease` | ADR 0022, `TaskLeaseLostException`, processor, two nets, comments, the handoff, two refusals | `docs/adr/0022-*.md`, `tasks/exceptions/TaskLeaseLostException.kt`, `TaskProcessor.kt`, `TaskContext.kt`, `UserDataExportBuilder.kt`, `UserDataImportRunner.kt`, `EbeanTaskQueue.kt` comment, `ReapUserDataExports.kt` KDoc, tests, `docs/handoffs/2026-09-05 - handoff - p2-debt-elimination.md`, `docs/backlog.md` | A29 to A32 |
@@ -668,6 +681,8 @@ Each names how a reader would notice if it changed anyway.
   asymmetry with 4.2's table is a decision rather than an oversight. Noticed by: the signature
   `findPending(limit: Int)` unchanged.
 - **The oversize `413`.** Measured in block 6, mapped if reachable, recorded here otherwise (4.5).
+  *(Corrected in block 6: not reachable. A bare `413` for a multipart body, a closed connection for a
+  JSON one, both answered below JAX-RS; 4.5 carries the measurement.)*
 - **`imports.lease_renewal_lines` and the export's per-image heartbeat** define the residual window
   of 4.7 and are not retuned. Noticed by: the default `200` in `ImportsConfig.kt` and the heartbeat
   at `UserDataExportBuilder.kt:253` unchanged.

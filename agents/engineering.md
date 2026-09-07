@@ -119,9 +119,11 @@ The failure mode is never one endpoint being wrong: it is one endpoint being **d
 - **Error format**: RFC 7807 Problem Details as `application/problem+json`
   (`dtos/output/ProblemDetail.kt`: `type`, `title`, `status`, `detail`, `instance`, plus a `code`
   extension). Every payload built through `mappers/ProblemResponses.kt`.
-- **Status codes** come from one table, `BaseErrorMapper.statusFor`, a `when` over `ErrorCode`
-  with no `else`. Convention: 400 malformed request, 422 well-formed but refused on its merits, 401 unauthenticated, 403
-  forbidden, 409 state conflict, 404 absent, 410 expired, 413 oversize upload, 429 rate limit.
+- **Status codes** come from two tables: `BaseErrorMapper.statusFor`, a `when` over `ErrorCode` with no `else`, for
+  what a use case refuses; `FrameworkErrorCode` and its mapper family (`mappers/*Mapper.kt`, `docs/adr/0021`) for
+  what the framework refuses before one runs. Convention: 400 malformed request, 422 well-formed but refused on its
+  merits, 401 unauthenticated, 403 forbidden, 409 state conflict, 404 absent, 410 expired, 413 oversize upload, 429
+  rate limit.
 - **Authentication**: opaque session tokens as `Authorization: Bearer <token>`, issued by
   `POST /api/v1/sessions`, validated by `SessionTokenAuthenticator`. Not JWTs: the OpenAPI security scheme is declared
   by hand in `openapi/OpenApiApplication.kt` (the Quarkus shortcut would stamp `bearerFormat: JWT`).

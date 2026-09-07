@@ -6,6 +6,13 @@ package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers
  */
 enum class FrameworkErrorCode {
     VALIDATION_ERROR,
+    MALFORMED_BODY,
+    UNKNOWN_ROUTE,
+    METHOD_NOT_ALLOWED,
+    UNSUPPORTED_MEDIA_TYPE,
+    NOT_ACCEPTABLE,
+    HTTP_ERROR,
+    INTERNAL_ERROR,
     AUTHENTICATION_REQUIRED,
     AUTHENTICATION_FAILED,
     SESSION_EXPIRED,
