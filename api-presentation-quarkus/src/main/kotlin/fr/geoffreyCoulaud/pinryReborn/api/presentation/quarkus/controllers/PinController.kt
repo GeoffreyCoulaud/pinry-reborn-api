@@ -106,8 +106,8 @@ class PinController(
     @Operation(
         summary = "Replace the pin's tags",
         description = "A tag name is an identity per author under an ASCII fold: `Landscape` and `landscape` " +
-            "are one tag, and the response carries the stored spelling, not the one sent. The fold is SQLite's " +
-            "collate nocase, A to Z only, so `ÉTÉ` and `été` stay two tags.",
+            "are one tag, and the response carries the stored spelling, not the one sent. The fold covers " +
+            "A to Z only, so `ÉTÉ` and `été` stay two tags.",
     )
     fun setTags(pinId: UUID, @Valid tagsDto: PinTagsInputDto): RestResponse<PinOutputDto> {
         val user = securityIdentity.getUser()

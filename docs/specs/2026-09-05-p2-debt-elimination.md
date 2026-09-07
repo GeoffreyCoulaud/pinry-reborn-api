@@ -522,7 +522,10 @@ Each names the output that fails it.
   `400`, `401`, `403`, `409`, `429` and not `200`; the four other export operations list the statuses
   of the table in 4.4.
 - A15. `jq -r '.paths["/api/v1/pins/{pinId}/tags"].put.description' docs/openapi.json` contains
-  "nocase" and "stored spelling"; today it prints `null`.
+  "ASCII fold" and "stored spelling"; today it prints `null`. *(Corrected in block 5: the first draft
+  asked for "nocase", and the operator refused a persistence detail in a presentation contract. The
+  description states the fold and its reach, A to Z, without naming the collation that implements
+  it; section 4.4's "its limit" sentence is read the same way.)*
 - A16. `jq -r '.paths["/api/v1/me/imports/{id}/archive"].put.parameters[] | select(.name=="offset")
   | .schema.default' docs/openapi.json` prints `0`; today it prints `null`.
 
