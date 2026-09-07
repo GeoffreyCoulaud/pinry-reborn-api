@@ -1,5 +1,7 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JsonMappingException
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.ProblemDetail
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriInfo
@@ -41,4 +43,36 @@ object ProblemResponses {
                 ),
             )
             .type(PROBLEM_JSON_MEDIA_TYPE)
+
+    /** The `400` for a body Jackson refused. The detail says where, never which class Jackson was binding to. */
+    fun malformedBody(exception: JsonProcessingException, uriInfo: UriInfo): Response.ResponseBuilder =
+        problemResponse(
+            status = Response.Status.BAD_REQUEST,
+            detail = malformedBodyDetail(exception),
+            code = FrameworkErrorCode.MALFORMED_BODY.name,
+            uriInfo = uriInfo,
+        )
+
+    /** The `500` with no detail: an unmapped throwable's message is nobody's to publish. */
+    fun internalError(uriInfo: UriInfo): Response.ResponseBuilder =
+        problemResponse(
+            status = Response.Status.INTERNAL_SERVER_ERROR,
+            detail = null,
+            code = FrameworkErrorCode.INTERNAL_ERROR.name,
+            uriInfo = uriInfo,
+        )
+
+    private fun malformedBodyDetail(exception: JsonProcessingException): String {
+        if (exception !is JsonMappingException) return "The body is not valid JSON: ${exception.originalMessage}"
+        val path = propertyPath(exception)
+        return "The body could not be read at ${if (path.isEmpty()) "its root" else "`$path`"}"
+    }
+
+    // `description`, `tags[2]`: the path Jackson was reading, without the class it was binding to.
+    private fun propertyPath(exception: JsonMappingException): String =
+        exception.path
+            .joinToString(separator = "") { reference ->
+                if (reference.fieldName != null) ".${reference.fieldName}" else "[${reference.index}]"
+            }
+            .removePrefix(".")
 }
