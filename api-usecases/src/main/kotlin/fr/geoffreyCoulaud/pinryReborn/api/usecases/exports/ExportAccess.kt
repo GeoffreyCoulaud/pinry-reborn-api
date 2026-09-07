@@ -7,7 +7,10 @@ import fr.geoffreyCoulaud.pinryReborn.api.usecases.fenced
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.fencedOver
 import java.util.UUID
 
-/** The export row's fence; an absent row refuses, `merge` being an upsert. The write is a lambda for the rule. */
+/**
+ * Reads the export, checks it, and saves [update] of it in one transaction; null when it is absent or
+ * refused. The write is a lambda, not `::save`, so the detekt rule sees a call inside the fence.
+ */
 internal fun UserDataExportRepositoryInterface.saveFenced(
     transactionRunner: TransactionRunner,
     exportId: UUID,
@@ -15,7 +18,7 @@ internal fun UserDataExportRepositoryInterface.saveFenced(
     update: (UserDataExport) -> UserDataExport,
 ): UserDataExport? = transactionRunner.fenced({ findById(exportId) }, held, update) { save(it) }
 
-/** The same fence answering the row it replaced: a caller whose release depends on the state reads it here. */
+/** [saveFenced], answering the export as it was read rather than as saved: the state before this write. */
 internal fun UserDataExportRepositoryInterface.saveFencedOver(
     transactionRunner: TransactionRunner,
     exportId: UUID,

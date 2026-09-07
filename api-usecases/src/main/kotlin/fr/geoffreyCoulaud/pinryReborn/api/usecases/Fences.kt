@@ -3,8 +3,8 @@ package fr.geoffreyCoulaud.pinryReborn.api.usecases
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.TransactionRunner
 
 /**
- * The one write of a row two actors can reach: read and written in one transaction, since a save of a
- * copy read earlier restores every column that copy carried. A refused [held] answers null (`docs/adr/0016`).
+ * Reads a row, checks it with [held], and writes [update] of it, all in one transaction. Answers the
+ * written row, or null when no row was read or [held] refused it (`docs/adr/0016`).
  */
 internal fun <T : Any> TransactionRunner.fenced(
     read: () -> T?,
@@ -14,8 +14,8 @@ internal fun <T : Any> TransactionRunner.fenced(
 ): T? = inTransaction { read()?.takeIf(held)?.let { write(update(it)) } }
 
 /**
- * The same write, answering the row it replaced rather than the one it wrote: a caller whose release
- * depends on the state reads it here, the state it saw before the fence being possibly one old.
+ * [fenced], answering the row as it was read rather than as it was written. A caller that decides its
+ * next step from the state before this write takes that state from here, not from an earlier read.
  */
 internal fun <T : Any> TransactionRunner.fencedOver(
     read: () -> T?,
