@@ -37,6 +37,10 @@ const FROZEN = [":!docs/specs", ":!docs/plans", ":!docs/adr", ":!docs/handoffs"]
  */
 const MAX_WORKERS = "--max-workers=4"
 
+/** The build that emits `contract/openapi.json`. It always runs here: the container starts with
+ * no build output, so nothing is ever up to date. */
+const CONTRACT_TASK = ":api-application:quarkusBuild"
+
 @object()
 export class PinryReborn {
   /**
@@ -48,13 +52,7 @@ export class PinryReborn {
   ): Promise<string> {
     // One Gradle invocation for both parts. Two would serialize on the shared cache volume and
     // the second would recompile what the first had just compiled.
-    const built = this.gradle(source).withExec([
-      "./gradlew",
-      "gate",
-      ":api-application:quarkusBuild",
-      "--no-daemon",
-      MAX_WORKERS,
-    ])
+    const built = this.gradleRun(source, "gate", CONTRACT_TASK)
     const [api, prose, contract] = await Promise.all([
       built.stdout(),
       this.prose(source),
@@ -70,7 +68,7 @@ export class PinryReborn {
   apiGate(
     @argument({ defaultPath: "/", ignore: IGNORE }) source: Directory,
   ): Container {
-    return this.gradle(source).withExec(["./gradlew", "gate", "--no-daemon", MAX_WORKERS])
+    return this.gradleRun(source, "gate")
   }
 
   /**
@@ -80,15 +78,7 @@ export class PinryReborn {
   contract(
     @argument({ defaultPath: "/", ignore: IGNORE }) source: Directory,
   ): Directory {
-    return this.gradle(source)
-      .withExec([
-        "./gradlew",
-        ":api-application:quarkusBuild",
-        "--no-daemon",
-        MAX_WORKERS,
-        "-q",
-      ])
-      .directory("/src/contract")
+    return this.gradleRun(source, CONTRACT_TASK).directory("/src/contract")
   }
 
   /**
@@ -153,6 +143,11 @@ export class PinryReborn {
       )
     }
     return "contract/openapi.json is synchronised"
+  }
+
+  /** The build, asked for one set of tasks. Every Gradle call in this module goes through here. */
+  private gradleRun(source: Directory, ...tasks: string[]): Container {
+    return this.gradle(source).withExec(["./gradlew", ...tasks, "--no-daemon", MAX_WORKERS])
   }
 
   /**
