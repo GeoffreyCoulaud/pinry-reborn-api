@@ -10,7 +10,7 @@
 | Document                                       | Regime                                                                             |
 |------------------------------------------------|------------------------------------------------------------------------------------|
 | `README.md`, `SECURITY.md`, `docs/backlog.md`  | living                                                                             |
-| `AGENTS.md`, `agents/*.md`, `agents/reviews/*` | living: updated in the same commit as the change they describe                     |
+| `AGENTS.md` (root and `api/`), `agents/*.md`, `agents/reviews/*` | living: updated in the same commit as the change they describe   |
 | `contract/openapi.json`                        | generated: rewritten by the `pre-commit` hook, checked in CI, never edited by hand |
 | `docs/specs`, `docs/adr`, `docs/handoffs`      | dated, append-only                                                                 |
 
