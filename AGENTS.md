@@ -12,9 +12,24 @@ Process, engineering norms and writing conventions live in separate documents; r
 - `docs/handoffs/` : the newest file is the entry point (current state, pitfalls, next step).
 - `docs/backlog.md` : open items only.
 
+## Where things live
+
+The repository holds several projects (`docs/adr/0024-three-projects-share-one-repository.md`).
+
+| Path        | What                                                                                     |
+|-------------|--------------------------------------------------------------------------------------------|
+| `api/`      | The Gradle build: the twelve modules, `Dockerfile`, `config/`, `.idea/`.                     |
+| `contract/` | The API's interface artefact, produced by `api/` and consumed by clients.                    |
+| Root        | `docs/`, `agents/`, `scripts/`, `security/`, `.claude/`, `.github/`, `.githooks/`.           |
+
+- **`contract/openapi.json` is generated and committed**, never edited by hand (`agents/writing.md`).
+- **`contract/frozen/` holds one document per contract major still served**: a document enters when a
+  major becomes still served and leaves when it stops being served. Empty during the alpha, where
+  breaking is the stated policy of the README.
+
 ## Where the code lives
 
-Twelve Gradle modules (`settings.gradle.kts`). Layering enforced by the build graph and
+Twelve Gradle modules (`api/settings.gradle.kts`). Layering enforced by the build graph and
 `ArchitectureKonsistTest`.
 
 | Module                     | Role                                                                      |
@@ -42,6 +57,10 @@ Twelve Gradle modules (`settings.gradle.kts`). Layering enforced by the build gr
 
 ## Commands
 
+**Every Gradle command runs from `api/`**: the wrapper is `api/gradlew` and the settings file it needs
+sits beside it, so `./api/gradlew` from the repository root finds no build at all. Prefix with
+`cd api &&` from anywhere else.
+
 - Runner: `./gradlew` (committed wrapper; JDK 25 toolchain auto-provisioned).
 - **Gate (the single local knob)**: `./gradlew gate`
 - One test: `./gradlew :api-usecases:test --tests "UserCreatorTest"`
@@ -56,7 +75,7 @@ Twelve Gradle modules (`settings.gradle.kts`). Layering enforced by the build gr
 
 CI (`validate.yml`) is not a caller of `gate`: it enumerates the gate's parts. A check added to
 `gate` alone runs on no pull request. CI also builds the container image and checks the
-`docs/openapi.json` sync. The gate covers neither: the `pre-commit` hook regenerates `docs/openapi.json`,
+`contract/openapi.json` sync. The gate covers neither: the `pre-commit` hook regenerates it,
 `ImportDataDirectoryImageTest` and `ExportDataDirectoryImageTest` read the Dockerfile's ownership lines
 from inside the gate, and the image build itself runs only in CI.
 
@@ -70,9 +89,13 @@ from inside the gate, and the image build itself runs only in CI.
   `unique = true` (Ebean emits an unsupported `ALTER TABLE` that becomes a silent no-op comment).
   `DbMigrationModelCoverageTest` fails on the no-op marker.
 - **Partial or expression index**: `definition` alone, no `columnNames`, no `unique = true`.
-- **The `pre-commit` hook rewrites `docs/openapi.json`**, stages it, and exits non-zero when it changed: re-run the
-  commit. It also rejects em/en-dashes in staged text.
+- **The `pre-commit` hook rewrites `contract/openapi.json`**, stages it, and exits non-zero when it changed: re-run
+  the commit. It also rejects em/en-dashes in staged text.
 - **A changed detekt rule is not picked up by a live Gradle daemon** (cached classpath: false green). Run
   `./gradlew --stop` before trusting a local gate after a rule change.
-- **detekt baselines are per module** (`config/detekt/baseline-<module>.xml`): the `detektBaseline`
+- **detekt baselines are per module** (`api/config/detekt/baseline-<module>.xml`): the `detektBaseline`
   task rewrites rather than merges.
+- **`checkNoLongDashes` and `checkEvidenceGuard` cover the repository, not the API**, so both name
+  `rootDir.parentFile` (`api/build.gradle.kts`). Both halves matter: point only the exec at the
+  repository and the read side silently finds no file and passes over nothing. They move to the
+  pipeline in block 2 of `docs/specs/2026-09-08-monorepo.md`.

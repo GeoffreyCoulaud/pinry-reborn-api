@@ -23,7 +23,7 @@ Norms, the gate perimeter, Kotlin and backend rules, and the design decisions al
       and its injected bookkeeping is mis-attributed to source lines.
     - `...models.query.Q*` and every class annotated `io.ebean.typequery.Generated`
 
-The perimeter is transcribed from `build.gradle.kts`, where it is enforced. Change it there first. **Inside never
+The perimeter is transcribed from `api/build.gradle.kts`, where it is enforced. Change it there first. **Inside never
 shrinks, and widening Outside requires the user's explicit agreement.**
 
 ## Kotlin

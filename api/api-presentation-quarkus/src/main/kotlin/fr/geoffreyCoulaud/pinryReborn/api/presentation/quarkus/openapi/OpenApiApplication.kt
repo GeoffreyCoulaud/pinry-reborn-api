@@ -13,7 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme
  * `components.securitySchemes` entry unless a built-in mechanism (Basic, JWT, OAuth2, OIDC) is
  * detected. Session tokens are opaque bearer tokens, not JWTs, so the config-based
  * `quarkus.smallrye-openapi.security-scheme=jwt` shortcut would mislabel them (it forces
- * `bearerFormat: JWT`). Declaring the scheme explicitly keeps the generated `docs/openapi.json`
+ * `bearerFormat: JWT`). Declaring the scheme explicitly keeps the generated `contract/openapi.json`
  * coherent (no dangling security refs) while accurately documenting `Authorization: Bearer <token>`.
  *
  * Quarkus does not require a JAX-RS `Application` subclass, but application-level OpenAPI

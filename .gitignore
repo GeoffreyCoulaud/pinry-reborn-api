@@ -1,19 +1,24 @@
 **/build
 .kotlin
 .gradle
-docs/openapi.yaml
+contract/openapi.yaml
 *.db
 *.db-shm
 *.db-wal
 # IntelliJ : tout ignorer par defaut...
-.idea/*
+# Anchored on api/, the project IntelliJ opens: an unanchored .idea/* would stop
+# re-including the six shared files below.
+api/.idea/*
 # ...sauf la config partagee volontairement
-!.idea/.name
-!.idea/conventionalCommit.xml
-!.idea/detekt.xml
-!.idea/inspectionProfiles/
-!.idea/ktlint-plugin.xml
-!.idea/vcs.xml
+!api/.idea/.name
+!api/.idea/conventionalCommit.xml
+!api/.idea/detekt.xml
+!api/.idea/inspectionProfiles/
+!api/.idea/ktlint-plugin.xml
+!api/.idea/vcs.xml
+# A root .idea/ is what an IDE opened on the repository instead of on api/ writes; nothing is
+# shared from there. The leading slash keeps this off api/.idea, whose re-inclusions are above.
+/.idea/
 *.iml
 # Claude Code: ignore the personal and generated parts, share the rest.
 # settings.json and the hook are team-wide (a hook only on one machine enforces
