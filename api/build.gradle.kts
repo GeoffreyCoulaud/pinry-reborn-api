@@ -169,6 +169,11 @@ subprojects {
     }
 }
 
+// The two checks below cover the repository, not the API, and Gradle's root is `api/`
+// (docs/adr/0024-three-projects-share-one-repository.md). Both halves of each one, the process's
+// working directory and the path it then reads, have to name the level above.
+val repositoryRoot: File = rootDir.parentFile
+
 // The no-long-dash rule, held over the tree rather than over a diff: the pre-commit hook checks
 // staged additions, and a hook nobody installed checks nothing.
 tasks.register("checkNoLongDashes") {
@@ -181,6 +186,7 @@ tasks.register("checkNoLongDashes") {
         val tracked =
             providers
                 .exec {
+                    workingDir = repositoryRoot
                     commandLine(
                         "git", "ls-files", "-z", "--", ".",
                         // A delivered dated document is frozen and rewriting one is forbidden, so
@@ -193,7 +199,7 @@ tasks.register("checkNoLongDashes") {
                 .filter { it.isNotEmpty() }
         val offenders =
             tracked.mapNotNull { path ->
-                val file = rootDir.resolve(path)
+                val file = repositoryRoot.resolve(path)
                 if (!file.isFile) return@mapNotNull null
                 val bytes = file.readBytes()
                 // A NUL byte means binary, and a binary file carries no prose to fix.
@@ -223,7 +229,7 @@ tasks.register("checkNoLongDashes") {
 tasks.register<Exec>("checkEvidenceGuard") {
     group = "verification"
     description = "Runs the evidence guard's own tests."
-    workingDir = rootDir
+    workingDir = repositoryRoot
     commandLine("python3", "-m", "unittest", "discover", "--start-directory", ".claude/hooks")
 }
 

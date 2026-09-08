@@ -1,7 +1,8 @@
-# Pinry Reborn - API server
+# Pinry Reborn
 
-This directory contains the API server for the project.  
-It is in charge of all the business logic, to be called by clients.
+The API server lives in `api/`. It is in charge of all the business logic, to be called by clients.  
+The OpenAPI contract it generates lives in `contract/`, which is what a client is written against
+(`docs/adr/0024-three-projects-share-one-repository.md`).
 
 > **Alpha. Do not deploy this yet.** Breaking changes and data loss are expected between versions, and the
 > database migration history will be flattened before beta.
@@ -11,7 +12,7 @@ It is in charge of all the business logic, to be called by clients.
 To start the API locally in dev mode
 
 ```sh
-./gradlew quarkusDev
+cd api && ./gradlew quarkusDev
 ```
 
 ## Git hooks
@@ -22,8 +23,8 @@ This repo ships its git hooks in `.githooks/`. Enable them once per clone:
 git config core.hooksPath .githooks
 ```
 
-- `pre-commit` regenerates the OpenAPI spec.
-- `pre-push` runs `./gradlew check koverVerify` (detekt, tests, and 100% branch coverage).
+- `pre-commit` regenerates the OpenAPI contract.
+- `pre-push` runs `./gradlew gate` (detekt, tests, 100% branch coverage and the prose rules).
 
 ## Architecture
 

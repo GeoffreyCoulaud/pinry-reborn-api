@@ -1,6 +1,6 @@
 #!/bin/sh
 # Local gate, mirroring CI's validate / gate: detekt, all tests, and the 100% branch
-# coverage bound. The `gate` task (root build.gradle.kts) aggregates `check` and
+# coverage bound. The `gate` task (api/build.gradle.kts) aggregates `check` and
 # `koverVerify` across all modules; add more `dependsOn` there to grow the gate.
 set -e
 
@@ -13,4 +13,5 @@ if ! git diff HEAD --quiet; then
     exit 1
 fi
 
+cd api
 exec ./gradlew gate
