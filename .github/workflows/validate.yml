@@ -1,9 +1,8 @@
 name: Validate
 
-# Reusable workflow: static analysis (detekt), tests and container image build.
-# Called by the PR workflow (push=false) and the release workflow (push=true)
-# so both run the exact same quality gate. Only the release path publishes the
-# image to GHCR.
+# Reusable workflow: the gate and the container image build. Called by the PR
+# workflow (push=false) and the release workflow (push=true) so both run the
+# exact same quality gate. Only the release path publishes the image to GHCR.
 on:
   workflow_call:
     inputs:
@@ -16,54 +15,31 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  # One call, not a list of checks. `gate` is a Dagger function (`.dagger/`) and the
+  # same command runs it on a workstation, so a check added to it is in CI the day it
+  # lands. The JDK, libvips and python3 are the function's container, not the runner's:
+  # nothing is installed here beyond the Dagger CLI.
+  verify:
     runs-on: ubuntu-latest
+    # A build that stops making progress has to fail rather than hold the runner: seen twice
+    # on a workstation, a Gradle task dying and the build then never reporting.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
+        # No `call` input: the action only installs the CLI, so the line below is the
+        # command a workstation types. The version pairs with dagger.json's engineVersion.
         with:
-          distribution: temurin
-          java-version: "25"
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-      - name: Detekt
-        working-directory: api
-        run: ./gradlew detekt
-      - name: No long dashes
-        # CI reproduces the gate's parts rather than calling `gate`, so a check added there is not
-        # in CI until it is added here too.
-        working-directory: api
-        run: ./gradlew checkNoLongDashes
-      - name: Evidence guard
-        working-directory: api
-        run: ./gradlew checkEvidenceGuard
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
-        with:
-          distribution: temurin
-          java-version: "25"
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-      - name: Install libvips
-        # api-imaging-vips's tests load the native libvips shared library.
-        # ubuntu-latest (24.04, "noble") ships it under the t64-suffixed name
-        # after the 64-bit time_t transition.
-        run: sudo apt-get update && sudo apt-get install -y libvips42t64
-      - name: Test and verify coverage
-        # `test` runs every module's tests (including api-application's end-to-end
-        # integration tests, which Kover does not cover); `koverVerify` then enforces
-        # 100% branch coverage per in-gate module. Gradle runs the shared test tasks once.
-        working-directory: api
-        run: ./gradlew test koverVerify
+          version: "0.21.9"
+      - name: Gate
+        run: dagger call gate
 
   # Build the runtime image on every run so each PR verifies it still builds,
   # and publish to GHCR only when push=true (release path). The Quarkus fast-jar
   # artifact is built once with Gradle (JVM jars are arch-independent) then
   # buildx assembles the multi-arch manifest directly.
   build-image:
-    needs: [lint, test]
+    needs: [verify]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -210,7 +186,7 @@ jobs:
   # protection, so the gate always runs (if: always()) and fails explicitly
   # unless every needed job actually reported "success".
   gate:
-    needs: [lint, test, build-image]
+    needs: [verify, build-image]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:

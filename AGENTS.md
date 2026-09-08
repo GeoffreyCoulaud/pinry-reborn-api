@@ -22,7 +22,8 @@ norms, its commands and its gate; this file carries what holds for the repositor
 | `api/`      | The Gradle build: the twelve modules, `Dockerfile`, `config/`, `.idea/`. Read `api/AGENTS.md` before touching it. |
 | `contract/` | The API's interface artefact, produced by `api/` and consumed by the clients.                              |
 | `clients/`  | Not built yet: the web application, the browser extension and their shared packages, with their own `AGENTS.md` when they arrive. |
-| Root        | `docs/`, `agents/`, `scripts/`, `security/`, `.claude/`, `.github/`, `.githooks/`.                         |
+| `.dagger/`  | The pipeline, in TypeScript (`docs/adr/0025-the-pipeline-is-written-in-typescript.md`). Belongs to no ecosystem: it calls both. |
+| Root        | `docs/`, `agents/`, `security/`, `.claude/`, `.github/`, `.githooks/`, `dagger.json`.                      |
 
 - **`contract/openapi.json` is generated and committed**, never edited by hand (`agents/writing.md`).
 - **`contract/frozen/` holds one document per contract major still served**: a document enters when a
@@ -32,21 +33,35 @@ norms, its commands and its gate; this file carries what holds for the repositor
 ## Setup (once per clone)
 
 - `git config core.hooksPath .githooks` (enables pre-commit and pre-push hooks).
+- **Docker and the Dagger CLI**, which the gate and the `pre-push` hook both go through. `dagger.json` pins the
+  engine version; install the CLI at that version.
 - `python3` on the PATH (`.claude/hooks/evidence-guard.py` runs on every Bash command; without python3 it enforces
   nothing, silently).
 - Each ecosystem root has its own setup steps on top of these; `api/AGENTS.md` carries the API's.
 
+## The gate
+
+**One command, from anywhere in the repository: `dagger call gate`.** It is what `pre-push` runs and what CI
+runs, in the same container, and it holds three things:
+
+| Function                | What it runs                                                                        |
+|-------------------------|--------------------------------------------------------------------------------------|
+| `dagger call api-gate`  | The API's Gradle gate (`api/AGENTS.md`), with the JDK, libvips and python3 pinned.    |
+| `dagger call prose`     | No long dash in a tracked text file, and the evidence guard's own tests.              |
+| `dagger call contract`  | Produces `contract/openapi.json`. `gate` refuses a committed document that differs.   |
+
+A check whose scope is the repository goes to `.dagger/`; a check whose scope is one ecosystem goes to that
+ecosystem's own gate.
+
 ## CI
 
-CI (`validate.yml`) is not a caller of `gate`: it enumerates the gate's parts. A check added to
-`gate` alone runs on no pull request. CI also builds the container image and checks the
-`contract/openapi.json` sync. The gate covers neither: the `pre-commit` hook regenerates it,
-`ImportDataDirectoryImageTest` and `ExportDataDirectoryImageTest` read the Dockerfile's ownership lines
-from inside the gate, and the image build itself runs only in CI.
+CI (`validate.yml`) **calls** the gate: one job, one `dagger call gate`, the command a workstation types. A check
+added to the pipeline is on the next pull request with nothing to add here. What CI still holds alone is the
+container image, which it builds on every run, smoke-tests, and publishes on the release path.
 
 ## Gotchas
 
 - **A local merge to `main` bypasses CI** (`enforce_admins` is false). Always push and open a PR; merge is rebase-only
   (`gh pr merge --rebase`).
-- **The `pre-commit` hook rewrites `contract/openapi.json`**, stages it, and exits non-zero when it changed: re-run
-  the commit. It also rejects em/en-dashes in staged text, which the gate holds over the whole tree.
+- **Nothing regenerates `contract/openapi.json` for you.** The gate refuses a stale document and names the command
+  that refreshes it; the `pre-commit` hook rejects em/en-dashes in staged additions and does nothing else.
