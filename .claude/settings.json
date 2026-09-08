@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(dagger:*)",
       "Bash(cd:*)",
       "Bash(./gradlew:*)",
       "Bash(git stash:*)",
