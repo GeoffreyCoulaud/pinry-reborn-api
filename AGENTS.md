@@ -53,11 +53,24 @@ runs, in the same container, and it holds three things:
 A check whose scope is the repository goes to `.dagger/`; a check whose scope is one ecosystem goes to that
 ecosystem's own gate.
 
+## The image
+
+Two calls outside the gate, because minutes of image build have no place in `pre-push`:
+
+| Function              | What it does                                                                             |
+|-----------------------|--------------------------------------------------------------------------------------------|
+| `dagger call image`   | Builds `api/Dockerfile` for `linux/amd64` and `linux/arm64`, and reads the machine back from inside each. |
+| `dagger call smoke`   | Starts the image and waits for `/q/health`. The only thing in the repository that runs what ships. |
+
+The suite never reads production's `application.properties`, its own sharing that name and winning by classpath
+order. So a deployment defect reaches `dagger call smoke` first, and it now reaches it on a workstation.
+
 ## CI
 
-CI (`validate.yml`) **calls** the gate: one job, one `dagger call gate`, the command a workstation types. A check
-added to the pipeline is on the next pull request with nothing to add here. What CI still holds alone is the
-container image, which it builds on every run, smoke-tests, and publishes on the release path.
+CI (`validate.yml`) **calls** the pipeline: `dagger call gate` in one job, `dagger call image` then
+`dagger call smoke` in the next, each the command a workstation types. A check added to the pipeline is on the
+next pull request with nothing to add here. What CI still holds alone is the release path, which needs a registry
+and GitHub's identity: the push to GHCR, the cosign attestations, both SBOMs and the OpenVEX predicate.
 
 ## Gotchas
 
