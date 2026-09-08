@@ -45,7 +45,12 @@ sits beside it, so `./api/gradlew` from the repository root finds no build at al
 `cd api &&` from anywhere else.
 
 - Runner: `./gradlew` (committed wrapper; JDK 25 toolchain auto-provisioned).
-- **Gate (the single local knob)**: `./gradlew gate`
+- **The API's gate**: `./gradlew gate`. It covers this build alone; the repository's single knob is
+  `dagger call gate`, which runs this one in a container and the repository-wide checks beside it (root `AGENTS.md`).
+- **Regenerate the contract**: `./gradlew :api-application:quarkusAppPartsBuild --rerun`, which writes
+  `contract/openapi.json`. Nothing does it for you, and the gate refuses a stale document. `--rerun` is not
+  optional: a document edited by hand leaves the sources untouched, so an ordinary build is up to date and
+  writes nothing.
 - One test: `./gradlew :api-usecases:test --tests "UserCreatorTest"`
 - New migration (after changing an entity model): `./gradlew :api-persistence-sqlite:generateDbMigration`.
 - Destructive migration (drop): re-run the generator with the property **in the generator's JVM**, not on the Gradle
@@ -66,7 +71,3 @@ sits beside it, so `./api/gradlew` from the repository root finds no build at al
   `./gradlew --stop` before trusting a local gate after a rule change.
 - **detekt baselines are per module** (`api/config/detekt/baseline-<module>.xml`): the `detektBaseline`
   task rewrites rather than merges.
-- **`checkNoLongDashes` and `checkEvidenceGuard` cover the repository, not the API**, so both name
-  `rootDir.parentFile` (`api/build.gradle.kts`). Both halves matter: point only the exec at the
-  repository and the read side silently finds no file and passes over nothing. They move to the
-  pipeline in block 2 of `docs/specs/2026-09-08-monorepo.md`.

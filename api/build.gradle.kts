@@ -169,81 +169,16 @@ subprojects {
     }
 }
 
-// The two checks below cover the repository, not the API, and Gradle's root is `api/`
-// (docs/adr/0024-three-projects-share-one-repository.md). Both halves of each one, the process's
-// working directory and the path it then reads, have to name the level above.
-val repositoryRoot: File = rootDir.parentFile
-
-// The no-long-dash rule, held over the tree rather than over a diff: the pre-commit hook checks
-// staged additions, and a hook nobody installed checks nothing.
-tasks.register("checkNoLongDashes") {
-    group = "verification"
-    description = "Fails when an em dash or en dash appears in a tracked text file."
-    doLast {
-        // Built from code points rather than written out, so this file is not its own offender.
-        val forbidden = setOf(0x2014.toChar(), 0x2013.toChar())
-        val nul = 0.toChar()
-        val tracked =
-            providers
-                .exec {
-                    workingDir = repositoryRoot
-                    commandLine(
-                        "git", "ls-files", "-z", "--", ".",
-                        // A delivered dated document is frozen and rewriting one is forbidden, so
-                        // the dashes it already carries stay where they are.
-                        ":!docs/specs", ":!docs/plans", ":!docs/adr", ":!docs/handoffs",
-                    )
-                }.standardOutput.asText
-                .get()
-                .split(nul)
-                .filter { it.isNotEmpty() }
-        val offenders =
-            tracked.mapNotNull { path ->
-                val file = repositoryRoot.resolve(path)
-                if (!file.isFile) return@mapNotNull null
-                val bytes = file.readBytes()
-                // A NUL byte means binary, and a binary file carries no prose to fix.
-                if (bytes.contains(0.toByte())) return@mapNotNull null
-                val lines =
-                    bytes
-                        .decodeToString()
-                        .lineSequence()
-                        .withIndex()
-                        .filter { (_, line) -> line.any { it in forbidden } }
-                        .map { (index, _) -> index + 1 }
-                        .toList()
-                if (lines.isEmpty()) null else "$path:${lines.joinToString(",")}"
-            }
-        if (offenders.isNotEmpty()) {
-            throw GradleException(
-                "Em dash or en dash found. Use a colon, a period, parentheses or a hyphen:\n" +
-                    offenders.joinToString("\n") { "  $it" },
-            )
-        }
-    }
-}
-
-// The evidence guard is Python under `.claude/`, so it belongs to no module and Kover cannot see it.
-// The gate reaches it by running its own tests, which need nothing but the `python3` the guard
-// already requires per clone.
-tasks.register<Exec>("checkEvidenceGuard") {
-    group = "verification"
-    description = "Runs the evidence guard's own tests."
-    workingDir = repositoryRoot
-    commandLine("python3", "-m", "unittest", "discover", "--start-directory", ".claude/hooks")
-}
-
-// Single entry point for the local gate, mirroring CI's `validate / gate` check. A root-level
-// `dependsOn("check")` does NOT fan out to subprojects (the name resolves only inside the root
-// project, which has no such task), so the subproject tasks are referenced explicitly. `check`
-// exists in every module (the java plugin); `koverVerify` only in modules that apply Kover, i.e.
-// every module except `api-application` (the composition root, no unit tests by design). Add more
-// `dependsOn` lines here as the gate grows; this is the one knob, not a per-task invocation.
+// The API's whole build in one task, called by the pipeline's `api-gate` function (`.dagger/`).
+// A root-level `dependsOn("check")` does NOT fan out to subprojects (the name resolves only inside
+// the root project, which has no such task), so the subproject tasks are referenced explicitly.
+// `check` exists in every module (the java plugin); `koverVerify` only in modules that apply Kover,
+// i.e. every module except `api-application` (the composition root, no unit tests by design). Add
+// more `dependsOn` lines here as the API's checks grow; a check whose scope is the repository goes
+// to the pipeline instead (docs/adr/0024, consequences).
 tasks.register("gate") {
     group = "verification"
-    description = "Full gate: detekt, all tests (check), the 100% branch coverage bound and the prose rules."
-    dependsOn("checkNoLongDashes")
-    dependsOn("checkEvidenceGuard")
+    description = "The API's gate: detekt, all tests (check) and the 100% branch coverage bound."
     dependsOn(subprojects.map { "${it.path}:check" })
     dependsOn(subprojects.filter { it.name != "api-application" }.map { "${it.path}:koverVerify" })
 }
