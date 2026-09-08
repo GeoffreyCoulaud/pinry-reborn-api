@@ -1,6 +1,6 @@
 #!/bin/sh
 # A fast local shortcut, not a barrier: an uninstalled hook checks nothing, so the gate holds the
-# dash rule over the whole tree and CI holds the OpenAPI document. Both are checked here first
+# dash rule over the whole tree and the contract's synchronisation with it. Checked here first
 # because a commit is cheaper to fix than a pushed branch.
 set -e
 
@@ -10,5 +10,3 @@ if git diff --cached -U0 | grep '^+' | grep -qF -e "$em" -e "$en"; then
     echo "pre-commit: em-dash or en-dash in staged additions; use ':' or '-' (no-em-dash rule)." >&2
     exit 1
 fi
-
-exec ./scripts/generate-openapi.sh

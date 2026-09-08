@@ -23,8 +23,9 @@ This repo ships its git hooks in `.githooks/`. Enable them once per clone:
 git config core.hooksPath .githooks
 ```
 
-- `pre-commit` regenerates the OpenAPI contract.
-- `pre-push` runs `./gradlew gate` (detekt, tests, 100% branch coverage and the prose rules).
+- `pre-commit` refuses an em dash or an en dash in what you staged.
+- `pre-push` runs `dagger call gate`, the same command CI runs: the API's build, the prose rules and the
+  contract's synchronisation. It needs Docker and the Dagger CLI.
 
 ## Architecture
 

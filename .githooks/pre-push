@@ -1,7 +1,7 @@
 #!/bin/sh
-# Local gate, mirroring CI's validate / gate: detekt, all tests, and the 100% branch
-# coverage bound. The `gate` task (api/build.gradle.kts) aggregates `check` and
-# `koverVerify` across all modules; add more `dependsOn` there to grow the gate.
+# The gate, in the container continuous integration runs it in: the API's build, the repository's
+# prose rules and the contract's synchronisation (`.dagger/`, docs/adr/0024 decision 5). Slower than
+# the session's warm Gradle daemon, and the last gesture before pushing is where correctness wins.
 set -e
 
 # The gate reads the working tree; it validates HEAD only when the two match. Refuse the
@@ -13,5 +13,4 @@ if ! git diff HEAD --quiet; then
     exit 1
 fi
 
-cd api
-exec ./gradlew gate
+exec dagger call gate
