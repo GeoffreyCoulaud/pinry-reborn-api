@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     # A build that stops making progress has to fail rather than hold the runner: seen twice
     # on a workstation, a Gradle task dying and the build then never reporting.
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
@@ -32,7 +32,10 @@ jobs:
         with:
           version: "0.21.9"
       - name: Gate
-        run: dagger call gate
+        # `--progress=plain` because the default renderer redraws in place and a runner's log
+        # keeps only what was printed: without it the job shows nothing between the first
+        # container and the verdict, which reads exactly like a hang.
+        run: dagger call --progress=plain gate
 
   # Build the runtime image on every run so each PR verifies it still builds,
   # and publish to GHCR only when push=true (release path). The Quarkus fast-jar
