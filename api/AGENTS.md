@@ -71,3 +71,7 @@ sits beside it, so `./api/gradlew` from the repository root finds no build at al
   `./gradlew --stop` before trusting a local gate after a rule change.
 - **detekt baselines are per module** (`api/config/detekt/baseline-<module>.xml`): the `detektBaseline`
   task rewrites rather than merges.
+- **The daemon's metaspace is bound in `api/gradle.properties`, and the bound is load-bearing.** The
+  gate runs the whole build in one JVM; at the default, a run with nothing cached dies with
+  `OutOfMemoryError: Metaspace` on whichever task is unlucky, and Gradle then hangs instead of
+  reporting. The symptom is a task marked `FAILED` with no message and no build summary after it.

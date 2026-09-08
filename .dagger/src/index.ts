@@ -32,8 +32,7 @@ const FROZEN = [":!docs/specs", ":!docs/plans", ":!docs/adr", ":!docs/handoffs"]
 
 /**
  * Gradle otherwise sizes its worker pool from the container's core count, which is the engine
- * host's rather than the runner's. Pinned to a runner's four so the build's peak load is the
- * same everywhere, and because the first run left at twelve died on a task that passed alone.
+ * host's and not the runner's. Pinned to a runner's four so the build has one shape everywhere.
  */
 const MAX_WORKERS = "--max-workers=4"
 
@@ -53,11 +52,10 @@ export class PinryReborn {
     // One Gradle invocation for both parts. Two would serialize on the shared cache volume and
     // the second would recompile what the first had just compiled.
     const built = this.gradleRun(source, "gate", CONTRACT_TASK)
-    const [api, prose, contract] = await Promise.all([
-      built.stdout(),
-      this.prose(source),
-      this.contractIsSynchronised(built.directory("/src/contract"), source),
-    ])
+    // The contract is read after the build, not beside it. Asking for both at once makes two
+    // requests for one container, and the second waits on a cache volume the first holds.
+    const [api, prose] = await Promise.all([built.stdout(), this.prose(source)])
+    const contract = await this.contractIsSynchronised(built.directory("/src/contract"), source)
     return [api, prose, contract].join("\n")
   }
 
@@ -161,12 +159,10 @@ export class PinryReborn {
       .from("eclipse-temurin:25-jdk")
       .withExec(["apt-get", "update"])
       .withExec(["apt-get", "install", "-y", "--no-install-recommends", "libvips42t64"])
-      // Locked, not shared: Gradle takes exclusive file locks inside its cache, so two
-      // invocations sharing the volume make one of them fail on the journal lock.
-      .withMountedCache("/root/.gradle/caches", dag.cacheVolume("gradle-caches"), {
-        sharing: CacheSharingMode.Locked,
-      })
-      .withMountedCache("/root/.gradle/wrapper", dag.cacheVolume("gradle-wrapper"), {
+      // One volume, locked. Gradle takes exclusive file locks inside its home, so two
+      // invocations sharing it make one fail on the journal lock; locked serializes them
+      // instead. One volume and not two, because two locks taken in either order deadlock.
+      .withMountedCache("/root/.gradle", dag.cacheVolume("gradle-home"), {
         sharing: CacheSharingMode.Locked,
       })
       .withMountedDirectory("/src", source)
