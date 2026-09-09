@@ -164,6 +164,12 @@ The exits, `docs/adr/0010-review-finding-dispositions.md` giving the four.
     failed" branch never sees one: an invalid pathspec fails the gate through Dagger's own error,
     carrying git's stderr, and the branch guards what is left. It is why that branch cannot be shown
     red, and why deleting it would be wrong.
+11. **A loaded workstation turns the gate red on three integration tests.** At load average 19,
+    `PinTaggingIntegrationTest` and two `ImageHostingIntegrationTest` cases failed and the Gradle
+    half took 12m 38s against its usual three minutes. The same three passed natively in 13s once
+    the machine was idle, and the next gate was green in 2m 59s. The gate runs the whole suite in a
+    container competing with everything else on the machine, so a red gate whose failures are
+    timing-bound integration tests is worth re-running idle before it is believed.
 
 ## Not validated
 
