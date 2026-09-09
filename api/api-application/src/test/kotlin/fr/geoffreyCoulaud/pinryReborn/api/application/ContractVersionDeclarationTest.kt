@@ -8,10 +8,8 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 /**
- * `info.version` is the contract's own number, the one a client negotiates on
- * (`docs/adr/0024-three-projects-share-one-repository.md`, decision 6), and nothing may fill it from the
- * build's. Asserting only that the field carries a value passes on a document where the two are the same
- * string, which is the state this test exists to leave behind.
+ * `info.version` is the contract's own number and never the build's (`docs/adr/0024`, decision 6):
+ * asserting it merely carries a value passes on the document this replaced, where the two were equal.
  */
 class ContractVersionDeclarationTest {
     private val infoVersionKey = "quarkus.smallrye-openapi.info-version"

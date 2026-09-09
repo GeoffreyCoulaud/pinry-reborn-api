@@ -9,6 +9,7 @@ import {
   CacheSharingMode,
   Container,
   Directory,
+  File,
   Platform,
   ReturnType,
   argument,
@@ -44,6 +45,30 @@ const QUARKUS_BUILD = ":api-application:quarkusBuild"
 /** The fast-jar layout, under `api/`. It is the whole of the image's build context. */
 const FAST_JAR = "api-application/build/quarkus-app"
 
+/** The published contract, at the path both halves of the guard read it from. */
+const CONTRACT = "contract/openapi.json"
+
+/** One document per contract major still served. Empty during the alpha, where breaking is the policy. */
+const FROZEN_MAJORS = "contract/frozen"
+
+/** The breaking-change guard. Pinned: `latest` reports a commit hash, which no reader can compare. */
+const OASDIFF = "tufin/oasdiff:v1.31.0"
+
+/**
+ * What oasdiff calls a break the declared version does not admit. It rates all three `info`, one level
+ * below a warning, so the guard reads the identifiers rather than the exit code.
+ */
+const VERSION_RULES = ["api-version-not-bumped", "api-major-version-not-bumped", "api-version-decreased"]
+
+/**
+ * Where the contract's previous state is read from, first one that resolves. A runner checks out a
+ * detached merge commit and has the remote ref alone; a workstation has both.
+ */
+const MAIN_REFS = ["origin/main", "main"]
+
+/** Where the previous contract lands, outside `/src` so it is not itself a candidate for comparison. */
+const PREVIOUS_CONTRACT = "/previous-contract.json"
+
 /** The port the runtime image serves on. */
 const HTTP_PORT = 8080
 
@@ -66,6 +91,21 @@ echo "no answer on /q/health within ${SMOKE_SECONDS}s" >&2
 exit 1
 `
 
+/**
+ * The contract as `main` has it. The document goes to a file and not to standard output, so the one
+ * thing on the error stream is the sentence a reader needs when no ref resolves.
+ */
+const SHOW_PREVIOUS_CONTRACT = `
+for ref in ${MAIN_REFS.join(" ")}; do
+  if git cat-file -e "$ref:${CONTRACT}" 2>/dev/null; then
+    git show "$ref:${CONTRACT}" > ${PREVIOUS_CONTRACT}
+    exit 0
+  fi
+done
+echo "No ${CONTRACT} on ${MAIN_REFS.join(" or ")}. The guard compares against main, so a shallow clone needs fetch-depth: 0." >&2
+exit 1
+`
+
 @object()
 export class PinryReborn {
   /**
@@ -80,9 +120,30 @@ export class PinryReborn {
     const built = this.gradleRun(source, "gate", QUARKUS_BUILD)
     // The contract is read after the build, not beside it. Asking for both at once makes two
     // requests for one container, and the second waits on a cache volume the first holds.
-    const [api, prose] = await Promise.all([built.stdout(), this.prose(source)])
+    const [api, prose, guard] = await Promise.all([
+      built.stdout(),
+      this.prose(source),
+      this.contractGuard(source),
+    ])
     const contract = await this.contractIsSynchronised(built.directory("/src/contract"), source)
-    return [api, prose, contract].join("\n")
+    return [api, prose, contract, guard].join("\n")
+  }
+
+  /**
+   * The contract refuses an undeclared breaking change
+   * (docs/adr/0024-three-projects-share-one-repository.md, decision 7). Two checks: the committed
+   * document breaks no major still served, and its `info.version` admits what it changed against
+   * `main`. The gate's synchronisation check is what makes reading the committed document sound.
+   */
+  @func()
+  async contractGuard(
+    @argument({ defaultPath: "/", ignore: IGNORE }) source: Directory,
+  ): Promise<string> {
+    const [stillServed, declared] = await Promise.all([
+      this.breaksNoStillServedMajor(source),
+      this.versionAdmitsTheDiff(source),
+    ])
+    return [stillServed, declared].join("\n")
   }
 
   /**
@@ -242,6 +303,76 @@ export class PinryReborn {
       )
     }
     return "contract/openapi.json is synchronised"
+  }
+
+  /**
+   * Nothing a client of a still served major reads may disappear. The directory is empty during the
+   * alpha, so this check has nothing to compare and says so rather than reporting a pass it did not earn.
+   */
+  private async breaksNoStillServedMajor(source: Directory): Promise<string> {
+    const entries = await source.directory(FROZEN_MAJORS).entries()
+    const majors = entries.filter((entry) => entry.endsWith(".json"))
+    if (majors.length === 0) {
+      return `${FROZEN_MAJORS}/ holds no still served major to break`
+    }
+    const oasdiff = this.oasdiff(source)
+    const reports = await Promise.all(
+      majors.map(async (major) => {
+        // Base then revision: swapped, a removal reads as an addition and every break passes.
+        const run = oasdiff.withExec(
+          ["breaking", `${FROZEN_MAJORS}/${major}`, CONTRACT, "--fail-on", "ERR", "--format", "singleline"],
+          { useEntrypoint: true, expect: ReturnType.Any },
+        )
+        const [status, changes] = await Promise.all([run.exitCode(), run.stdout()])
+        return { major, status, changes }
+      }),
+    )
+    const broken = reports.filter((report) => report.status !== 0)
+    if (broken.length > 0) {
+      throw new Error(
+        `${CONTRACT} breaks a major that is still served. Restore what it removed, or retire that major:\n` +
+          broken.map((report) => `  against ${FROZEN_MAJORS}/${report.major}:\n${report.changes}`).join("\n"),
+      )
+    }
+    return `${CONTRACT} breaks none of the still served majors: ${majors.join(", ")}`
+  }
+
+  /**
+   * A break is allowed; a break the version hides is not. oasdiff derives the bump the diff requires
+   * and names the rule it failed, so the guard reports its sentence rather than writing its own.
+   */
+  private async versionAdmitsTheDiff(source: Directory): Promise<string> {
+    const changelog = await this.oasdiff(source)
+      .withFile(PREVIOUS_CONTRACT, await this.contractOnMain(source))
+      .withExec(["changelog", PREVIOUS_CONTRACT, CONTRACT, "--format", "json"], { useEntrypoint: true })
+      .stdout()
+    const changes: { id: string; text: string }[] = JSON.parse(changelog || "[]")
+    const hidden = changes.filter((change) => VERSION_RULES.includes(change.id))
+    if (hidden.length > 0) {
+      throw new Error(
+        `${CONTRACT} breaks and its info.version does not admit it. Raise ` +
+          "quarkus.smallrye-openapi.info-version, then regenerate the contract:\n" +
+          hidden.map((change) => `  ${change.text} [${change.id}]`).join("\n"),
+      )
+    }
+    return `${CONTRACT}'s info.version admits every break in the diff against main`
+  }
+
+  /** The committed contract on `main`, which is what a merge would replace. */
+  private async contractOnMain(source: Directory): Promise<File> {
+    const run = this.repository(source).withExec(["sh", "-c", SHOW_PREVIOUS_CONTRACT], {
+      expect: ReturnType.Any,
+    })
+    const [status, failure] = await Promise.all([run.exitCode(), run.stderr()])
+    if (status !== 0) {
+      throw new Error(failure.trim())
+    }
+    return run.file(PREVIOUS_CONTRACT)
+  }
+
+  /** The guard's environment: one static binary, and the working tree it reads the contract from. */
+  private oasdiff(source: Directory): Container {
+    return dag.container().from(OASDIFF).withMountedDirectory("/src", source).withWorkdir("/src")
   }
 
   /** The build, asked for one set of tasks. Every Gradle call in this module goes through here. */
