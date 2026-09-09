@@ -26,10 +26,15 @@ norms, its commands and its gate; this file carries what holds for the repositor
 | Root        | `docs/`, `agents/`, `security/`, `.claude/`, `.github/`, `.githooks/`, `dagger.json`.                      |
 
 - **`contract/openapi.json` is generated and committed**, never edited by hand (`agents/writing.md`).
-- **Its `info.version` is the contract's own number**, declared by `quarkus.smallrye-openapi.info-version`
-  in `api/api-application/src/main/resources/application.properties` and independent of the image tag
-  (`docs/adr/0024-three-projects-share-one-repository.md`, decision 6). Nothing may fill it from
-  `quarkus.application.version`; `ContractVersionDeclarationTest` refuses that.
+- **Its `info.title` and `info.version` are the contract's own**, declared by
+  `quarkus.smallrye-openapi.info-title` and `.info-version` in
+  `api/api-application/src/main/resources/application.properties`. Left undeclared they fall back to the
+  build, the title to the Gradle module's name and the version to `quarkus.application.version`, which a
+  client would then negotiate on (`docs/adr/0024-three-projects-share-one-repository.md`, decision 6).
+  `ContractVersionDeclarationTest` refuses the version's fallback.
+- **The contract's version is always a plain release**, never a prerelease: `oasdiff` reads
+  `1.0.0-SNAPSHOT` to `1.0.0` as a *decrease*, where semver precedence makes it an increase, and the guard
+  below would refuse a break the version does declare. An accepted limit of the tool, not a defect here.
 - **`contract/frozen/` holds one document per contract major still served**, as `<major>.json`: a document
   enters when a major becomes still served and leaves when it stops being served. Empty during the alpha,
   where breaking is the stated policy of the README.

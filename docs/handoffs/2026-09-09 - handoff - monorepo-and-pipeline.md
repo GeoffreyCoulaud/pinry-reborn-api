@@ -11,9 +11,9 @@ document's own.
 ## Current state
 
 Three of the four code blocks are merged. Block 4, the contract guard, is green at its branch tip
-(`dagger call gate`, 2m 54s) and waits for the human's reading; the holistic review runs over the
-whole lot after it. Nothing here is deployed: the lot changes where code lives and what checks it,
-not what the server does.
+(`dagger call gate` in 2m 44s, and run `34351819709` green on all three jobs) and waits for the
+human's reading; the holistic review runs over the whole lot after it. Nothing here is deployed: the
+lot changes where code lives and what checks it, not what the server does.
 
 The repository now holds the Gradle build under `api/`, the generated contract under `contract/`,
 and the pipeline under `.dagger/`. `clients/` does not exist and no client is built.
@@ -40,7 +40,9 @@ operator's ruling; `buildx` still ships both architectures on the release path.
 
 **Block 4, the contract guard** (this block). `quarkus.smallrye-openapi.info-version` is declared
 explicitly and the contract now announces `1.0.0` where the build announces `1.0.0-SNAPSHOT`;
-`ContractVersionDeclarationTest` pins the two apart. `dagger call contract-guard` runs `oasdiff`
+`ContractVersionDeclarationTest` pins the two apart. `info-title` is declared beside it on the
+operator's ruling, the document having published the Gradle module's name until now.
+`dagger call contract-guard` runs `oasdiff`
 inside the gate with two checks: nothing in `contract/frozen/` may break at all, and a break against
 `main` must be admitted by `info.version`. `validate.yml`'s `verify` job checks out with
 `fetch-depth: 0`, the guard reading the contract as `origin/main` has it.
@@ -54,7 +56,8 @@ Every number is a measured continuous integration run, not an estimate.
 | Before the lot (`34229652108`) | `lint` 1m 11s and `test` 5m 10s in parallel | the same image build, not recorded on its own | **8m 38s** |
 | After block 2 (`34250166952`) | 7m 26s | 2m 33s | **10m 08s** |
 | Block 3, both architectures (`34277955208`) | 9m 07s | 10m 06s | **19m 24s** |
-| Block 3, one architecture (`34339649929`) | 9m 02s | 4m 30s | **13m 43s**, which is what ships |
+| Block 3, one architecture (`34339649929`) | 9m 02s | 4m 30s | **13m 43s** |
+| Block 4, the guard in the gate (`34351819709`) | 8m 52s | 4m 41s | **13m 47s**, which is what ships |
 
 Three readings of that table:
 
@@ -100,10 +103,13 @@ name (a persistent engine, Dagger Cloud, or a runner with storage). None is take
    `ignore` list, so the fast jar is not in the directory a function receives. The context is
    assembled from the `Dockerfile` and the Gradle container's output instead.
 8. **`oasdiff` reads `1.0.0-SNAPSHOT` to `1.0.0` as a version decrease**, where semver precedence
-   makes it an increase. Its rules do parse a prerelease and do fire on one, which is what section 8
-   asked; the ordering is the surprise. It bites exactly once, on the commit that leaves the
-   prerelease behind, and only if that same commit also breaks the contract. Contract versions are
-   plain releases from here on, so the case does not recur.
+   makes a prerelease lower than the release it announces. Its rules do parse a prerelease and do
+   fire on one, which is what section 8 asked; the ordering is the surprise. It bites exactly once,
+   on the commit that leaves the prerelease behind, and only if that same commit also breaks the
+   contract. **Exit: an accepted limit of the tool the guard rests on**, and not a backlog item,
+   because no work follows from it. It is written where the decision lives: section 8 of the
+   specification carries the correction, and the root `AGENTS.md` carries the rule it produces, that
+   the contract's version is always a plain release.
 9. **An empty `contract/frozen/` makes the first `oasdiff` check unfalsifiable.** A wrong path, a
    wrong flag or a swapped base and revision are all green against nothing. Block 4's evidence is a
    throwaway document dropped into the directory, and a counter-check showing that the same pure
@@ -111,10 +117,6 @@ name (a persistent engine, Dagger Cloud, or a runner with storage). None is take
 
 ## Not validated
 
-- **That `origin/main` resolves inside the pipeline on a runner.** The contract guard reads the
-  previous contract from `origin/main`, falling back to `main`, and `fetch-depth: 0` is there for
-  it. A workstation has both refs; that a pull request's detached checkout has the first is proved
-  by this block's own continuous integration run and by nothing before it.
 - **`contract/frozen/` has never held a document outside a demonstration.** The first real one
   arrives when a major becomes still served, and the guard's behaviour with several documents at
   once is exercised by one throwaway file only.
@@ -145,15 +147,18 @@ sibling are the first client lot's to close; **Import follow-ons** is not adjace
 
 ## Tier-2 questions asked
 
-Two, both in the same shape: a measurement reported as a finding, and the operator ruling on it.
+Three, one per block except block 2, which asked none.
 
 - **Block 1**, `api/AGENTS.md`: which file the split delivers it in. Answer: block 1 delivers it,
   and the split follows ADR 0024 decision 2, norms and commands and gate to the ecosystem file.
 - **Block 3**, the pipeline going from 10m 08s to 19m 24s. Answer: a pull request tests
   `linux/amd64` alone, the risk of an architecture-specific false negative being low with these
   technologies. `buildx` still ships both on the release path.
-
-Blocks 2 and 4 asked none.
+- **Block 4**, `info.title` publishing the Gradle module's name, `api-application API`, from the same
+  fallback the block was removing for the version. Answer: declare it too, as `Pinry Reborn API`. The
+  specification's review had raised the version and not the title, and the operator recorded that as
+  the specification's omission rather than a decision, which is worth carrying: an argument from a
+  review's silence is not available.
 
 ## Next step
 
