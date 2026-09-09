@@ -2719,7 +2719,7 @@
   },
   "info" : {
     "title" : "api-application API",
-    "version" : "1.0.0-SNAPSHOT"
+    "version" : "1.0.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",
