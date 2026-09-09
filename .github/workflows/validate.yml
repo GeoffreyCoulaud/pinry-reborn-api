@@ -26,6 +26,10 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # The contract guard reads the contract as origin/main has it, and the default shallow
+          # checkout fetches that ref's history not at all. The gate fails naming this line.
+          fetch-depth: 0
       - uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
         # No `call` input: the action only installs the CLI, so the line below is the
         # command a workstation types. The version pairs with dagger.json's engineVersion.

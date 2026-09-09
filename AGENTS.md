@@ -26,9 +26,13 @@ norms, its commands and its gate; this file carries what holds for the repositor
 | Root        | `docs/`, `agents/`, `security/`, `.claude/`, `.github/`, `.githooks/`, `dagger.json`.                      |
 
 - **`contract/openapi.json` is generated and committed**, never edited by hand (`agents/writing.md`).
-- **`contract/frozen/` holds one document per contract major still served**: a document enters when a
-  major becomes still served and leaves when it stops being served. Empty during the alpha, where
-  breaking is the stated policy of the README.
+- **Its `info.version` is the contract's own number**, declared by `quarkus.smallrye-openapi.info-version`
+  in `api/api-application/src/main/resources/application.properties` and independent of the image tag
+  (`docs/adr/0024-three-projects-share-one-repository.md`, decision 6). Nothing may fill it from
+  `quarkus.application.version`; `ContractVersionDeclarationTest` refuses that.
+- **`contract/frozen/` holds one document per contract major still served**, as `<major>.json`: a document
+  enters when a major becomes still served and leaves when it stops being served. Empty during the alpha,
+  where breaking is the stated policy of the README.
 
 ## Setup (once per clone)
 
@@ -42,13 +46,14 @@ norms, its commands and its gate; this file carries what holds for the repositor
 ## The gate
 
 **One command, from anywhere in the repository: `dagger call gate`.** It is what `pre-push` runs and what CI
-runs, in the same container, and it holds three things:
+runs, in the same container, and it holds four things:
 
-| Function                | What it runs                                                                        |
-|-------------------------|--------------------------------------------------------------------------------------|
-| `dagger call api-gate`  | The API's Gradle gate (`api/AGENTS.md`), with the JDK, libvips and python3 pinned.    |
-| `dagger call prose`     | No long dash in a tracked text file, and the evidence guard's own tests.              |
-| `dagger call contract`  | Produces `contract/openapi.json`. `gate` refuses a committed document that differs.   |
+| Function                     | What it runs                                                                     |
+|------------------------------|-----------------------------------------------------------------------------------|
+| `dagger call api-gate`       | The API's Gradle gate (`api/AGENTS.md`), with the JDK, libvips and python3 pinned. |
+| `dagger call prose`          | No long dash in a tracked text file, and the evidence guard's own tests.           |
+| `dagger call contract`       | Produces `contract/openapi.json`. `gate` refuses a committed document that differs. |
+| `dagger call contract-guard` | The contract breaks no still served major, and its `info.version` admits what it changed against `main` (`oasdiff`). |
 
 A check whose scope is the repository goes to `.dagger/`; a check whose scope is one ecosystem goes to that
 ecosystem's own gate.
@@ -82,3 +87,8 @@ and GitHub's identity: the push to GHCR, the cosign attestations, both SBOMs and
   (`gh pr merge --rebase`).
 - **Nothing regenerates `contract/openapi.json` for you.** The gate refuses a stale document and names the command
   that refreshes it; the `pre-commit` hook rejects em/en-dashes in staged additions and does nothing else.
+- **The gate reads git history**, the contract on `origin/main` being what a merge would replace. A shallow clone
+  has no such ref and the guard says so: `validate.yml` carries `fetch-depth: 0` for it.
+- **A break is allowed and a version that hides one is not.** Raise
+  `quarkus.smallrye-openapi.info-version` by a major, regenerate, and the gate accepts the break.
+  `contract/frozen/` is the other half: nothing there may break at all, whatever the version says.
