@@ -4,16 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
 
 /**
  * `info.version` is the contract's own number and never the build's (`docs/adr/0024`, decision 6):
  * asserting it merely carries a value passes on the document this replaced, where the two were equal.
+ * It is also always a plain release, which the gate's guard depends on and only a test can hold.
  */
 class ContractVersionDeclarationTest {
     private val infoVersionKey = "quarkus.smallrye-openapi.info-version"
     private val buildVersionLine = Regex("""^version\s*=\s*"([^"]+)"$""")
+    private val plainRelease = Regex("""^\d+\.\d+\.\d+$""")
 
     @Test
     fun `Given the published contract, Then its version is declared here and is not the build's`() {
@@ -40,8 +43,14 @@ class ContractVersionDeclarationTest {
             "The contract announces the build's version ($built). The two are independent: an image tag is " +
                 "not a contract change and must not read as one.",
         )
+        assertTrue(
+            plainRelease.matches(published),
+            "The contract announces the prerelease $published. oasdiff orders 1.0.0-SNAPSHOT above 1.0.0, " +
+                "so the gate's guard would refuse a break this version does declare (AGENTS.md).",
+        )
     }
 
+    /** Read from the working tree: inside `dagger call gate` the same build wrote it moments earlier. */
     private fun publishedContractVersion(): String =
         ObjectMapper()
             .readTree(File("../../contract/openapi.json"))
