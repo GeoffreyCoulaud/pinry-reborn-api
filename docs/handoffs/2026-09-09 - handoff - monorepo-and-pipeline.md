@@ -67,7 +67,8 @@ its start to its end and the pipeline from the run's creation to its last job's 
 | After block 2 (`34250166952`) | 7m 26s | 2m 33s | **10m 08s** |
 | Block 3, both architectures (`34277955208`) | 9m 07s | 10m 06s | **19m 24s** |
 | Block 3, one architecture (`34339649929`) | 9m 02s | 4m 30s | **13m 43s** |
-| Block 4, the guard in the gate (`34357626076`) | 9m 24s | 4m 18s | **13m 54s**, which is what ships |
+| Block 4, the guard in the gate (`34357626076`) | 9m 24s | 4m 18s | **13m 54s** |
+| The closing block, the guard's second oasdiff run (`34366862857`) | 8m 46s | 4m 28s | **13m 26s**, which is what ships |
 
 Three readings of that table:
 
@@ -115,7 +116,7 @@ The exits, `docs/adr/0010-review-finding-dispositions.md` giving the four.
 | **MINOR.** Commit `87a310bb`, `chore(agents) allow dagger`, has no colon, and both permission commits have empty bodies | **Named, nothing to fix**: rewriting merged history costs more than the defect. The rule is the format, not a hook: nothing lints a commit message here |
 | **MINOR.** The handoff's baseline row was mislabelled and its image build called unrecorded | **Fixed here**: the row is block 1's own head run, inside the lot, its image build 3m 20s and its pipeline 8m 41s by the method the table now states |
 | **MINOR.** Two cold Gradle builds per pull request, called a backlog candidate and never filed | **Fixed here**: a `P2` item |
-| **MINOR.** Three error paths were never shown red | **Two fixed, one accepted.** `contractOnMain`'s missing ref shown red against `origin/no-such-branch`. The long-dash search's failure branch cannot go red as written and the pitfalls below say why. The smoke test's sixty-second timeout is not shown: an image build and a minute of waiting to exercise a `for` loop |
+| **MINOR.** Three error paths were never shown red | **One shown, two accepted.** `contractOnMain`'s missing ref shown red against `origin/no-such-branch`. The long-dash search's failure branch cannot go red as written, for the reason pitfall 10 gives. The smoke test's sixty-second timeout is not shown: an image build and a minute of waiting to exercise a `for` loop |
 
 ## Pitfalls, in the order they cost time
 
@@ -158,8 +159,8 @@ The exits, `docs/adr/0010-review-finding-dispositions.md` giving the four.
    throwaway document dropped into the directory, and a counter-check showing that the same pure
    removal reports "No breaking changes to report" with base and revision swapped.
 10. **A container's `expect: ANY` still raises on exit 128 and 129.** Measured at 2, 5, 127, 128, 129
-    and 255: every code but those two comes back through `exitCode()`, the two being where a shell
-    reports a signal. 128 is also git's code for a fatal error, so `prose`'s "the search itself
+    and 255: every code but those two comes back through `exitCode()`.
+    128 is also git's code for a fatal error, so `prose`'s "the search itself
     failed" branch never sees one: an invalid pathspec fails the gate through Dagger's own error,
     carrying git's stderr, and the branch guards what is left. It is why that branch cannot be shown
     red, and why deleting it would be wrong.
