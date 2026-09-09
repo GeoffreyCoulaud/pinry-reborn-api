@@ -11,9 +11,9 @@ document's own.
 ## Current state
 
 Three of the four code blocks are merged. Block 4, the contract guard, is green at its branch tip
-(`dagger call gate` in 2m 44s, and run `34351819709` green on all three jobs) and waits for the
-human's reading; the holistic review runs over the whole lot after it. Nothing here is deployed: the
-lot changes where code lives and what checks it, not what the server does.
+(`dagger call gate`, 2m 56s) and green in continuous integration on every push it made; it waits for
+the human's reading, and the holistic review runs over the whole lot after it. Nothing here is
+deployed: the lot changes where code lives and what checks it, not what the server does.
 
 The repository now holds the Gradle build under `api/`, the generated contract under `contract/`,
 and the pipeline under `.dagger/`. `clients/` does not exist and no client is built.
@@ -57,7 +57,7 @@ Every number is a measured continuous integration run, not an estimate.
 | After block 2 (`34250166952`) | 7m 26s | 2m 33s | **10m 08s** |
 | Block 3, both architectures (`34277955208`) | 9m 07s | 10m 06s | **19m 24s** |
 | Block 3, one architecture (`34339649929`) | 9m 02s | 4m 30s | **13m 43s** |
-| Block 4, the guard in the gate (`34351819709`) | 8m 52s | 4m 41s | **13m 47s**, which is what ships |
+| Block 4, the guard in the gate (`34357626076`) | 9m 24s | 4m 18s | **13m 54s**, which is what ships |
 
 Three readings of that table:
 
