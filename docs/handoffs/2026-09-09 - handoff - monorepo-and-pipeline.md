@@ -4,16 +4,17 @@ Date: 2026-09-09
 Specification: `docs/specs/2026-09-08-monorepo.md`
 Decisions: `docs/adr/0024-three-projects-share-one-repository.md`,
 `docs/adr/0025-the-pipeline-is-written-in-typescript.md`
-Tier: Spec, four code blocks, one teammate each (`docs/adr/0023-act-in-a-teammate-per-block.md`).
-Base commit: `7d93c31b`. Pull requests: 90 (block 1), 92 (block 2), 93 (block 3), block 4's is this
-document's own.
+Tier: Spec, four code blocks and Wrap's closing block, one teammate each
+(`docs/adr/0023-act-in-a-teammate-per-block.md`).
+Base commit: `7d93c31b`. Pull requests: 90 (block 1), 92 (block 2), 93 (block 3), 95 (block 4), and
+the closing block's, which carries this document's corrections.
 
 ## Current state
 
-Three of the four code blocks are merged. Block 4, the contract guard, is green at its branch tip
-(`dagger call gate`, 2m 56s) and green in continuous integration on every push it made; it waits for
-the human's reading, and the holistic review runs over the whole lot after it. Nothing here is
-deployed: the lot changes where code lives and what checks it, not what the server does.
+The four code blocks are merged. What is open is Wrap's closing block: the holistic review's sixteen
+findings, the two backlog items the lot owed, and the corrections below. It is green at its branch
+tip (`dagger call gate`, 2m 51s). Nothing here is deployed: the lot changes where code lives and what
+checks it, not what the server does.
 
 The repository now holds the Gradle build under `api/`, the generated contract under `contract/`,
 and the pipeline under `.dagger/`. `clients/` does not exist and no client is built.
@@ -38,7 +39,7 @@ and keeps its release steps. The smoke test starts what ships and polls `/q/heal
 pipeline, which no workstation could do before. A pull request builds `linux/amd64` alone, on the
 operator's ruling; `buildx` still ships both architectures on the release path.
 
-**Block 4, the contract guard** (this block). `quarkus.smallrye-openapi.info-version` is declared
+**Block 4, the contract guard** (PR 95). `quarkus.smallrye-openapi.info-version` is declared
 explicitly and the contract now announces `1.0.0` where the build announces `1.0.0-SNAPSHOT`;
 `ContractVersionDeclarationTest` pins the two apart. `info-title` is declared beside it on the
 operator's ruling, the document having published the Gradle module's name until now.
@@ -47,13 +48,22 @@ inside the gate with two checks: nothing in `contract/frozen/` may break at all,
 `main` must be admitted by `info.version`. `validate.yml`'s `verify` job checks out with
 `fetch-depth: 0`, the guard reading the contract as `origin/main` has it.
 
+**Wrap's closing block** (this document's own). The holistic review's sixteen findings, each with its
+exit below. The guard's two halves both stopped at `--fail-on ERR`, which passes seventeen of
+oasdiff's breaking rules, so a removed query parameter went green through both; both now fail on
+`WARN`, and the version half reads a second `breaking` run against `main` and demands a raised major
+for whatever that run reports. `ContractVersionDeclarationTest` refuses a prerelease value. Two
+backlog items are filed, `agents/workflow.md`'s green criterion names `dagger call gate`, and the
+specification's two falsified statements about the release steps are corrected in place.
+
 ## What the pipeline costs
 
-Every number is a measured continuous integration run, not an estimate.
+Every number is a measured continuous integration run, not an estimate: `gh run view`, each job from
+its start to its end and the pipeline from the run's creation to its last job's end.
 
 | State | `verify` | `build-image` | Pipeline |
 |---|---|---|---|
-| Before the lot (`34229652108`) | `lint` 1m 11s and `test` 5m 10s in parallel | the same image build, not recorded on its own | **8m 38s** |
+| Block 1 merged, still pre-Dagger (`34229652108`) | `lint` 1m 11s and `test` 5m 10s in parallel | 3m 20s | **8m 41s** |
 | After block 2 (`34250166952`) | 7m 26s | 2m 33s | **10m 08s** |
 | Block 3, both architectures (`34277955208`) | 9m 07s | 10m 06s | **19m 24s** |
 | Block 3, one architecture (`34339649929`) | 9m 02s | 4m 30s | **13m 43s** |
@@ -71,9 +81,41 @@ Three readings of that table:
   (specification, section 2, property 4).
 
 **A pull request pays two cold Gradle builds, one in `verify` and one in `image`.** Nothing in this
-lot fixes it: the two jobs run on different runners and the Dagger cache volume dies with each. It
-is a backlog candidate and not a defect, and its exits are the ones ADR 0024's consequences already
-name (a persistent engine, Dagger Cloud, or a runner with storage). None is taken.
+lot fixes it: the two jobs run on different runners and the Dagger cache volume dies with each. It is
+a `P2` item since the closing block, and not a defect; its exits are the ones ADR 0024's consequences
+already name (a persistent engine, Dagger Cloud, or a runner with storage). None is taken.
+
+## The holistic review, and what its count does not measure
+
+The review ran over `git diff 7d93c31b..HEAD` with all four code blocks merged, and reported sixteen
+findings: one CRITICAL, three MAJOR, twelve MINOR. **Every one of them is against an already merged
+block, and that number is therefore not what series costs in rework.**
+`docs/adr/0023-act-in-a-teammate-per-block.md` decision 7 has the review dispatched when the last
+code block's teammate reports the gate green and the handoff written, its findings against that block
+going back to that teammate; the lead dispatched it after block 4 merged instead, so block 4's own
+findings had nowhere to go but here. The count is inflated by that, not by the regime, and the
+measure decision 7 asks for is unavailable for this lot.
+
+The exits, `docs/adr/0010-review-finding-dispositions.md` giving the four.
+
+| Finding | Exit |
+|---|---|
+| **CRITICAL.** `--fail-on ERR` passes seventeen of oasdiff's 681 changelog rules, `request-parameter-removed` among them, so a break went green through both halves of the guard | **Fixed here**, on the operator's ruling. Both halves fail on `WARN`, and the version half demands a raised major for any break the `breaking` run reports. Shown red then green on each half. The four sentences that asserted the absolute (`AGENTS.md` twice, ADR 0024 decision 7, specification 4.7) are now true of the code rather than of the prose |
+| **MAJOR.** The `Before beta` item section 6 binds the lot to file was still unfiled | **Fixed here**: `docs/backlog.md`, Before beta, pointing at specification 4.3 |
+| **MAJOR.** `agents/workflow.md`'s green criterion still said `./gradlew gate`, a command the repository root does not have | **Fixed here**: `dagger call gate`, the criterion every teammate brief rests on |
+| **MAJOR.** Nothing refused a prerelease `info.version`, which pitfall 8's disposition rests on | **Fixed here**: one assertion in `ContractVersionDeclarationTest`, shown red at `1.1.0-rc1` |
+| **MINOR.** The test resources' comment described the pre-commit generation block 2 deleted | **Fixed here** |
+| **MINOR.** `README.md` listed three gate parts where block 4 made four | **Fixed here** |
+| **MINOR.** `quarkus-app` was in no table, and the CI section did not name the release call that uses it | **Fixed here**: a third row under The image, and one sentence under CI |
+| **MINOR.** `MAIN_REFS`'s `main` fallback silently compared against a local branch | **Fixed here**: `MAIN_REF` is `origin/main` alone |
+| **MINOR.** `--max-workers=4` caps the gate on a twelve-core workstation | **Refused, and measured**: the Dagger container sees all twelve cores, and lifting the pin ran the gate's Gradle half in 2m 49s against 2m 47s with it. The pin costs nothing and buys one shape everywhere; the measurement is at the constant |
+| **MINOR.** `breaksNoStillServedMajor` did not handle `contract/frozen/` being absent, and its `.gitkeep` was undocumented | **Fixed here**: an absent directory reads as no major still served, and `AGENTS.md` says what keeps the directory in git |
+| **MINOR.** The version test reads a contract the same Gradle invocation rewrites | **Accepted limit**, written at the method that reads it. Redundancy inside `dagger call gate`, and the other assertions still discriminate |
+| **MINOR.** Specification 4.5 and 7 assert the release YAML is untouched, which block 3 falsified | **Fixed here**, both in the `(Corrected: ...)` form, the specification freezing at this block's merge |
+| **MINOR.** Commit `87a310bb`, `chore(agents) allow dagger`, has no colon, and both permission commits have empty bodies | **Named, nothing to fix**: rewriting merged history costs more than the defect. The rule is the format, not a hook: nothing lints a commit message here |
+| **MINOR.** The handoff's baseline row was mislabelled and its image build called unrecorded | **Fixed here**: the row is block 1's own head run, inside the lot, its image build 3m 20s and its pipeline 8m 41s by the method the table now states |
+| **MINOR.** Two cold Gradle builds per pull request, called a backlog candidate and never filed | **Fixed here**: a `P2` item |
+| **MINOR.** Three error paths were never shown red | **Two fixed, one accepted.** `contractOnMain`'s missing ref shown red against `origin/no-such-branch`. The long-dash search's failure branch cannot go red as written and the pitfalls below say why. The smoke test's sixty-second timeout is not shown: an image build and a minute of waiting to exercise a `for` loop |
 
 ## Pitfalls, in the order they cost time
 
@@ -109,11 +151,18 @@ name (a persistent engine, Dagger Cloud, or a runner with storage). None is take
    contract. **Exit: an accepted limit of the tool the guard rests on**, and not a backlog item,
    because no work follows from it. It is written where the decision lives: section 8 of the
    specification carries the correction, and the root `AGENTS.md` carries the rule it produces, that
-   the contract's version is always a plain release.
+   the contract's version is always a plain release. `ContractVersionDeclarationTest` refuses one
+   since the closing block, prose alone having held the rule until then.
 9. **An empty `contract/frozen/` makes the first `oasdiff` check unfalsifiable.** A wrong path, a
    wrong flag or a swapped base and revision are all green against nothing. Block 4's evidence is a
    throwaway document dropped into the directory, and a counter-check showing that the same pure
    removal reports "No breaking changes to report" with base and revision swapped.
+10. **A container's `expect: ANY` still raises on exit 128 and 129.** Measured at 2, 5, 127, 128, 129
+    and 255: every code but those two comes back through `exitCode()`, the two being where a shell
+    reports a signal. 128 is also git's code for a fatal error, so `prose`'s "the search itself
+    failed" branch never sees one: an invalid pathspec fails the gate through Dagger's own error,
+    carrying git's stderr, and the branch guards what is left. It is why that branch cannot be shown
+    red, and why deleting it would be wrong.
 
 ## Not validated
 
@@ -133,21 +182,29 @@ name (a persistent engine, Dagger Cloud, or a runner with storage). None is take
   commands from its output would recover them at a cost nobody has paid.
 - **Dependabot's resolution of both manifests** was only observable after block 1 merged, and
   `.dagger/package.json` is watched by nothing, deliberately (ADR 0025, last consequence).
+- **Two of the pipeline's error paths have never fired.** The long-dash search's failure branch
+  cannot, for the reason pitfall 10 gives, and the smoke test's sixty-second timeout was not
+  exercised. `contractOnMain`'s missing ref was, in the closing block.
+- **The guard has never refused a real break.** Every red above is a document broken on purpose and
+  reverted; no contract change in this repository has yet needed a major.
 
-## The backlog item this lot still owes
+## The backlog
 
-Section 6 of the specification binds this lot to file one `Before beta` item: **populate
-`contract/frozen/` when the first major becomes still served, and state the support window.** No
-block row carried it, blocks 1 and 2 both flagged it as unfiled, and `docs/backlog.md` is in no code
-block's file list. **It is the closing block's to file**, and it is lost if Wrap does not.
+The item section 6 of the specification binds this lot to file is filed by the closing block:
+**populate `contract/frozen/` when the first major becomes still served, and state the support
+window**, in `Before beta`, pointing at specification 4.3. The closing block files a second, in
+`P2`: **a pull request pays two cold Gradle builds**, which had been named a candidate here and
+nowhere else.
 
 The lot's other adjacent items keep the exits the specification gave them: **Browser-extension CORS
 origin** stays open, ADR 0024 decision 9 widening it rather than closing it, and both it and its new
-sibling are the first client lot's to close; **Import follow-ons** is not adjacent; no `P2` item is.
+sibling are the first client lot's to close; **Import follow-ons** is not adjacent. No item was
+closed by a block, so there is nothing to reconcile beyond the two additions.
 
 ## Tier-2 questions asked
 
-Three, one per block except block 2, which asked none.
+Three, one per block except block 2 and the closing block, which asked none. The closing block's one
+judgement call, the worker pin, was settled by measuring it rather than by asking.
 
 - **Block 1**, `api/AGENTS.md`: which file the split delivers it in. Answer: block 1 delivers it,
   and the split follows ADR 0024 decision 2, norms and commands and gate to the ecosystem file.
@@ -162,8 +219,12 @@ Three, one per block except block 2, which asked none.
 
 ## Next step
 
-**Wrap's closing block**: the holistic review's findings, the backlog item above, and this document
-corrected with both. After that, the first client lot, which is what the whole move exists for. It
+**Wrap's second half**, once the closing block merges: the lot needs no tag, and the report of what
+was done, its friction points and every tier-2 question with its answer is the input to Improve. The
+one thing that report has to carry is the dispatch error above: the holistic review ran after block 4
+merged, and ADR 0023 decision 7's measure is corrupted for this lot because of it.
+
+After that, the first client lot, which is what the whole move exists for. It
 inherits three things this lot leaves ready and unproven: the contract as an interface artefact with
 a version a client can negotiate on, a guard that refuses a version that lies, and a pipeline whose
 `gate` takes the contract as an argument the moment `clients/` has a gate of its own.
