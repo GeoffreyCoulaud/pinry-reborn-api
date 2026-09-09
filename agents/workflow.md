@@ -76,7 +76,7 @@ A block is the smallest change that can be merged to `main` on its own.
 
 Three conditions:
 
-- **Green alone.** `./gradlew gate` passes at the block's tip. A block therefore never ends between a red test commit
+- **Green alone.** `dagger call gate` passes at the block's tip. A block therefore never ends between a red test commit
   and the implementation that answers it.
 - **Coherent alone.** Nothing it adds is unreachable: every new port method has a caller, every configuration key is
   read, every new state is produced somewhere. Where a surface's real consumer arrives in a later block, the spec says
