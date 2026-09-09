@@ -44,12 +44,6 @@ const QUARKUS_BUILD = ":api-application:quarkusBuild"
 /** The fast-jar layout, under `api/`. It is the whole of the image's build context. */
 const FAST_JAR = "api-application/build/quarkus-app"
 
-/**
- * The platforms the image ships on. The jars are architecture independent, so one Gradle build
- * feeds both and only the base image and its apt layer differ per platform.
- */
-const PLATFORMS = ["linux/amd64", "linux/arm64"] as Platform[]
-
 /** The port the runtime image serves on. */
 const HTTP_PORT = 8080
 
@@ -162,16 +156,22 @@ export class PinryReborn {
   }
 
   /**
-   * The runtime image, built for every platform it ships on. Each line is read from inside the
-   * image that was built, not from the request that asked for it.
+   * The runtime image. Each line is read from inside the image that was built, not from the
+   * request that asked for it, so a run that built one architecture cannot report two.
+   *
+   * @param platforms What to build. Empty means the engine's own, which is what a pull request
+   * needs: the other is emulated, costs minutes, and `buildx` builds both on the release path
+   * anyway. `--platforms=linux/amd64,linux/arm64` asks for everything the image ships on.
    */
   @func()
   async image(
     @argument({ defaultPath: "/", ignore: IGNORE }) source: Directory,
+    platforms: Platform[] = [],
   ): Promise<string> {
+    const wanted = platforms.length > 0 ? platforms : [await dag.defaultPlatform()]
     const context = this.imageContext(source)
     const lines = await Promise.all(
-      PLATFORMS.map(async (platform) => {
+      wanted.map(async (platform) => {
         const machine = await context.dockerBuild({ platform }).withExec(["uname", "-m"]).stdout()
         return `${platform}: built, ${machine.trim()} inside`
       }),

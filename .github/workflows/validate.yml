@@ -38,9 +38,14 @@ jobs:
         run: dagger call --progress=plain gate
 
   # Two calls, then the release path. `image` and `smoke` are Dagger functions (`.dagger/`),
-  # so a workstation builds the same multi-arch image and starts the same container before
-  # pushing. What stays here is what needs a registry and GitHub's OIDC identity and therefore
-  # never runs locally (docs/adr/0024-three-projects-share-one-repository.md, decision 5).
+  # so a workstation builds the same image and starts the same container before pushing. What
+  # stays here is what needs a registry and GitHub's OIDC identity and therefore never runs
+  # locally (docs/adr/0024-three-projects-share-one-repository.md, decision 5).
+  #
+  # A pull request builds one architecture. The second is emulated and cost five and a half
+  # minutes of every run; buildx below builds both, so a release still ships both. What is
+  # accepted is a defect showing on arm64 alone reaching the release build rather than the
+  # pull request that introduced it.
   build-image:
     needs: [verify]
     runs-on: ubuntu-latest
@@ -56,7 +61,7 @@ jobs:
       - uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
         with:
           version: "0.21.9"
-      - name: The image builds for every platform it ships on
+      - name: The image builds for the platform this runner can start
         run: dagger call --progress=plain image
       # The suite never reads production's application.properties: the test resources share its
       # name and win by classpath order. So nothing but this starts what ships, and a datasource
@@ -91,6 +96,10 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha
             type=semver,pattern=v{{version}}
+      # The second build of this image, and both architectures this time. The first one is what
+      # `smoke` started; this one is what gets pushed, and cosign signs its digest, so it cannot
+      # be the other one while the registry stays out of the pipeline (decision 5 again). Both
+      # read the same Dockerfile and the same exported fast jar, and it costs a release only.
       - name: Build and push image
         if: ${{ inputs.push }}
         id: build

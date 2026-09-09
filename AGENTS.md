@@ -59,11 +59,15 @@ Two calls outside the gate, because minutes of image build have no place in `pre
 
 | Function              | What it does                                                                             |
 |-----------------------|--------------------------------------------------------------------------------------------|
-| `dagger call image`   | Builds `api/Dockerfile` for `linux/amd64` and `linux/arm64`, and reads the machine back from inside each. |
+| `dagger call image`   | Builds `api/Dockerfile` for the engine's own platform and reads the machine back from inside it. `--platforms=linux/amd64,linux/arm64` builds everything the image ships on. |
 | `dagger call smoke`   | Starts the image and waits for `/q/health`. The only thing in the repository that runs what ships. |
 
 The suite never reads production's `application.properties`, its own sharing that name and winning by classpath
 order. So a deployment defect reaches `dagger call smoke` first, and it now reaches it on a workstation.
+
+**A pull request builds one architecture**, the second being emulated and slow. `validate.yml` builds both with
+buildx on the release path, so a release still ships both; a defect that shows on arm64 alone therefore surfaces
+at the release rather than on the pull request that introduced it.
 
 ## CI
 
