@@ -61,10 +61,16 @@ const OASDIFF = "tufin/oasdiff:v1.31.0"
 const VERSION_RULES = ["api-version-not-bumped", "api-major-version-not-bumped", "api-version-decreased"]
 
 /**
- * Where the contract's previous state is read from, first one that resolves. A runner checks out a
- * detached merge commit and has the remote ref alone; a workstation has both.
+ * The level at which a break is one. Seventeen of oasdiff's 681 changelog rules are rated a warning,
+ * `request-parameter-removed` among them, so `--fail-on ERR` lets a removed query parameter through.
  */
-const MAIN_REFS = ["origin/main", "main"]
+const FAIL_ON = "WARN"
+
+/**
+ * Where the contract's previous state is read from. The remote ref and not a local `main`, which a
+ * workstation may have left behind the branch it is comparing against.
+ */
+const MAIN_REF = "origin/main"
 
 /** Where the previous contract lands, outside `/src` so it is not itself a candidate for comparison. */
 const PREVIOUS_CONTRACT = "/previous-contract.json"
@@ -96,13 +102,11 @@ exit 1
  * thing on the error stream is the sentence a reader needs when no ref resolves.
  */
 const SHOW_PREVIOUS_CONTRACT = `
-for ref in ${MAIN_REFS.join(" ")}; do
-  if git cat-file -e "$ref:${CONTRACT}" 2>/dev/null; then
-    git show "$ref:${CONTRACT}" > ${PREVIOUS_CONTRACT}
-    exit 0
-  fi
-done
-echo "No ${CONTRACT} on ${MAIN_REFS.join(" or ")}. The guard compares against main, so a shallow clone needs fetch-depth: 0." >&2
+if git cat-file -e "${MAIN_REF}:${CONTRACT}" 2>/dev/null; then
+  git show "${MAIN_REF}:${CONTRACT}" > ${PREVIOUS_CONTRACT}
+  exit 0
+fi
+echo "No ${CONTRACT} on ${MAIN_REF}. The guard compares against main, so a shallow clone needs fetch-depth: 0." >&2
 exit 1
 `
 
@@ -310,7 +314,9 @@ export class PinryReborn {
    * alpha, so this check has nothing to compare and says so rather than reporting a pass it did not earn.
    */
   private async breaksNoStillServedMajor(source: Directory): Promise<string> {
-    const entries = await source.directory(FROZEN_MAJORS).entries()
+    // Git keeps the directory with a `.gitkeep` alone, so a tree that lost it has to read as no
+    // major still served rather than fail the pipeline on a missing path.
+    const entries = await source.directory(FROZEN_MAJORS).entries().catch((): string[] => [])
     const majors = entries.filter((entry) => entry.endsWith(".json"))
     if (majors.length === 0) {
       return `${FROZEN_MAJORS}/ holds no still served major to break`
@@ -320,7 +326,7 @@ export class PinryReborn {
       majors.map(async (major) => {
         // Base then revision: swapped, a removal reads as an addition and every break passes.
         const run = oasdiff.withExec(
-          ["breaking", `${FROZEN_MAJORS}/${major}`, CONTRACT, "--fail-on", "ERR", "--format", "singleline"],
+          ["breaking", `${FROZEN_MAJORS}/${major}`, CONTRACT, "--fail-on", FAIL_ON, "--format", "singleline"],
           { useEntrypoint: true, expect: ReturnType.Any },
         )
         const [status, changes] = await Promise.all([run.exitCode(), run.stdout()])
@@ -338,14 +344,28 @@ export class PinryReborn {
   }
 
   /**
-   * A break is allowed; a break the version hides is not. oasdiff derives the bump the diff requires
-   * and names the rule it failed, so the guard reports its sentence rather than writing its own.
+   * A break is allowed; a break the version hides is not. Two readings of the same diff: oasdiff's own
+   * version rules, which name the bump they wanted, and a `breaking` run, whose warning-level findings
+   * those rules never see and which therefore needs the majors compared here.
    */
   private async versionAdmitsTheDiff(source: Directory): Promise<string> {
-    const changelog = await this.oasdiff(source)
-      .withFile(PREVIOUS_CONTRACT, await this.contractOnMain(source))
-      .withExec(["changelog", PREVIOUS_CONTRACT, CONTRACT, "--format", "json"], { useEntrypoint: true })
-      .stdout()
+    const previous = await this.contractOnMain(source)
+    const oasdiff = this.oasdiff(source).withFile(PREVIOUS_CONTRACT, previous)
+    const changelogRun = oasdiff.withExec(
+      ["changelog", PREVIOUS_CONTRACT, CONTRACT, "--format", "json"],
+      { useEntrypoint: true },
+    )
+    const breakingRun = oasdiff.withExec(
+      ["breaking", PREVIOUS_CONTRACT, CONTRACT, "--fail-on", FAIL_ON, "--format", "singleline"],
+      { useEntrypoint: true, expect: ReturnType.Any },
+    )
+    const [changelog, breakingStatus, breaks, previousVersion, declaredVersion] = await Promise.all([
+      changelogRun.stdout(),
+      breakingRun.exitCode(),
+      breakingRun.stdout(),
+      this.declaredVersion(previous),
+      this.declaredVersion(source.file(CONTRACT)),
+    ])
     const changes: { id: string; text: string }[] = JSON.parse(changelog || "[]")
     const hidden = changes.filter((change) => VERSION_RULES.includes(change.id))
     if (hidden.length > 0) {
@@ -355,7 +375,28 @@ export class PinryReborn {
           hidden.map((change) => `  ${change.text} [${change.id}]`).join("\n"),
       )
     }
+    // A version nothing can parse reads as no raise, so a document the guard cannot read fails.
+    const raised = this.major(declaredVersion) > this.major(previousVersion)
+    if (breakingStatus !== 0 && !raised) {
+      throw new Error(
+        `${CONTRACT} breaks against main and announces ${declaredVersion}, where main announces ` +
+          `${previousVersion}. Raise quarkus.smallrye-openapi.info-version by a major, then ` +
+          "regenerate the contract:\n" +
+          breaks,
+      )
+    }
     return `${CONTRACT}'s info.version admits every break in the diff against main`
+  }
+
+  /** A contract's declared `info.version`, empty when the document carries none. */
+  private async declaredVersion(contract: File): Promise<string> {
+    const document = JSON.parse(await contract.contents())
+    return document?.info?.version ?? ""
+  }
+
+  /** The major a break has to raise. `NaN` for anything else, which compares false either way. */
+  private major(version: string): number {
+    return Number.parseInt(version, 10)
   }
 
   /** The committed contract on `main`, which is what a merge would replace. */
