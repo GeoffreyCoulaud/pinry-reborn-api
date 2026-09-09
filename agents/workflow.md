@@ -121,9 +121,12 @@ request is merged before the next block starts. Wrap closes the lot.
    costs in rework; (b) the backlog reconciled, an item closed by a block having been deleted in that block's own pull
    request; (c) the handoff in `docs/handoffs/<ISO date> - handoff - <context>.md`, written in the last code block from
    the lot's pull requests and corrected here: current state, what was built, pitfalls, what is not validated, next
-   step. The second half runs after that pull request merges: (d) tag if the spec called for a release; (e) report
-   what was done and the friction points, and every tier-2 question asked with the answer it got. That report is the
-   input to Improve.
+   step. The second half runs after that pull request merges: (d) tag the lot, an annotated `lot/X.Y.Z-<slug>` on the
+   closing merge, pushed; (e) report what was done and the friction points, and every tier-2 question asked with the
+   answer it got. That report is the input to Improve.
+
+   **A lot tag is a delivery checkpoint, not a release.** `release.yml` triggers on `v*` and publishes a signed image
+   to the registry; the `lot/` prefix cannot match it. A release is its own decision and its own tag.
 
 ## The backlog
 

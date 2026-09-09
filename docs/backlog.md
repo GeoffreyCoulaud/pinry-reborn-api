@@ -1,12 +1,12 @@
 # Backlog
 
 **Living document.** What is still open, banded by nature first and by priority second. What already shipped lives
-in git history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*` tags, not here.
+in git history, the handoffs under `docs/handoffs/`, and the annotated `lot/X.Y.Z-*` tags, not here.
 
 ## How to use this file
 
 - This file holds **open items only**. Do not keep a "shipped" log here: completed work is recorded by git
-  history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*` tags.
+  history, the handoffs under `docs/handoffs/`, and the annotated `lot/X.Y.Z-*` tags.
 - **Four bands, by nature.** *Open work* is what someone will do. *Known limits* points at the document that
   records each one and holds no copy of it. *Before beta* holds dated events no session can start early.
   *Features* is the roadmap, unsequenced. A limit is not debt and is not counted as debt.
