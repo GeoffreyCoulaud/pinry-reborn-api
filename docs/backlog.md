@@ -47,7 +47,9 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `vX.Y.Z-*
 
 ### P2: Operational debt
 
-Nothing open.
+- **A pull request pays two cold Gradle builds**, one in `verify` and one in `build-image`: the jobs run
+  on different runners and the Dagger cache volume dies with each. The exits are the ones ADR 0024's
+  consequences name. See `docs/handoffs/2026-09-09 - handoff - monorepo-and-pipeline.md`. New 2026-09-09.
 
 ## Known limits
 
@@ -84,6 +86,9 @@ Dated events. No session starts these early.
   changes its checksum and breaks startup. At beta, collapse `1.0` to `1.n` into a single generated
   baseline and take that fix with it. Until then, when a fix is blocked only by an already-applied
   migration, prefer the clean design and record the debt here. New 2026-07-23.
+- **Populate `contract/frozen/`.** It stays empty while the alpha breaks freely; when the first contract
+  major becomes still served its document enters as `<major>.json`, and the support window is stated with
+  it. See `docs/specs/2026-09-08-monorepo.md` section 4.3. New 2026-09-09.
 
 ## Features
 

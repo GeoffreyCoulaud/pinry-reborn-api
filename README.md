@@ -24,8 +24,8 @@ git config core.hooksPath .githooks
 ```
 
 - `pre-commit` refuses an em dash or an en dash in what you staged.
-- `pre-push` runs `dagger call gate`, the same command CI runs: the API's build, the prose rules and the
-  contract's synchronisation. It needs Docker and the Dagger CLI.
+- `pre-push` runs `dagger call gate`, the same command CI runs: the API's build, the prose rules, the
+  contract's synchronisation and the breaking-change guard. It needs Docker and the Dagger CLI.
 
 ## Architecture
 

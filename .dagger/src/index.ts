@@ -180,6 +180,7 @@ export class PinryReborn {
   ): Promise<string> {
     const base = this.repository(source)
     // `git grep` answers by its exit status: 0 found something, 1 found nothing, above that it failed.
+    // Dagger raises on 128 itself, git's code for a fatal error, so the branch below guards the rest.
     const dashes = base.withExec(
       ["git", "grep", "-n", "-I", "-F", ...LONG_DASHES.flatMap((d) => ["-e", d]), "--", ".", ...FROZEN],
       { expect: ReturnType.Any },

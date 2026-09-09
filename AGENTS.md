@@ -37,7 +37,8 @@ norms, its commands and its gate; this file carries what holds for the repositor
   below would refuse a break the version does declare. An accepted limit of the tool, not a defect here.
 - **`contract/frozen/` holds one document per contract major still served**, as `<major>.json`: a document
   enters when a major becomes still served and leaves when it stops being served. Empty during the alpha,
-  where breaking is the stated policy of the README.
+  where breaking is the stated policy of the README, and kept in git by a `.gitkeep` alone; the guard reads
+  the directory's absence as no major still served.
 
 ## Setup (once per clone)
 
@@ -65,12 +66,13 @@ ecosystem's own gate.
 
 ## The image
 
-Two calls outside the gate, because minutes of image build have no place in `pre-push`:
+Three calls outside the gate, because minutes of image build have no place in `pre-push`:
 
-| Function              | What it does                                                                             |
-|-----------------------|--------------------------------------------------------------------------------------------|
-| `dagger call image`   | Builds `api/Dockerfile` for the engine's own platform and reads the machine back from inside it. `--platforms=linux/amd64,linux/arm64` builds everything the image ships on. |
-| `dagger call smoke`   | Starts the image and waits for `/q/health`. The only thing in the repository that runs what ships. |
+| Function                   | What it does                                                                        |
+|----------------------------|---------------------------------------------------------------------------------------|
+| `dagger call image`        | Builds `api/Dockerfile` for the engine's own platform and reads the machine back from inside it. `--platforms=linux/amd64,linux/arm64` builds everything the image ships on. |
+| `dagger call smoke`        | Starts the image and waits for `/q/health`. The only thing in the repository that runs what ships. |
+| `dagger call quarkus-app`  | Returns the fast-jar layout the `Dockerfile` copies, so a caller builds the image with no JDK of its own. Used by the release path alone. |
 
 The suite never reads production's `application.properties`, its own sharing that name and winning by classpath
 order. So a deployment defect reaches `dagger call smoke` first, and it now reaches it on a workstation.
@@ -84,7 +86,9 @@ at the release rather than on the pull request that introduced it.
 CI (`validate.yml`) **calls** the pipeline: `dagger call gate` in one job, `dagger call image` then
 `dagger call smoke` in the next, each the command a workstation types. A check added to the pipeline is on the
 next pull request with nothing to add here. What CI still holds alone is the release path, which needs a registry
-and GitHub's identity: the push to GHCR, the cosign attestations, both SBOMs and the OpenVEX predicate.
+and GitHub's identity: the push to GHCR, the cosign attestations, both SBOMs and the OpenVEX predicate. That path
+calls the pipeline once too, `dagger call quarkus-app export`, so the image `buildx` pushes carries the bytes
+`dagger call smoke` started.
 
 ## Gotchas
 
