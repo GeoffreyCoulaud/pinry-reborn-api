@@ -5,9 +5,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema
 import java.util.UUID
 
 /**
- * The decoded form of a cursor. On the wire it is the Base64 string `Base64Json` builds, and the
- * schema says so: SmallRye knows neither that annotation nor `Base64JsonSerializer`, so left to
- * derive the schema from this type it would publish the object clients must never read.
+ * The decoded form of a cursor, opaque on the wire. SmallRye knows neither `Base64Json` nor
+ * `Base64JsonSerializer`, so without the type below it would publish the object it decodes to.
  */
 @Schema(
     type = SchemaType.STRING,

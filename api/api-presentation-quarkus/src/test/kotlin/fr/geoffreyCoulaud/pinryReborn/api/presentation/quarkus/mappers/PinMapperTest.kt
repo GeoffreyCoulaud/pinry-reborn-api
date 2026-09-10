@@ -6,6 +6,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Page
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.CursorDirection
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinImageStatusDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageState
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageStatus
@@ -74,7 +75,7 @@ class PinMapperTest {
         val result = pin.toDto(states)
 
         // Then
-        assertEquals("READY", result.image?.status)
+        assertEquals(PinImageStatusDto.READY, result.image?.status)
         assertEquals("/api/v1/pins/${pin.id}/image", result.image?.url)
         assertEquals(800, result.image?.width)
         assertEquals(600, result.image?.height)
@@ -90,7 +91,7 @@ class PinMapperTest {
         val result = pin.toDto(states)
 
         // Then
-        assertEquals("PENDING", result.image?.status)
+        assertEquals(PinImageStatusDto.PENDING, result.image?.status)
         assertNull(result.image?.url)
         assertNull(result.image?.width)
         assertNull(result.image?.height)
