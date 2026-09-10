@@ -63,7 +63,8 @@ Inside `apps/webapp/src`:
   mode, so the parity test in `src/lib/catalogues.test.ts` is the only thing that catches a French message nobody
   wrote.
 - **The import graph is acyclic**, and `packages/api-client` never imports `packages/auth`: what a generator
-  rewrites at every install cannot sit downstream of code written by hand.
+  rewrites at every install cannot sit downstream of code written by hand. **An application never imports the
+  HTTP client either**, only the two packages do, so the transport is chosen once and not per screen.
 - Everything is in English, as everywhere else in the repository, the message catalogues excepted: they are the
   product's own text.
 
