@@ -21,7 +21,16 @@ import {
  * What the pipeline never needs from the working tree. `.git` is deliberately kept: the
  * prose rule reads the index to know which files are tracked.
  */
-const IGNORE = ["**/build", "**/.gradle", "**/.kotlin", ".dagger/sdk", "**/node_modules"]
+const IGNORE = [
+  "**/build",
+  "**/.gradle",
+  "**/.kotlin",
+  ".dagger/sdk",
+  "**/node_modules",
+  "**/dist",
+  "**/coverage",
+  "**/src/paraglide",
+]
 
 /**
  * The two long dashes the prose rule refuses, built from code points so that this file is
@@ -76,6 +85,15 @@ const MAIN_REF = "origin/main"
 /** Where the previous contract lands, outside `/src` so it is not itself a candidate for comparison. */
 const PREVIOUS_CONTRACT = "/previous-contract.json"
 
+/** Node's current long term support line, which is what every version in `clients/` is pinned for. */
+const NODE = "node:24-slim"
+
+/** The pnpm `clients/package.json` names under `packageManager`. The two move together. */
+const PNPM = "pnpm@12.3.4"
+
+/** pnpm's own store for root, mounted so an install is not a fresh download every run. */
+const PNPM_STORE = "/root/.local/share/pnpm/store"
+
 /** The port the runtime image serves on. */
 const HTTP_PORT = 8080
 
@@ -125,13 +143,14 @@ export class PinryReborn {
     const built = this.gradleRun(source, "gate", QUARKUS_BUILD)
     // The contract is read after the build, not beside it. Asking for both at once makes two
     // requests for one container, and the second waits on a cache volume the first holds.
-    const [api, prose, guard] = await Promise.all([
+    const [api, clients, prose, guard] = await Promise.all([
       built.stdout(),
+      this.clientsGate(source).stdout(),
       this.prose(source),
       this.contractGuard(source),
     ])
     const contract = await this.contractIsSynchronised(built.directory("/src/contract"), source)
-    return [api, prose, contract, guard].join("\n")
+    return [api, clients, prose, contract, guard].join("\n")
   }
 
   /**
@@ -159,6 +178,24 @@ export class PinryReborn {
     @argument({ defaultPath: "/", ignore: IGNORE }) source: Directory,
   ): Container {
     return this.gradleRun(source, "gate")
+  }
+
+  /**
+   * The JavaScript gate alone (`clients/AGENTS.md`), in a container pinning Node and pnpm.
+   * The catalogues compile second and not fourth, because what Paraglide emits is what the
+   * typecheck reads.
+   */
+  @func()
+  clientsGate(
+    @argument({ defaultPath: "/", ignore: IGNORE }) source: Directory,
+  ): Container {
+    return this.node(source)
+      .withExec(["pnpm", "install", "--frozen-lockfile"])
+      .withExec(["pnpm", "run", "messages"])
+      .withExec(["pnpm", "run", "typecheck"])
+      .withExec(["pnpm", "run", "lint"])
+      .withExec(["pnpm", "run", "boundaries"])
+      .withExec(["pnpm", "run", "test"])
   }
 
   /**
@@ -442,6 +479,25 @@ export class PinryReborn {
       })
       .withMountedDirectory("/src", source)
       .withWorkdir("/src/api")
+  }
+
+  /**
+   * The JavaScript environment. pnpm comes from npm rather than from corepack, which Node
+   * ships deprecated, and its version is the one `clients/package.json` pins, so nothing
+   * self-manages mid-run.
+   */
+  private node(source: Directory): Container {
+    return dag
+      .container()
+      .from(NODE)
+      .withExec(["npm", "install", "--global", PNPM])
+      // Locked like the Gradle home, and free here: one call never runs two clients gates,
+      // so serializing costs nothing and a concurrent one cannot half write the store.
+      .withMountedCache(PNPM_STORE, dag.cacheVolume("pnpm-store"), {
+        sharing: CacheSharingMode.Locked,
+      })
+      .withMountedDirectory("/src", source)
+      .withWorkdir("/src/clients")
   }
 
   /** The repository-wide environment: git for the tracked file list, python3 for the guard's tests. */
