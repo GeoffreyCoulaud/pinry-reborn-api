@@ -8,9 +8,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * The contract declares what the server emits. A cursor travels as the opaque Base64 string
- * `Base64Json` builds, never as the object it decodes to; a status filled from an enum's name
- * declares that enum's values, so a client's exhaustive branch breaks when the set changes.
+ * The contract declares what the server emits: a cursor is the opaque Base64 string the wire
+ * carries, and a status filled from an enum's name declares that enum's values.
  */
 class ContractSchemaDeclarationTest {
     private val nullableString = setOf("string", "null")
