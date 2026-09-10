@@ -40,11 +40,11 @@ Inside `apps/webapp/src`:
 - `pnpm install` : the whole workspace. The gate uses `--frozen-lockfile`, so a manifest changed without a
   matching lockfile fails there rather than resolving quietly.
 - **The clients' gate**: `dagger call clients-gate`, from anywhere in the repository. It is what
-  `dagger call gate` calls; the six steps below are its content and each runs on its own too.
+  `dagger call gate` calls; the seven steps below are its content and each runs on its own too.
 - `pnpm run messages` : compiles `messages/{en,fr}.json` into typed functions under `src/paraglide/`.
   **Run it before anything that typechecks**, a fresh clone having no generated output at all.
 - `pnpm run typecheck`, `pnpm run lint`, `pnpm run boundaries` (dependency-cruiser), `pnpm run test` (Vitest with
-  coverage).
+  coverage), `pnpm run build` (the static bundle, which is the only step that runs the Vite plugin chain).
 - `pnpm --filter @pinry-reborn/webapp run dev` : the development server, with `/api` proxied to
   `http://localhost:8080` so the application is same origin against a locally running API.
 

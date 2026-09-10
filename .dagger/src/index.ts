@@ -184,6 +184,9 @@ export class PinryReborn {
    * The JavaScript gate alone (`clients/AGENTS.md`), in a container pinning Node and pnpm.
    * The catalogues compile second and not fourth, because what Paraglide emits is what the
    * typecheck reads.
+   *
+   * The bundle is built last for the reason the API's gate builds the fast jar: a typecheck is
+   * not a build, and a Vite plugin wired wrong passes every step above it.
    */
   @func()
   clientsGate(
@@ -196,6 +199,7 @@ export class PinryReborn {
       .withExec(["pnpm", "run", "lint"])
       .withExec(["pnpm", "run", "boundaries"])
       .withExec(["pnpm", "run", "test"])
+      .withExec(["pnpm", "run", "build"])
   }
 
   /**
