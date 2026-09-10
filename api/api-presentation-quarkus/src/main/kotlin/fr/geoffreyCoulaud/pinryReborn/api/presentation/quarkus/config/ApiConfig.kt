@@ -22,13 +22,8 @@ interface ApiConfig {
 
     interface Cors {
         /**
-         * Allowed CORS origins. Forwarded verbatim to `quarkus.http.cors.origins` via
-         * `api.cors.origins` interpolation; the built-in CORS filter reads the framework property, so
-         * this typed member exists to keep the public `api.*` surface complete and validated, not to
-         * be read by application code.
-         *
-         * Optional because the shipped list is empty: SmallRye's converter reads an empty value as
-         * null and refuses to build a required member from it.
+         * Allowed CORS origins, interpolated into `quarkus.http.cors.origins`, which is what the filter
+         * reads: this member keeps `api.*` validated. Optional because SmallRye reads the empty list as null.
          */
         fun origins(): Optional<String>
     }
