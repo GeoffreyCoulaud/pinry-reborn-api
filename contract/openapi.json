@@ -324,6 +324,13 @@
             }, {
               "type" : "null"
             } ]
+          },
+          "image" : {
+            "anyOf" : [ {
+              "$ref" : "#/components/schemas/PinImageStateDto"
+            }, {
+              "type" : "null"
+            } ]
           }
         }
       },
@@ -2842,7 +2849,7 @@
   },
   "info" : {
     "title" : "Pinry Reborn API",
-    "version" : "2.0.0"
+    "version" : "2.1.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",

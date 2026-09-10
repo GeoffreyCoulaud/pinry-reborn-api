@@ -199,6 +199,10 @@ major refuses it.
 pin has no image at all. The three states a tile tells apart are `READY` (place it with the ratio the
 API gives), `PENDING` (the tile stays out of the grid, see 4.8) and `FAILED` (a tile showing
 `reasonCode`).
+(Corrected: the field's type is `PinImageStateDto`, the shape `GET /api/v1/pins/{pinId}/image/status`
+already answers, rather than a new four-field type. Two shapes for one concept is the difference
+`agents/engineering.md` names as the contract's failure mode, and this one carries the `reasonCode`
+the `FAILED` tile above reads, which the four fields do not. It is a superset: the four are there.)
 
 The field is populated for every list that returns pins, so the grid places a page in one request.
 The alternative examined and refused was a batch endpoint keyed by pin identifiers: it makes the
@@ -212,6 +216,11 @@ absolute URL built from `api.remote_host`, `api.port` and `api.base_path` is cor
 deployment that reconfigures all three, and a tile pointing at another origin gets no
 `SameSite=Strict` cookie. `ApiConfig.baseUrl()` loses its callers here; whether the member itself
 goes is block 4's to decide against its own budget.
+(Corrected: it went, and `remoteHost()`, `basePath()` and the `api.remote_host` key with it, nothing
+else reading them. Losing every caller took the two `Location` headers this section does not name,
+`POST /api/v1/pins` and `POST /api/v1/boards`: the same three keys built them, so they were wrong in
+the same deployments, and a pin creation would otherwise answer a relative `image.url` under an
+absolute `Location`.)
 
 Adding a property to a response schema breaks no client, and the URL's shape is a value change
 rather than a schema change, so `oasdiff` reads the whole block as additive. The contract goes to
