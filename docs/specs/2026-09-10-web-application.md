@@ -267,7 +267,11 @@ would be work done twice.
 `clients/AGENTS.md` states that the block budget excludes it. `.dagger/.gitattributes` is the
 precedent, and the reason is the same: the budget measures what a human rereads.
 
-Every version below was read from registry.npmjs.org on 2026-09-10, not remembered.
+Every version below was read from registry.npmjs.org on 2026-09-10, not remembered. (Corrected: block 1
+read the registry again before pinning and three of the rows naming a bare major were behind it, so what
+it installed is pnpm 12.3.4, ESLint 10.10.0 and dependency-cruiser 18.2.0. TypeScript, which the table
+does not name, is pinned at 6.0.3, the newest major `typescript-eslint` 8.70.0 accepts, its peer range
+stopping below 6.1. Every other row matched.)
 
 | Dependency | Version | What it replaces |
 |---|---|---|
@@ -298,7 +302,9 @@ placement ourselves.
 
 `dagger call clients-gate`, called by `gate` next to `api-gate`, running `pnpm install --frozen-lockfile`
 then typecheck, lint, dependency-cruiser, the Paraglide compile, the catalogue parity test and
-Vitest. **Continuous integration needs no change**: `validate.yml` already runs
+Vitest. (Corrected: block 1 runs the Paraglide compile second, right after the install, because what it
+emits is what the typecheck reads; the parity test is one of the Vitest cases rather than a step of its
+own.) **Continuous integration needs no change**: `validate.yml` already runs
 `dagger call --progress=plain gate` and nothing else, which is what ADR 0024 decision 5 buys.
 
 **Coverage covers the pure functions, at 100% of lines and branches**, which is the bound
@@ -459,7 +465,10 @@ Each row names how a reader notices if it changed anyway.
   Development uses Vite's proxy, which reproduces the same origin.
 - **No measurement of what the JavaScript gate costs.** `pnpm install` on a cold Dagger cache is
   estimated, never measured. Block 1 measures it and this document is corrected in the
-  `(Corrected: ...)` form if the number changes anything.
+  `(Corrected: ...)` form if the number changes anything. (Corrected: measured on 2026-09-10, on a
+  workstation, engine v0.21.9, with an empty pnpm store: `dagger call clients-gate` takes 22.3 seconds,
+  3.6 of them the install. It changes nothing, and the store is a cache volume, so a workstation pays
+  the figure once and a runner pays it every time.)
 - **That `openapi-typescript` generates a usable client for this contract.** Three known oddities
   meet it: `CursorDto` is passed as a query parameter through a `$ref`, `StreamingOutput` is declared
   under `application/json` for a route that returns image bytes, and SmallRye marks nullable Kotlin
