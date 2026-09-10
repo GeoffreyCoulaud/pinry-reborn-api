@@ -121,8 +121,14 @@ function PinGrid() {
               </GridListItem>
             )}
           </Collection>
+          {/*
+            The sentinel is re-observed on every collection change, and its own loading flag is
+            one such change, so an unguarded `onLoadMore` re-enters until the test times out.
+          */}
           <GridListLoadMoreItem
-            onLoadMore={() => void pins.fetchNextPage()}
+            onLoadMore={() => {
+              if (pins.hasNextPage && !pins.isFetchingNextPage) void pins.fetchNextPage()
+            }}
             isLoading={pins.isFetchingNextPage}
           />
         </GridList>
