@@ -3,7 +3,6 @@ package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Image
 import fr.geoffreyCoulaud.pinryReborn.api.domain.images.ImageStore
 import fr.geoffreyCoulaud.pinryReborn.api.domain.images.RenditionCache
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ImagesConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.RenditionsConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinImageDownloadInputDto
@@ -61,7 +60,6 @@ class ImageController(
     private val renditionCache: RenditionCache,
     private val renditionsConfig: RenditionsConfig,
     private val securityIdentity: SecurityIdentity,
-    private val apiConfig: ApiConfig,
 ) {
     @PUT
     @Path("/{pinId}/image")
@@ -98,7 +96,7 @@ class ImageController(
                 maxPixels = imagesConfig.maxPixels(),
             )
         }
-        val dto = result.image.toDto(baseUrl())
+        val dto = result.image.toDto()
         val status = if (result.replaced) RestResponse.Status.OK else RestResponse.Status.CREATED
         return ResponseBuilder.create(status, dto).build()
     }
@@ -191,9 +189,9 @@ class ImageController(
     fun requestImageDownload(pinId: UUID, @Valid body: PinImageDownloadInputDto): RestResponse<PinImageStateDto> {
         val requester = securityIdentity.getUser()
         requestPinImageDownload.request(pinId, requester, body.sourceUrl)
-        val dto = PinImageState(PinImageStatus.PENDING, null, null, null).toDto(baseUrl(), pinId)
+        val dto = PinImageState(PinImageStatus.PENDING, null, null, null).toDto(pinId)
         return ResponseBuilder.create<PinImageStateDto>(RestResponse.Status.ACCEPTED, dto)
-            .header(HttpHeaders.LOCATION, "${baseUrl()}/api/v1/pins/$pinId/image/status")
+            .header(HttpHeaders.LOCATION, "/api/v1/pins/$pinId/image/status")
             .build()
     }
 
@@ -202,10 +200,8 @@ class ImageController(
     fun getImageStatus(pinId: UUID): RestResponse<PinImageStateDto> {
         val requester = securityIdentity.getUser()
         val state = resolvePinImageState.resolve(pinId = pinId, requester = requester)
-        return RestResponse.ok(state.toDto(baseUrl(), pinId))
+        return RestResponse.ok(state.toDto(pinId))
     }
-
-    private fun baseUrl(): String = apiConfig.baseUrl()
 
     private companion object {
         // Shared by `setImage` and `requestImageDownload`: both are `PUT /{pinId}/image`, and

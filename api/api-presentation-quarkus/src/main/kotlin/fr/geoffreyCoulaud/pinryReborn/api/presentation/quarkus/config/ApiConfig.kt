@@ -10,13 +10,7 @@ import java.util.Optional
 interface ApiConfig {
     fun host(): String
 
-    fun remoteHost(): String
-
     fun port(): Int
-
-    fun basePath(): String = ""
-
-    fun baseUrl(): String = "https://${remoteHost()}:${port()}/${basePath()}"
 
     fun cors(): Cors
 

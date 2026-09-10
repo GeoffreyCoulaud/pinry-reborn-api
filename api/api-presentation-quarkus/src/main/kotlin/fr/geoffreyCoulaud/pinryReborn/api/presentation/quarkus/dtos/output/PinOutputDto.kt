@@ -12,4 +12,6 @@ data class PinOutputDto(
     val tags: List<TagOutputDto>,
     val boards: List<BoardRefDto>,
     val softDeletedAt: Instant? = null,
+    /** The pin's image state, or null when the pin has neither an image nor a download. */
+    val image: PinImageStateDto? = null,
 )

@@ -28,11 +28,8 @@ class ResolvePinImageState(
     }
 
     /**
-     * The image state of [pins], keyed by pin id, in two reads whatever the page holds. A pin with
-     * neither an image nor a download is absent, so a caller renders it as "no image".
-     *
-     * No permission check: the caller passes pins a reader-scoped query already returned, unlike
-     * [resolve], which is reached by pin id alone.
+     * The state of [pins] keyed by pin id, in two reads whatever the page holds; a pin with neither
+     * image nor download is absent. No permission check: the caller's query was reader-scoped.
      */
     fun statesFor(pins: Collection<Pin>): Map<UUID, PinImageState> {
         if (pins.isEmpty()) return emptyMap()

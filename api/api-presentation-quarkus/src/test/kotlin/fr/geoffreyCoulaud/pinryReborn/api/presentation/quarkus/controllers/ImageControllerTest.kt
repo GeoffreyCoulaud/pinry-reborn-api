@@ -4,7 +4,6 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Image
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.images.ImageStore
 import fr.geoffreyCoulaud.pinryReborn.api.domain.images.RenditionCache
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ImagesConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.RenditionsConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.ImageOutputDto
@@ -50,7 +49,6 @@ class ImageControllerTest {
     private val renditionCache = mockk<RenditionCache>()
     private val renditionsConfig = mockk<RenditionsConfig>()
     private val securityIdentity = mockk<SecurityIdentity>()
-    private val apiConfig = mockk<ApiConfig>()
     private val controller = ImageController(
         setPinImage = setPinImage,
         getPinImageRendition = getPinImageRendition,
@@ -62,7 +60,6 @@ class ImageControllerTest {
         renditionCache = renditionCache,
         renditionsConfig = renditionsConfig,
         securityIdentity = securityIdentity,
-        apiConfig = apiConfig,
     )
 
     @TempDir
@@ -101,7 +98,6 @@ class ImageControllerTest {
         every {
             setPinImage.set(pinId = pinId, requester = user, upload = any(), maxBytes = maxBytes, maxPixels = maxPixels)
         } returns SetPinImageResult(image = image, replaced = false)
-        every { apiConfig.baseUrl() } returns "https://host"
 
         // When
         val response = controller.setImage(pinId, fileUpload)
@@ -110,7 +106,7 @@ class ImageControllerTest {
         assertEquals(201, response.status)
         val dto = response.entity as ImageOutputDto
         assertEquals(image.id, dto.id)
-        assertEquals("https://host/api/v1/pins/$pinId/image", dto.url)
+        assertEquals("/api/v1/pins/$pinId/image", dto.url)
     }
 
     @Test
@@ -131,7 +127,6 @@ class ImageControllerTest {
         every {
             setPinImage.set(pinId = pinId, requester = user, upload = any(), maxBytes = maxBytes, maxPixels = maxPixels)
         } returns SetPinImageResult(image = image, replaced = true)
-        every { apiConfig.baseUrl() } returns "https://host"
 
         // When
         val response = controller.setImage(pinId, fileUpload)

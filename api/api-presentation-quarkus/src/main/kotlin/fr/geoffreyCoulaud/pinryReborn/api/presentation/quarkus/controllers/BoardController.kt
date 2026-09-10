@@ -1,7 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.BoardInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinSortStrategyInputEnum
@@ -11,7 +10,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinLi
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.ProblemDetail
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.BoardMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.ProblemResponses.PROBLEM_JSON_MEDIA_TYPE as PROBLEM_JSON
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
@@ -48,7 +47,7 @@ class BoardController(
     private val boardPinLister: BoardPinLister,
     private val boardRecycleBin: BoardRecycleBin,
     private val securityIdentity: SecurityIdentity,
-    private val apiConfig: ApiConfig,
+    private val pinResponses: PinResponses,
 ) {
     @POST
     @Authenticated
@@ -73,7 +72,7 @@ class BoardController(
         val user = securityIdentity.getUser()
         val board = boardCreator.create(author = user, name = dto.name, description = dto.description)
         return ResponseBuilder
-            .created<BoardOutputDto>(URI("${apiConfig.baseUrl()}/api/v1/boards/${board.id}"))
+            .created<BoardOutputDto>(URI("/api/v1/boards/${board.id}"))
             .entity(board.toDto(pinCount = 0))
             .build()
     }
@@ -147,8 +146,7 @@ class BoardController(
         val cursor = cursorInput?.toDomain()
         return boardPinLister
             .listActivePinsForBoard(reader = user, boardId = boardId, cursor = cursor, pageSize = pageSize, sort = sort)
-            .toDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.page(it)) }
     }
 
     companion object {

@@ -9,6 +9,8 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.TagSe
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.TagSearchResultOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.TagMapper.toDto
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageState
+import java.util.UUID
 
 object SearchResultMapper {
     fun List<SearchResult<Tag>>.toTagSearchDto() = TagSearchOutputDto(
@@ -20,10 +22,10 @@ object SearchResultMapper {
         }
     )
 
-    fun List<SearchResult<Pin>>.toPinSearchDto() = PinSearchOutputDto(
+    fun List<SearchResult<Pin>>.toPinSearchDto(imageStates: Map<UUID, PinImageState>) = PinSearchOutputDto(
         results = this.map { result ->
             PinSearchResultOutputDto(
-                pin = result.item.toDto(),
+                pin = result.item.toDto(imageStates),
                 score = result.score,
             )
         }
