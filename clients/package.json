@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@12.3.4",
   "engines": {
-    "node": "^22.13.0 || >=24"
+    "node": "^22.13.0 || ^24 || >=26"
   },
   "scripts": {
     "messages": "pnpm --recursive --sequential run messages",
