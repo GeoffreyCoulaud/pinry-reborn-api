@@ -378,6 +378,13 @@ Paging uses `useInfiniteQuery` over the cursor pagination the API already has.
 `PaginationOutputDto` carries `previousCursor` as well as `nextCursor`, and `CursorDirectionDto` has
 `BACKWARD`, so the number of pages held in memory is capped and pages reload upward on the way back.
 What the grid holds is therefore what scrolling accumulates, not the collection (question Y).
+(Corrected: block 6 ships no cap on the query. A capped `useInfiniteQuery` drops the pages at the
+far end, and nothing in the screen reloads them: measured on seven pages at a cap of five, the grid
+held pages 2 to 6 and the two it dropped never came back, so a user scrolling up found a grid two
+pages shorter than the one they scrolled down. The upward half needs a trigger at the top of the
+scroll container, which React Aria's `GridListLoadMoreItem` does not carry. What caps the grid's
+memory meanwhile is the virtualiser, which mounts the visible tiles alone; the query accumulates
+JSON. The backlog holds what is left open.)
 
 The tile requests the `small` or `medium` rendition depending on the column width, through
 `GET /api/v1/pins/{pinId}/image?size=`.
