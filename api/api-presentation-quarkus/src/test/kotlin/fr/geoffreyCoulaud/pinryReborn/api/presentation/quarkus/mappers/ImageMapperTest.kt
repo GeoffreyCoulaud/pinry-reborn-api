@@ -9,12 +9,12 @@ import java.util.UUID.randomUUID
 
 class ImageMapperTest {
     @Test
-    fun `Given an image and base url, Then toDto builds the serve url`() {
+    fun `Given an image, Then toDto builds a serve url relative to the origin serving it`() {
         val pinId = randomUUID()
         val image =
             Image(randomUUID(), pinId, "image/webp", 8, 6, false, 99, "h", "originals/x/y/z.webp", Instant.EPOCH)
-        val dto = image.toDto("https://host")
-        assertEquals("https://host/api/v1/pins/$pinId/image", dto.url)
+        val dto = image.toDto()
+        assertEquals("/api/v1/pins/$pinId/image", dto.url)
         assertEquals("image/webp", dto.mimeType)
         assertEquals(8, dto.width)
     }

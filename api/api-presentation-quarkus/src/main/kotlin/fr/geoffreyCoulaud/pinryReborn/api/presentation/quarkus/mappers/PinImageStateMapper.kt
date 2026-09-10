@@ -8,11 +8,11 @@ import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageState
 import java.util.UUID
 
 object PinImageStateMapper {
-    fun PinImageState.toDto(baseUrl: String, pinId: UUID): PinImageStateDto {
+    fun PinImageState.toDto(pinId: UUID): PinImageStateDto {
         val img = image
         return PinImageStateDto(
             status = status.name,
-            url = img?.let { "$baseUrl/api/v1/pins/$pinId/image" },
+            url = img?.let { "/api/v1/pins/$pinId/image" },
             mimeType = img?.mimeType,
             width = img?.width,
             height = img?.height,

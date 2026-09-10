@@ -16,19 +16,18 @@ import java.util.UUID.randomUUID
 
 class PinImageStateMapperTest {
     private val pinId = randomUUID()
-    private val baseUrl = "http://host"
 
     @Test fun `Given READY, Then the dto carries the serve url and dimensions`() {
         val img =
             Image(randomUUID(), pinId, "image/png", 4, 5, false, 6, "h", "originals/x/$pinId/i.png", Instant.EPOCH)
-        val dto = PinImageState(PinImageStatus.READY, img, null, null).toDto(baseUrl, pinId)
+        val dto = PinImageState(PinImageStatus.READY, img, null, null).toDto(pinId)
         assertEquals("READY", dto.status)
-        assertEquals("$baseUrl/api/v1/pins/$pinId/image", dto.url)
+        assertEquals("/api/v1/pins/$pinId/image", dto.url)
         assertEquals(4, dto.width)
     }
 
     @Test fun `Given FAILED, Then the dto carries the reason code and a message`() {
-        val dto = PinImageState(PinImageStatus.FAILED, null, DownloadReason.ACCESS_DENIED, null).toDto(baseUrl, pinId)
+        val dto = PinImageState(PinImageStatus.FAILED, null, DownloadReason.ACCESS_DENIED, null).toDto(pinId)
         assertEquals("FAILED", dto.status)
         assertEquals("ACCESS_DENIED", dto.reasonCode)
         assertTrue(dto.message!!.isNotBlank())
@@ -44,13 +43,13 @@ class PinImageStateMapperTest {
                 null,
                 PinImageReplacement(DownloadStatus.FAILED, DownloadReason.NOT_FOUND),
             )
-        val dto = state.toDto(baseUrl, pinId)
+        val dto = state.toDto(pinId)
         assertEquals("FAILED", dto.replacement?.status)
         assertEquals("NOT_FOUND", dto.replacement?.reasonCode)
     }
 
     @Test fun `Given NONE, Then the dto has no url, mimeType, dimensions, reason or replacement`() {
-        val dto = PinImageState(PinImageStatus.NONE, null, null, null).toDto(baseUrl, pinId)
+        val dto = PinImageState(PinImageStatus.NONE, null, null, null).toDto(pinId)
         assertEquals("NONE", dto.status)
         assertNull(dto.url)
         assertNull(dto.mimeType)
@@ -72,7 +71,7 @@ class PinImageStateMapperTest {
                 null,
                 PinImageReplacement(DownloadStatus.PENDING, null),
             )
-        val dto = state.toDto(baseUrl, pinId)
+        val dto = state.toDto(pinId)
         assertEquals("PENDING", dto.replacement?.status)
         assertNull(dto.replacement?.reasonCode)
         assertNull(dto.replacement?.message)
@@ -80,7 +79,7 @@ class PinImageStateMapperTest {
 
     @Test fun `Given every DownloadReason, Then messageFor returns a non-blank message`() {
         for (reason in DownloadReason.entries) {
-            val dto = PinImageState(PinImageStatus.FAILED, null, reason, null).toDto(baseUrl, pinId)
+            val dto = PinImageState(PinImageStatus.FAILED, null, reason, null).toDto(pinId)
             assertEquals(reason.name, dto.reasonCode)
             assertTrue(dto.message!!.isNotBlank()) { "expected a message for $reason" }
         }

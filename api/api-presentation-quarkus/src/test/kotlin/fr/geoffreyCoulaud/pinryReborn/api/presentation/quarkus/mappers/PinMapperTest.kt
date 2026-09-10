@@ -1,13 +1,17 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Cursor
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Image
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Page
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.CursorDirection
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageState
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageStatus
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -33,7 +37,7 @@ class PinMapperTest {
         val page = Page<Pin>(items = listOf(createPin()), previousCursor = null, nextCursor = null)
 
         // When
-        val result = page.toDto()
+        val result = page.toDto(emptyMap())
 
         // Then
         assertNull(result.pagination.previousCursor)
@@ -48,10 +52,59 @@ class PinMapperTest {
         val page = Page<Pin>(items = listOf(createPin()), previousCursor = previousCursor, nextCursor = nextCursor)
 
         // When
-        val result = page.toDto()
+        val result = page.toDto(emptyMap())
 
         // Then
         assertNotNull(result.pagination.previousCursor)
         assertNotNull(result.pagination.nextCursor)
+    }
+
+    @Test
+    fun `Given a pin whose image is ready, Then toDto carries its dimensions and a relative url`() {
+        // Given
+        val pin = createPin()
+        val image = Image(
+            id = randomUUID(), pinId = pin.id, mimeType = "image/png", width = 800, height = 600,
+            animated = false, byteSize = 1024, contentHash = "h", storageKey = "originals/x/y/z.png",
+            createdAt = TestTime.now,
+        )
+        val states = mapOf(pin.id to PinImageState(PinImageStatus.READY, image, null, null))
+
+        // When
+        val result = pin.toDto(states)
+
+        // Then
+        assertEquals("READY", result.image?.status)
+        assertEquals("/api/v1/pins/${pin.id}/image", result.image?.url)
+        assertEquals(800, result.image?.width)
+        assertEquals(600, result.image?.height)
+    }
+
+    @Test
+    fun `Given a pin whose download is pending, Then toDto carries PENDING and no dimensions`() {
+        // Given
+        val pin = createPin()
+        val states = mapOf(pin.id to PinImageState(PinImageStatus.PENDING, null, null, null))
+
+        // When
+        val result = pin.toDto(states)
+
+        // Then
+        assertEquals("PENDING", result.image?.status)
+        assertNull(result.image?.url)
+        assertNull(result.image?.width)
+        assertNull(result.image?.height)
+    }
+
+    @Test
+    fun `Given a pin absent from the resolved states, Then toDto carries no image at all`() {
+        // Given
+        val pin = createPin()
+
+        // When
+        val result = pin.toDto(emptyMap())
+
+        // Then
+        assertNull(result.image)
     }
 }

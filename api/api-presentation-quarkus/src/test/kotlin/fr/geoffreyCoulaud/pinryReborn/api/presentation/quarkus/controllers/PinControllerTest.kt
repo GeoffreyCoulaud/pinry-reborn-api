@@ -4,14 +4,15 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Page
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDirectionDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinBoardsInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinSortStrategyInputEnum
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinBoardSetter
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinGetter
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.ResolvePinImageState
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
 import io.mockk.every
@@ -25,7 +26,10 @@ class PinControllerTest {
     private val pinGetter = mockk<PinGetter>()
     private val pinBoardSetter = mockk<PinBoardSetter>()
     private val securityIdentity = mockk<SecurityIdentity>()
-    private val apiConfig = mockk<ApiConfig>()
+    // The real assembler over a stubbed resolver: the responses under assertion are the mapped ones.
+    private val resolvePinImageState = mockk<ResolvePinImageState>().also {
+        every { it.statesFor(any()) } returns emptyMap()
+    }
     private val controller = PinController(
         pinCreator = mockk(),
         pinGetter = pinGetter,
@@ -33,7 +37,7 @@ class PinControllerTest {
         pinRecycleBin = mockk(),
         pinBoardSetter = pinBoardSetter,
         securityIdentity = securityIdentity,
-        apiConfig = apiConfig,
+        pinResponses = PinResponses(resolvePinImageState),
     )
 
     @Test

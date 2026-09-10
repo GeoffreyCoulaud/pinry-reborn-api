@@ -5,7 +5,6 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Page
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDirectionDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.BoardInputDto
@@ -13,11 +12,13 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinSor
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.BoardListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.BoardOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinListOutputDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.BoardCreator
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.BoardGetter
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.BoardPinLister
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.BoardRecycleBin
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.BoardUpdater
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.ResolvePinImageState
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
 import io.mockk.every
@@ -35,7 +36,11 @@ class BoardControllerTest {
     private val boardPinLister = mockk<BoardPinLister>()
     private val boardRecycleBin = mockk<BoardRecycleBin>()
     private val securityIdentity = mockk<SecurityIdentity>()
-    private val apiConfig = mockk<ApiConfig>()
+    // The real assembler over a stubbed resolver: the responses under assertion are the mapped ones.
+    private val resolvePinImageState = mockk<ResolvePinImageState>().also {
+        every { it.statesFor(any()) } returns emptyMap()
+    }
+    private val pinResponses = PinResponses(resolvePinImageState)
     private val controller = BoardController(
         boardCreator = boardCreator,
         boardGetter = boardGetter,
@@ -43,7 +48,7 @@ class BoardControllerTest {
         boardPinLister = boardPinLister,
         boardRecycleBin = boardRecycleBin,
         securityIdentity = securityIdentity,
-        apiConfig = apiConfig,
+        pinResponses = pinResponses,
     )
 
     private fun aUser() = User(id = randomUUID(), name = createRandomString(), createdAt = TestTime.now)
@@ -60,7 +65,6 @@ class BoardControllerTest {
         val board = Board(id = randomUUID(), author = user, name = dto.name, description = dto.description,
             createdAt = TestTime.now, updatedAt = TestTime.now)
         every { securityIdentity.getAttribute<User>("user") } returns user
-        every { apiConfig.baseUrl() } returns "https://example.test"
         every { boardCreator.create(author = user, name = dto.name, description = dto.description) } returns board
 
         // When
@@ -68,7 +72,7 @@ class BoardControllerTest {
 
         // Then
         assertEquals(201, response.status)
-        assertEquals("https://example.test/api/v1/boards/${board.id}", response.getHeaderString("Location"))
+        assertEquals("/api/v1/boards/${board.id}", response.getHeaderString("Location"))
         val body = response.entity as BoardOutputDto
         assertEquals(board.id, body.id)
         assertEquals(board.name, body.name)

@@ -1,7 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ApiConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinBoardsInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinCreationInputDto
@@ -10,7 +9,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinTag
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinSortStrategyMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.serialization.Base64Json
@@ -43,7 +42,7 @@ class PinController(
     private val pinRecycleBin: PinRecycleBin,
     private val pinBoardSetter: PinBoardSetter,
     private val securityIdentity: SecurityIdentity,
-    private val apiConfig: ApiConfig,
+    private val pinResponses: PinResponses,
 ) {
     @GET
     @Authenticated
@@ -52,8 +51,7 @@ class PinController(
         val user = securityIdentity.getUser()
         return pinGetter
             .getPinForUser(pinId = pinId, reader = user)
-            .toDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.pin(it)) }
     }
 
     @POST
@@ -68,8 +66,8 @@ class PinController(
             tags = emptyList(),
         )
         return ResponseBuilder
-            .created<PinOutputDto>(URI("${apiConfig.baseUrl()}/api/v1/pins/${pin.id}"))
-            .entity(pin.toDto())
+            .created<PinOutputDto>(URI("/api/v1/pins/${pin.id}"))
+            .entity(pinResponses.pin(pin))
             .build()
     }
 
@@ -87,8 +85,7 @@ class PinController(
 
         return pinGetter
             .listPinsPaginatedForUser(reader = user, cursor = cursor, pageSize = pageSize, sort = sort)
-            .toDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.page(it)) }
     }
 
     @DELETE
@@ -113,8 +110,7 @@ class PinController(
         val user = securityIdentity.getUser()
         return pinTagger
             .setTags(pinId = pinId, tagNames = tagsDto.tags, user = user)
-            .toDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.pin(it)) }
     }
 
     @PUT
@@ -124,8 +120,7 @@ class PinController(
         val user = securityIdentity.getUser()
         return pinBoardSetter
             .setBoards(pinId = pinId, boardIds = boardsDto.boardIds, user = user)
-            .toDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.pin(it)) }
     }
 
     companion object {

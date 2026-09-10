@@ -1,7 +1,9 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinSearcher
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.ResolvePinImageState
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
 import io.mockk.every
@@ -15,9 +17,15 @@ import java.util.UUID.randomUUID
 class PinSearchControllerTest {
     private val pinSearcher = mockk<PinSearcher>()
     private val securityIdentity = mockk<SecurityIdentity>()
+
+    // The real assembler over a stubbed resolver: the responses under assertion are the mapped ones.
+    private val resolvePinImageState = mockk<ResolvePinImageState>().also {
+        every { it.statesFor(any()) } returns emptyMap()
+    }
     private val controller = PinSearchController(
         pinSearcher = pinSearcher,
         securityIdentity = securityIdentity,
+        pinResponses = PinResponses(resolvePinImageState),
     )
 
     @Test

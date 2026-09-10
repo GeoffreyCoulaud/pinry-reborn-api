@@ -1,7 +1,7 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinSearchOutputDto
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.SearchResultMapper.toPinSearchDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinSearcher
 import io.quarkus.security.Authenticated
@@ -16,6 +16,7 @@ import org.jboss.resteasy.reactive.RestResponse
 class PinSearchController(
     private val pinSearcher: PinSearcher,
     private val securityIdentity: SecurityIdentity,
+    private val pinResponses: PinResponses,
 ) {
     @GET
     @Authenticated
@@ -29,8 +30,7 @@ class PinSearchController(
 
         return pinSearcher
             .searchPins(user = user, query = requireNotNull(query), limit = limit)
-            .toPinSearchDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.searchResults(it)) }
     }
 
     companion object {

@@ -6,8 +6,8 @@ import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinRec
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinListOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDomain
-import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinRecycleBinSortStrategyMapper.toDomain
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.serialization.Base64Json
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinRecycleBin
@@ -27,6 +27,7 @@ class PinRecycleBinController(
     private val pinRecycleBin: PinRecycleBin,
     private val pinRecycleBinGetter: PinRecycleBinGetter,
     private val securityIdentity: SecurityIdentity,
+    private val pinResponses: PinResponses,
 ) {
     @GET
     @Authenticated
@@ -42,8 +43,7 @@ class PinRecycleBinController(
 
         return pinRecycleBinGetter
             .listSoftDeletedPinsPaginatedForUser(reader = user, cursor = cursor, pageSize = pageSize, sort = sort)
-            .toDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.page(it)) }
     }
 
     @POST
@@ -53,8 +53,7 @@ class PinRecycleBinController(
         val user = securityIdentity.getUser()
         return pinRecycleBin
             .restore(pinId = pinId, user = user)
-            .toDto()
-            .let { RestResponse.ok(it) }
+            .let { RestResponse.ok(pinResponses.pin(it)) }
     }
 
     @DELETE
