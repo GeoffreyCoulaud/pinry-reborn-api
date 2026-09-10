@@ -35,6 +35,13 @@ ALLOWED = (
     "python3 -c 'import sys; sys.exit(0)'",
     # The size is the value of -s, not a file called 0.
     "truncate -s 0 /tmp/scratch",
+    # A package manager's `install` is its own subcommand, not coreutils'.
+    "pnpm install --frozen-lockfile",
+    "pnpm install react",
+    "npm install",
+    # shlex splits `2>&1` into `2`, `>&` and `1`: the file descriptor is not a
+    # file called 2 that the command ahead of it writes.
+    "echo note | tee /tmp/scratch 2>&1",
     # Input the guard cannot read is never a reason to block a call.
     [],
     {"tool_name": "Bash", "cwd": CWD, "tool_input": "not an object"},
@@ -59,6 +66,11 @@ BLOCKED = (
     "perl -pi -e s/a/b/ /tmp/scratch.md",
     "truncate -s 0 AGENTS.md",
     "dd of=AGENTS.md",
+    # Coreutils' own install, and the editor a package manager runs, are both
+    # still judged: neither exemption above reaches them.
+    "install -m 0755 script AGENTS.md",
+    "pnpm exec sed -i 1d AGENTS.md",
+    "tee AGENTS.md 2>&1",
     "git apply change.patch",
     "patch -p1 < change.patch",
     "python3 -c 'print(1)'",
