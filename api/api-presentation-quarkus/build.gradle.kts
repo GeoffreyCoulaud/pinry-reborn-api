@@ -40,6 +40,8 @@ dependencies {
     // HttpAuthenticationMechanism; the tests mock RoutingContext/HttpServerRequest). On main these
     // come via quarkus-smallrye-openapi, which the test source set does not depend on.
     testImplementation(libs.quarkus.micrometer)
+    // The OpenAPI model SessionSecurityRequirementFilter rewrites: compileOnly at main scope.
+    testImplementation(libs.quarkus.smallrye.openapi)
     testImplementation(libs.bundles.testing)
     testRuntimeOnly(libs.bundles.testing.runtime)
 }
