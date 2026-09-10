@@ -31,6 +31,7 @@ class BearerTokenIdentityProvider(
                     .addAttribute("userId", session.user.id)
                     .addAttribute("user", session.user)
                     .addAttribute("sessionToken", session)
+                    .addAttribute("sessionTransport", SessionTransport.ofCredential(request.token.type))
                     .build()
             } catch (e: SessionTokenExpiredError) {
                 // Spec §12: a dedicated SessionExpiredException subtype was tried (Task 9) but Quarkus

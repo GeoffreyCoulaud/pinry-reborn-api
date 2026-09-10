@@ -13,3 +13,6 @@ fun SecurityIdentity.getUserId(): UUID =
 
 fun SecurityIdentity.getSessionToken(): SessionToken =
     getAttribute("sessionToken") as SessionToken
+
+fun SecurityIdentity.getSessionTransport(): SessionTransport =
+    getAttribute("sessionTransport") as SessionTransport
