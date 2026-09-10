@@ -466,9 +466,10 @@ Each row names how a reader notices if it changed anyway.
 - **No measurement of what the JavaScript gate costs.** `pnpm install` on a cold Dagger cache is
   estimated, never measured. Block 1 measures it and this document is corrected in the
   `(Corrected: ...)` form if the number changes anything. (Corrected: measured on 2026-09-10, on a
-  workstation, engine v0.21.9, with an empty pnpm store: `dagger call clients-gate` takes 22.3 seconds,
-  3.6 of them the install. It changes nothing, and the store is a cache volume, so a workstation pays
-  the figure once and a runner pays it every time.)
+  workstation, engine v0.21.9. `dagger call clients-gate` takes 15.2 seconds with a warm pnpm store.
+  Against an empty one the install alone took 3.6 seconds and the whole function 22.3, measured before
+  the bundle build joined it. It changes nothing, and the store is a cache volume, so a workstation pays
+  the cold figure once and a runner pays it every time.)
 - **That `openapi-typescript` generates a usable client for this contract.** Three known oddities
   meet it: `CursorDto` is passed as a query parameter through a `$ref`, `StreamingOutput` is declared
   under `application/json` for a route that returns image bytes, and SmallRye marks nullable Kotlin

@@ -89,9 +89,10 @@ so pairing it with a photo album would have meant writing the placement function
 - **Continuous integration needs no change, and that is the whole point of ADR 0024 decision 5.**
   `dagger call clients-gate` is called by `gate`, and `validate.yml` already calls `gate` and nothing else.
   A second ecosystem entered the pipeline without a line of workflow.
-- **`pre-push` and every pull request now pay a JavaScript install.** Measured on a workstation with an
-  empty pnpm store on 2026-09-10: 22.3 seconds for the whole function, 3.6 of them the install. The store
-  is a cache volume, so a runner pays the full figure and a workstation pays it once.
+- **`pre-push` and every pull request now pay a JavaScript install.** Measured on a workstation on
+  2026-09-10: 15.2 seconds for the whole function with a warm pnpm store, and 3.6 seconds for the install
+  alone against an empty one. The store is a cache volume, so a runner pays the cold figure every time and
+  a workstation pays it once.
 - **The coverage bound protects a small surface, deliberately.** What the view does is checked by the
   journeys, not by a percentage. A block that puts logic in a component instead of in `lib/` moves it out
   of the bound without anything going red, and the review is what catches that.
