@@ -26,10 +26,12 @@ Inside `apps/webapp/src`:
 
 ## Setup (once per clone)
 
-- **Node 22.13 or newer**, 24 being what the gate's container pins. `.npmrc` sets `engine-strict`, so an older
-  Node refuses to install rather than installing something the gate will not reproduce.
-- pnpm comes from `packageManager` in `clients/package.json`: run `pnpm install` from `clients/` and it fetches
-  the pinned version itself. Nothing else needs installing.
+- **Node `^22.13 || ^24 || >=26`**, the intersection of what ESLint, Vitest, Vite and dependency-cruiser accept.
+  24 is what the gate's container pins, and the gate is the authority: pnpm 12 treats the root project's own
+  `engines` as advisory whatever `engine-strict` says (measured), so an unsupported Node installs fine here and
+  fails there.
+- **Any recent pnpm.** `packageManager` in `clients/package.json` names the exact one, and an installed pnpm
+  switches itself to it: observed going from 11.3.0 to the pinned 12.3.4 on the first install.
 
 ## Commands
 
@@ -69,6 +71,9 @@ Inside `apps/webapp/src`:
 - **`pnpm-workspace.yaml` grows a `minimumReleaseAgeExclude` entry per freshly published pin**, written by pnpm
   itself: it holds back a version published inside its release-age window unless the file names it. Expected, not
   a defect.
+- **`engines` does not refuse a wrong Node.** pnpm's own documentation says the root project's engine range always
+  fails an install; pnpm 12.3.4 was measured doing the opposite, with `engine-strict` set and a range this Node
+  does not satisfy. What the setting does refuse is a *dependency* declaring itself incompatible.
 - **Routing is code-based**, not file-based: one route does not pay for a generated route tree sitting inside
   `src/` under every perimeter above. The block that adds enough routes to want the generator moves it.
 - **`src/paraglide/` is generated and carries its own `.gitignore` and `eslint-disable`.** The linter,
