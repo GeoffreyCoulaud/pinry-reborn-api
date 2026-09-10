@@ -151,6 +151,8 @@ different session authenticates as the header's.
 application and the API on one public origin: every request the application makes is same site, and
 no third party site can make the browser attach the cookie. `access-control-allow-credentials` stays
 unset, which is the second half: even asked for, the cookie never travels to another origin.
+(Corrected: unset is not off. Quarkus 3.37 emits the header for any origin the list matches exactly,
+so what closes this half is the empty list below, not the absent key.)
 
 `rememberMe` maps onto the cookie's lifetime. Checked, the cookie is persistent and expires with the
 session's thirty days; unchecked, it is a session cookie the browser drops on close, and the
@@ -176,11 +178,16 @@ carried one.
 hand and SmallRye stamps `quarkus.smallrye-openapi.security-scheme-name` on every `@Authenticated`
 operation. Block 2 adds an `apiKey` scheme in `cookie` named `pinry_session`, so that the client
 `openapi-typescript` generates in block 3 describes the mechanism the web application actually uses.
+(Corrected: declaring it is not enough. SmallRye stamps the first of the two declared schemes and
+`quarkus.smallrye-openapi.security-scheme-name` does not steer that choice, so the cookie replaced
+the bearer on all 45 protected operations; `SessionSecurityRequirementFilter` puts both on each.)
 
 **`api.cors.origins` becomes empty** (question X). The proxy makes the web application same origin,
 so nothing needs an entry until the extension has an identifier. The test resources pin
 `api.cors.origins=https://app.test` and win by classpath order, so no existing test observes the
-production default: block 2 adds the one that does.
+production default: block 2 adds the one that does. (Corrected: measured on Quarkus 3.37, an empty
+list refuses every origin rather than allowing all; and SmallRye reads an empty value as null, so
+`ApiConfig.Cors.origins()` had to become `Optional<String>` for the boot to survive.)
 
 A required field on an input is a breaking change. The contract goes to `2.0.0` and `oasdiff`
 accepts the break because the version declares it; `contract/frozen/` is empty, so no still served
@@ -414,6 +421,10 @@ Every block measures its diff with `git diff --numstat` against 600 lines, of wh
 production code (`docs/adr/0018-a-block-is-a-pull-request.md`), as soon as it is first green rather
 than at the end. `clients/pnpm-lock.yaml` is excluded by 4.5. Block 1 is still the one at risk: if it
 exceeds, it splits into the workspace and the application first, `clients-gate` and ADR 0027 second.
+(Corrected: block 2 is the one that exceeded, and it cannot split, because the only seam that leaves
+two coherent halves puts a second contract major inside the lot and shifts every version in 4.9.
+`contract/openapi.json` joins the exclusions, marked generated in `contract/.gitattributes` for the
+same reason as the lockfile; block 2's own figures are in its pull request.)
 
 ## 6. Adjacent backlog items
 
