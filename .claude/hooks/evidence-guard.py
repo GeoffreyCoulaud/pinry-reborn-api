@@ -74,6 +74,9 @@ INPLACE_LONG = re.compile(r"\A--in-place(=.*)?\Z")
 # that one.
 SED_INPLACE = re.compile(r"\A-[A-Za-z]*i")
 TRUNCATING = {"truncate", "dd", "install"}
+# Wrappers whose next word is a subcommand of their own rather than a program,
+# so that `pnpm install react` is not read as coreutils' install.
+SUBCOMMAND_HOSTS = {"pnpm", "npm", "yarn", "bun", "uv", "poetry", "hatch", "pdm", "rye", "pipx"}
 # Flags whose value is the next token, which is a size or a mode, not a file.
 TRUNCATING_VALUE_FLAGS = {
     "-s", "-m", "-o", "-g", "-r", "-S",
@@ -179,11 +182,24 @@ def command_positions(tokens: list[str]) -> set[int]:
     return found
 
 
+def redirects(token: str) -> bool:
+    return bool(WRITE_OP.match(token) or FD_DUP_OP.match(token))
+
+
 def arguments_after(tokens: list[str], index: int) -> list[str]:
-    """Arguments belonging to the command starting at index."""
+    """Arguments belonging to the command starting at index.
+
+    shlex splits `2>&1` into `2`, `>&` and `1`, so the file descriptor in front
+    of a redirection ends the list too: read as an argument it becomes a file
+    called `2` that the command is said to be writing.
+    """
     out = []
-    for token in tokens[index + 1:]:
-        if token in SEPARATORS or WRITE_OP.match(token):
+    for offset in range(index + 1, len(tokens)):
+        token = tokens[offset]
+        following = tokens[offset + 1] if offset + 1 < len(tokens) else ""
+        if token in SEPARATORS or redirects(token):
+            break
+        if token.isdigit() and redirects(following):
             break
         out.append(token)
     return out
@@ -242,6 +258,8 @@ def check_truncating(tokens, commands, cwd):
     for index, token in enumerate(tokens):
         name = basename(token)
         if index not in commands or name not in TRUNCATING:
+            continue
+        if index > 0 and basename(tokens[index - 1]) in SUBCOMMAND_HOSTS:
             continue
         skip_value = False
         for argument in arguments_after(tokens, index):
