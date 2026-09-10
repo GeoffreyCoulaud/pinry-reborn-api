@@ -3,9 +3,8 @@ package fr.geoffreyCoulaud.pinryReborn.api.application
 import java.io.File
 
 /**
- * `src/main/resources/application.properties`, read from the file rather than from the injected
- * configuration: the test resources share that file's name and win by classpath order, so nothing
- * running under `@QuarkusTest` observes a production default.
+ * `src/main/resources/application.properties`, read from the file: the test resources share its name
+ * and win by classpath order, so nothing under `@QuarkusTest` ever observes a production default.
  */
 object ProductionProperties {
     private const val PATH = "src/main/resources/application.properties"

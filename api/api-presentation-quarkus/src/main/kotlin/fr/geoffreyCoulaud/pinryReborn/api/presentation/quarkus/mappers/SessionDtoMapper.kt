@@ -12,4 +12,8 @@ object SessionDtoMapper {
 
     fun SessionToken.toExistingDto(renewAfter: Instant) =
         ExistingSessionOutputDto(expiresAt = expiresAt, renewAfter = renewAfter, persistent = persistent)
+
+    /** What a cookie session answers instead of its token, which only the browser ever sees. */
+    fun IssuedSession.toExistingDto(persistent: Boolean) =
+        ExistingSessionOutputDto(expiresAt = expiresAt, renewAfter = renewAfter, persistent = persistent)
 }

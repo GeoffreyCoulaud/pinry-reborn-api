@@ -3,9 +3,8 @@ package fr.geoffreyCoulaud.pinryReborn.api.application
 import io.quarkus.test.junit.QuarkusTestProfile
 
 /**
- * The deployment's own `api.cors.origins`, taken from the production file. Every other case runs
- * with the test resources' `https://app.test`, so this profile is the only place the shipped default
- * is exercised.
+ * The deployment's own `api.cors.origins`, taken from the production file: every other case runs on
+ * the test resources' `https://app.test`.
  */
 class ProductionCorsTestProfile : QuarkusTestProfile {
     override fun getConfigOverrides(): Map<String, String> =

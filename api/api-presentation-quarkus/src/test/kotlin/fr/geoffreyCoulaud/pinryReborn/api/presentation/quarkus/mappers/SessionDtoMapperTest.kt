@@ -24,6 +24,14 @@ class SessionDtoMapperTest {
     }
 
     @Test
+    fun `Given an IssuedSession, Then toExistingDto keeps its token out of the body`() {
+        val dto = IssuedSession("tok", expiresAt, renewAfter).toExistingDto(persistent = false)
+        assertEquals(expiresAt, dto.expiresAt)
+        assertEquals(renewAfter, dto.renewAfter)
+        assertEquals(false, dto.persistent)
+    }
+
+    @Test
     fun `Given a SessionToken, Then toExistingDto exposes expiry, renewAfter and persistent but no token`() {
         val token = SessionToken(randomUUID(), User(randomUUID(), "alice",
             createdAt = TestTime.now), expiresAt, persistent = true, createdAt = TestTime.now)

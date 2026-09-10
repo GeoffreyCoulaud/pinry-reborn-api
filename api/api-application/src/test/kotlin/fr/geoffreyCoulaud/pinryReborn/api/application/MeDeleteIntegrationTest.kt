@@ -19,7 +19,7 @@ class MeDeleteIntegrationTest : IntegrationTest() {
         // token rejected, login refused
         given().authenticatedAs(auth).get("/api/v1/me").then().statusCode(401)
         given().contentType("application/json")
-            .body("""{"name":"${auth.user.name}","password":"password123"}""")
+            .body("""{"name":"${auth.user.name}","password":"password123","transport":"BEARER"}""")
             .post("/api/v1/sessions").then().statusCode(401)
     }
 

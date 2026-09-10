@@ -1,11 +1,15 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.IssuedSession
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.SessionCreationInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.CreatedSessionOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.ExistingSessionOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.SessionDtoMapper.toCreatedDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.SessionDtoMapper.toExistingDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.SessionCookie
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.SessionTransport
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getSessionToken
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getSessionTransport
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.getUser
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.SessionCreator
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.SessionRenewer
@@ -21,6 +25,10 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.core.MediaType
+import org.eclipse.microprofile.openapi.annotations.media.Content
+import org.eclipse.microprofile.openapi.annotations.media.Schema
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.jboss.resteasy.reactive.RestResponse
 
 @Path("/api/v1/sessions")
@@ -31,17 +39,22 @@ class SessionController(
     private val expiryPolicy: SessionExpiryPolicy,
     private val securityIdentity: SecurityIdentity,
 ) {
+    // SmallRye reads one status off the return type, and these two routes answer two; the status is
+    // what tells the transports apart, so no field of either body is ever nullable.
     @POST
     @PermitAll
-    fun createSession(@Valid dto: SessionCreationInputDto): RestResponse<CreatedSessionOutputDto> {
+    @APIResponse(responseCode = "201", description = BEARER_ANSWER,
+        content = [Content(mediaType = JSON, schema = Schema(implementation = CreatedSessionOutputDto::class))])
+    @APIResponse(responseCode = "200", description = COOKIE_ANSWER,
+        content = [Content(mediaType = JSON, schema = Schema(implementation = ExistingSessionOutputDto::class))])
+    fun createSession(@Valid dto: SessionCreationInputDto): RestResponse<Any> {
+        val persistent = dto.rememberMe ?: false
         val issued = try {
-            sessionCreator.create(name = dto.name, password = dto.password, persistent = dto.rememberMe ?: false)
+            sessionCreator.create(name = dto.name, password = dto.password, persistent = persistent)
         } catch (e: UserAuthenticationError) {
             throw AuthenticationFailedException("Authentication failed", e)
         }
-        return RestResponse.ResponseBuilder.create(RestResponse.Status.CREATED, issued.toCreatedDto())
-            .header(CACHE_CONTROL_HEADER, NO_STORE)
-            .build()
+        return sessionResponse(dto.transport, issued, persistent)
     }
 
     @GET
@@ -55,24 +68,66 @@ class SessionController(
     @POST
     @Path("/current/renew")
     @Authenticated
-    fun renewSession(): RestResponse<CreatedSessionOutputDto> {
-        val renewed = sessionRenewer.renew(securityIdentity.getSessionToken()).toCreatedDto()
-        return RestResponse.ResponseBuilder.create(RestResponse.Status.OK, renewed)
-            .header(CACHE_CONTROL_HEADER, NO_STORE)
-            .build()
+    @APIResponse(responseCode = "201", description = BEARER_ANSWER,
+        content = [Content(mediaType = JSON, schema = Schema(implementation = CreatedSessionOutputDto::class))])
+    @APIResponse(responseCode = "200", description = COOKIE_ANSWER,
+        content = [Content(mediaType = JSON, schema = Schema(implementation = ExistingSessionOutputDto::class))])
+    fun renewSession(): RestResponse<Any> {
+        val current = securityIdentity.getSessionToken()
+        val renewed = sessionRenewer.renew(current)
+        return sessionResponse(securityIdentity.getSessionTransport(), renewed, current.persistent)
     }
 
     @DELETE
     @Path("/current")
     @Authenticated
-    fun revokeCurrentSession() = sessionRevoker.revokeCurrent(securityIdentity.getSessionToken())
+    @APIResponse(responseCode = "204", description = REVOKED)
+    fun revokeCurrentSession(): RestResponse<Void> {
+        sessionRevoker.revokeCurrent(securityIdentity.getSessionToken())
+        return revocationResponse()
+    }
 
     @DELETE
     @Authenticated
-    fun revokeAllSessions() = sessionRevoker.revokeAll(securityIdentity.getUser())
+    @APIResponse(responseCode = "204", description = REVOKED)
+    fun revokeAllSessions(): RestResponse<Void> {
+        sessionRevoker.revokeAll(securityIdentity.getUser())
+        return revocationResponse()
+    }
+
+    /** The token itself for a bearer session; the cookie and no token for a cookie one. */
+    private fun sessionResponse(
+        transport: SessionTransport,
+        issued: IssuedSession,
+        persistent: Boolean,
+    ): RestResponse<Any> {
+        val response = when (transport) {
+            SessionTransport.BEARER ->
+                RestResponse.ResponseBuilder.create<Any>(RestResponse.Status.CREATED, issued.toCreatedDto())
+
+            SessionTransport.COOKIE ->
+                RestResponse.ResponseBuilder
+                    .create<Any>(RestResponse.Status.OK, issued.toExistingDto(persistent))
+                    .cookie(SessionCookie.issued(issued.token, issued.expiresAt, persistent))
+        }
+        return response.header(CACHE_CONTROL_HEADER, NO_STORE).build()
+    }
+
+    /** A cookie session leaves with its cookie cleared; a bearer one carries nothing to clear. */
+    private fun revocationResponse(): RestResponse<Void> {
+        val response = RestResponse.ResponseBuilder.create<Void>(RestResponse.Status.NO_CONTENT)
+        if (securityIdentity.getSessionTransport() == SessionTransport.COOKIE) {
+            response.cookie(SessionCookie.cleared())
+        }
+        return response.build()
+    }
 
     private companion object {
         const val CACHE_CONTROL_HEADER = "Cache-Control"
         const val NO_STORE = "no-store"
+        const val JSON = MediaType.APPLICATION_JSON
+        const val BEARER_ANSWER = "Bearer session, with the token the client sends back as a header"
+        const val COOKIE_ANSWER = "Cookie session, carried by the pinry_session cookie and never in the body"
+        const val REVOKED = "Session revoked, and the pinry_session cookie cleared when the request carried one"
     }
 }
