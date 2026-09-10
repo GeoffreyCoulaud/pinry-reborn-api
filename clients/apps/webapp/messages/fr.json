@@ -1,5 +1,13 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "app_name": "Pinry Reborn",
-  "home_heading": "Vos épingles"
+  "home_heading": "Vos épingles",
+  "password": "Mot de passe",
+  "remember_me": "Rester connecté",
+  "sign_in": "Se connecter",
+  "sign_in_refused": "Ce nom d’utilisateur et ce mot de passe n’ont pas fonctionné.",
+  "sign_out": "Se déconnecter",
+  "sign_up": "Créer un compte",
+  "sign_up_refused": "Ce compte n’a pas pu être créé.",
+  "username": "Nom d’utilisateur"
 }
