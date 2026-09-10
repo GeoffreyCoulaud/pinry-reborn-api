@@ -1,0 +1,16 @@
+{
+  "forbidden": [
+    {
+      "name": "no-circular",
+      "comment": "Two modules that import each other have no reading order, and no order in which a change to one can be understood before the other.",
+      "severity": "error",
+      "from": {},
+      "to": { "circular": true }
+    }
+  ],
+  "options": {
+    "doNotFollow": { "path": "node_modules" },
+    "exclude": { "path": "(^|/)(src/paraglide|dist|coverage)/" },
+    "enhancedResolveOptions": { "extensions": [".ts", ".tsx", ".js", ".jsx", ".json"] }
+  }
+}
