@@ -1,8 +1,11 @@
 package fr.geoffreyCoulaud.pinryReborn.api.application
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Image
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.CursorDirection
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.ImageDownloadRepositoryInterface
+import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.ImageRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.CursorMapper.toDto
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinCreator
@@ -18,6 +21,7 @@ import org.hamcrest.Matchers.notNullValue
 import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
+import java.time.Instant
 import java.util.UUID
 import kotlin.io.encoding.Base64
 
@@ -28,6 +32,12 @@ class PinListIntegrationTest : IntegrationTest() {
 
     @Inject
     lateinit var objectMapper: ObjectMapper
+
+    @Inject
+    lateinit var imageRepository: ImageRepositoryInterface
+
+    @Inject
+    lateinit var imageDownloadRepository: ImageDownloadRepositoryInterface
 
     // ==================== Helpers ====================
 
@@ -58,6 +68,41 @@ class PinListIntegrationTest : IntegrationTest() {
             .toByteArray()
             .let { Base64.encode(it) }
     )
+
+    @Test
+    fun `Given a ready image, a pending download and neither, Then each pin carries its own image state`() {
+        // Given: three pins in creation order, the first imaged, the second downloading, the third bare
+        val auth = createAuthenticatedUser()
+        val (imaged, downloading, _) = createPinsForUser(auth.user, 3)
+        imageRepository.save(
+            Image(
+                id = UUID.randomUUID(), pinId = imaged, mimeType = "image/png", width = 800, height = 600,
+                animated = false, byteSize = 1024, contentHash = "hash-$imaged",
+                storageKey = "originals/x/$imaged/i.png", createdAt = FIXED_INSTANT,
+            ),
+        )
+        imageDownloadRepository.upsertPending(
+            pinId = downloading, sourceUrl = "https://example.com/i.png",
+            taskId = UUID.randomUUID(), now = FIXED_INSTANT,
+        )
+
+        // When / Then
+        given()
+            .authenticatedAs(auth)
+            .`when`()
+            .get("/api/v1/pins")
+            .then()
+            .statusCode(200)
+            .body("pins[0].image.status", equalTo("READY"))
+            .body("pins[0].image.url", equalTo("/api/v1/pins/$imaged/image"))
+            .body("pins[0].image.width", equalTo(800))
+            .body("pins[0].image.height", equalTo(600))
+            .body("pins[1].image.status", equalTo("PENDING"))
+            .body("pins[1].image.url", nullValue())
+            .body("pins[1].image.width", nullValue())
+            .body("pins[1].image.height", nullValue())
+            .body("pins[2].image", nullValue())
+    }
 
     @Test
     fun `getting pins returns pins with correct structure`() {
@@ -307,5 +352,9 @@ class PinListIntegrationTest : IntegrationTest() {
             .get("/api/v1/pins")
             .then()
             .statusCode(403)
+    }
+
+    private companion object {
+        val FIXED_INSTANT: Instant = Instant.parse("2026-09-10T00:00:00Z")
     }
 }

@@ -8,7 +8,7 @@ import io.quarkus.test.junit.QuarkusTestProfile
 import io.quarkus.test.junit.TestProfile
 import io.restassured.RestAssured.given
 import jakarta.inject.Inject
-import org.hamcrest.CoreMatchers.endsWith
+import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -75,7 +75,7 @@ class ImageHostingIntegrationTest : IntegrationTest() {
             .`when`().put("/api/v1/pins/$pinId/image")
             .then()
             .statusCode(201)
-            .body("url", endsWith("/api/v1/pins/$pinId/image"))
+            .body("url", equalTo("/api/v1/pins/$pinId/image"))
 
         // Then: GET returns the image with an ETag
         val etag = given()
@@ -122,7 +122,7 @@ class ImageHostingIntegrationTest : IntegrationTest() {
             .`when`().put("/api/v1/pins/$pinId/image")
             .then()
             .statusCode(200)
-            .body("url", endsWith("/api/v1/pins/$pinId/image"))
+            .body("url", equalTo("/api/v1/pins/$pinId/image"))
 
         // Then: GET reflects the replaced image
         given()

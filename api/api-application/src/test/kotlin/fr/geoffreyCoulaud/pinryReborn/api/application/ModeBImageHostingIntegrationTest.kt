@@ -9,7 +9,6 @@ import io.quarkus.test.junit.TestProfile
 import io.restassured.RestAssured.given
 import io.restassured.path.json.JsonPath
 import jakarta.inject.Inject
-import org.hamcrest.CoreMatchers.endsWith
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterAll
@@ -121,7 +120,7 @@ class ModeBImageHostingIntegrationTest : IntegrationTest() {
         requestDownload(pinId, auth, originUrl("/img.png"))
             .then()
             .statusCode(202)
-            .header("Location", endsWith("/api/v1/pins/$pinId/image/status"))
+            .header("Location", equalTo("/api/v1/pins/$pinId/image/status"))
             .body("status", equalTo("PENDING"))
 
         // Then: the worker settles the download to READY
