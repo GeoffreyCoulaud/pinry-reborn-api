@@ -32,17 +32,20 @@ class BearerTokenIdentityProviderTest {
         }
     }
 
-    private fun request(token: String) = TokenAuthenticationRequest(TokenCredential(token, "bearer"))
+    private fun request(token: String, transport: SessionTransport = SessionTransport.BEARER) =
+        TokenAuthenticationRequest(TokenCredential(token, transport.credentialType))
+
+    private fun session() = SessionToken(
+        randomUUID(),
+        user,
+        TestTime.now.plusSeconds(60),
+        persistent = true,
+        createdAt = TestTime.now,
+    )
 
     @Test
     fun `Given a valid token, Then the identity carries the user, userId and sessionToken`() {
-        val session = SessionToken(
-            randomUUID(),
-            user,
-            TestTime.now.plusSeconds(60),
-            persistent = true,
-            createdAt = TestTime.now,
-        )
+        val session = session()
         every { authenticator.authenticate("good") } returns session
 
         val identity = provider.authenticate(request("good"), context).await().indefinitely()
@@ -51,6 +54,29 @@ class BearerTokenIdentityProviderTest {
         assertEquals(user.id, identity.getAttribute("userId"))
         assertEquals(user, identity.getAttribute<User>("user"))
         assertEquals(session, identity.getAttribute<SessionToken>("sessionToken"))
+    }
+
+    @Test
+    fun `Given a token read from the header, Then the identity says the session travels as a bearer`() {
+        every { authenticator.authenticate("good") } returns session()
+
+        val identity = provider.authenticate(request("good"), context).await().indefinitely()
+
+        assertEquals(SessionTransport.BEARER, identity.getSessionTransport())
+    }
+
+    @Test
+    fun `Given a token read from the cookie, Then the identity says the session travels as a cookie`() {
+        // What tells a renewal to answer with a Set-Cookie rather than a token, the session itself
+        // being the same row either way.
+        every { authenticator.authenticate("good") } returns session()
+
+        val identity = provider
+            .authenticate(request("good", SessionTransport.COOKIE), context)
+            .await()
+            .indefinitely()
+
+        assertEquals(SessionTransport.COOKIE, identity.getSessionTransport())
     }
 
     @Test
