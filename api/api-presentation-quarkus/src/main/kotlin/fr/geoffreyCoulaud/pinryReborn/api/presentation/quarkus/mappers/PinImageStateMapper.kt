@@ -1,17 +1,21 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers
 
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.DownloadReason
+import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.DownloadStatus
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.DownloadStatusDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinImageStateDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinImageStateDto.ReplacementDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinImageStatusDto
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageReplacement
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageState
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinImageStatus
 import java.util.UUID
 
 object PinImageStateMapper {
     fun PinImageState.toDto(pinId: UUID): PinImageStateDto {
         val img = image
         return PinImageStateDto(
-            status = status.name,
+            status = status.toDto(),
             url = img?.let { "/api/v1/pins/$pinId/image" },
             mimeType = img?.mimeType,
             width = img?.width,
@@ -25,10 +29,24 @@ object PinImageStateMapper {
 
     private fun PinImageReplacement.toDto() =
         ReplacementDto(
-            status = status.name,
+            status = status.toDto(),
             reasonCode = reasonCode?.name,
             message = reasonCode?.let { messageFor(it) },
         )
+
+    private fun PinImageStatus.toDto(): PinImageStatusDto =
+        when (this) {
+            PinImageStatus.NONE -> PinImageStatusDto.NONE
+            PinImageStatus.PENDING -> PinImageStatusDto.PENDING
+            PinImageStatus.READY -> PinImageStatusDto.READY
+            PinImageStatus.FAILED -> PinImageStatusDto.FAILED
+        }
+
+    private fun DownloadStatus.toDto(): DownloadStatusDto =
+        when (this) {
+            DownloadStatus.PENDING -> DownloadStatusDto.PENDING
+            DownloadStatus.FAILED -> DownloadStatusDto.FAILED
+        }
 
     private fun messageFor(reason: DownloadReason): String =
         when (reason) {

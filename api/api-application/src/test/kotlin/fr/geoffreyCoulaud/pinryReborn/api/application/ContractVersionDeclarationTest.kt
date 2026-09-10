@@ -1,6 +1,5 @@
 package fr.geoffreyCoulaud.pinryReborn.api.application
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -49,10 +48,8 @@ class ContractVersionDeclarationTest {
         )
     }
 
-    /** Read from the working tree: inside `dagger call gate` the same build wrote it moments earlier. */
     private fun publishedContractVersion(): String =
-        ObjectMapper()
-            .readTree(File("../../contract/openapi.json"))
+        PublishedContract.document
             .path("info")
             .path("version")
             .asText()
