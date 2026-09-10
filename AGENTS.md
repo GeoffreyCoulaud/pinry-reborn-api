@@ -21,7 +21,7 @@ norms, its commands and its gate; this file carries what holds for the repositor
 |-------------|-----------------------------------------------------------------------------------------------------------|
 | `api/`      | The Gradle build: the twelve modules, `Dockerfile`, `config/`, `.idea/`. Read `api/AGENTS.md` before touching it. |
 | `contract/` | The API's interface artefact, produced by `api/` and consumed by the clients.                              |
-| `clients/`  | Not built yet: the web application, the browser extension and their shared packages, with their own `AGENTS.md` when they arrive. |
+| `clients/`  | The pnpm workspace: `apps/webapp`, `packages/` for what the clients share. Read `clients/AGENTS.md` before touching it. The browser extension is not built yet. |
 | `.dagger/`  | The pipeline, in TypeScript (`docs/adr/0025-the-pipeline-is-written-in-typescript.md`). Belongs to no ecosystem: it calls both. |
 | Root        | `docs/`, `agents/`, `security/`, `.claude/`, `.github/`, `.githooks/`, `dagger.json`.                      |
 
@@ -52,11 +52,12 @@ norms, its commands and its gate; this file carries what holds for the repositor
 ## The gate
 
 **One command, from anywhere in the repository: `dagger call gate`.** It is what `pre-push` runs and what CI
-runs, in the same container, and it holds four things:
+runs, in the same container, and it holds five things:
 
 | Function                     | What it runs                                                                     |
 |------------------------------|-----------------------------------------------------------------------------------|
 | `dagger call api-gate`       | The API's Gradle gate (`api/AGENTS.md`), with the JDK, libvips and python3 pinned. |
+| `dagger call clients-gate`   | The clients' gate (`clients/AGENTS.md`), with Node and pnpm pinned: install, catalogue compile, typecheck, lint, import boundaries, Vitest with its coverage bound. |
 | `dagger call prose`          | No long dash in a tracked text file, and the evidence guard's own tests.           |
 | `dagger call contract`       | Produces `contract/openapi.json`. `gate` refuses a committed document that differs. |
 | `dagger call contract-guard` | The contract breaks no still served major, and its `info.version` admits what it changed against `main` (`oasdiff`). |
