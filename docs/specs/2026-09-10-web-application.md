@@ -102,7 +102,7 @@ $ grep -n "@PermitAll" $K/controllers/UserController.kt
 | R | Is sign up in the lot | Yes. Without it the lot produces nothing usable on a fresh instance |
 | S | How does the client learn a download finished | Polling, stopping when the list empties. SSE later, if an import ever fills it |
 | T | One theme or two | Light and dark, following the system, with a manual switch |
-| U | One lot or two | One, nine blocks, each API block landing before the client block that consumes it |
+| U | One lot or two | One, nine blocks, each API block landing before the client block that consumes it (Corrected: ten, block 5 having been inserted mid-lot by question AD) |
 | V | Can a file be uploaded from disk | Yes. A remote download fails often, and without upload a failed task has no recourse |
 | W | Does the lot serve the handshake | Yes, in its own block. Client side validation is impossible without the limits, and a hard coded limit would drift from the deployment |
 | X | What happens to CORS | The default origin list empties. The proxy makes the web application same origin, and the extension will add its own |
@@ -111,6 +111,7 @@ $ grep -n "@PermitAll" $K/controllers/UserController.kt
 | AA | Who computes the tile's height | The tile, through CSS `aspect-ratio`. `WaterfallLayout` has no per-item input, so the layout measures the node and settles once per tile |
 | AB | Absolute or relative image URLs | Relative. Three configuration keys leave the critical path, and the one client that needs an absolute URL already configures its base |
 | AC | The lockfile against the block budget | `clients/pnpm-lock.yaml` is marked generated and excluded from the count, as `.dagger/.gitattributes` already does for `/sdk/**` |
+| AD | What to do about the two schemas that declare less than the server emits | Its own block, before the grid, and the contract goes to `3.0.0`. Asked during block 4, whose `PinImageStateDto` on every pin is what makes the second one urgent. Section 4.10 is the design |
 
 ### Decisions this document settles without an ADR
 
@@ -226,7 +227,7 @@ Adding a property to a response schema breaks no client, and the URL's shape is 
 rather than a schema change, so `oasdiff` reads the whole block as additive. The contract goes to
 `2.1.0`.
 
-### 4.3 The handshake (block 6)
+### 4.3 The handshake (block 7)
 
 ADR 0024 decision 6 settles what a handshake carries: the contract's major and minor, and the
 deployment's limits, with no capability registry. This block serves it, because 4.8 cannot validate
@@ -243,7 +244,7 @@ do not declare `quarkus.smallrye-openapi.info-version` and win by classpath orde
 the injected value would serve a default under test, and a test comparing the response to that same
 injected value would be a tautology that passes at any number. The contract goes to `2.2.0`.
 
-### 4.4 The download list (block 7)
+### 4.4 The download list (block 8)
 
 `GET /api/v1/me/image-downloads` lists the requester's `ImageDownload` rows, which by property 3 are
 exactly those running or failed. `DELETE /api/v1/me/image-downloads/{pinId}` removes one failed row.
@@ -261,7 +262,7 @@ This adds one method, `findByAuthor`, to the six the interface has today.
 
 **Deleting a `PENDING` row is refused with `409`.** The worker owns that row, and
 `agents/engineering.md` requires the status to come from `BaseErrorMapper.statusFor`, a `when` over
-`ErrorCode` with no `else`. Block 7 therefore adds one `ErrorCode` value, its row in that table, and
+`ErrorCode` with no `else`. Block 8 therefore adds one `ErrorCode` value, its row in that table, and
 the exception the use case throws. The contract goes to `2.3.0`.
 
 ### 4.5 The client's tree and its tooling (block 1)
@@ -358,7 +359,7 @@ from a locale falls back to the base locale, silently, and every other gate step
 Vitest case compares the key sets of `messages/en.json` and `messages/fr.json` and fails on any
 difference. It is the only thing in the gate that can catch a French translation nobody wrote.
 
-### 4.7 The grid (block 5)
+### 4.7 The grid (block 6)
 
 `Virtualizer` with `WaterfallLayout`, wrapping a `GridList` in `selectionMode="multiple"` with
 `layout="grid"`.
@@ -384,7 +385,7 @@ The tile requests the `small` or `medium` rendition depending on the column widt
 A pin opens in a dialog, read only: its image, description, tags and boards. Editing any of them is
 another lot.
 
-### 4.8 Creating a pin, and the task centre (block 8)
+### 4.8 Creating a pin, and the task centre (block 9)
 
 Two entries, one screen. A URL goes to `POST /api/v1/pins` then `PUT /api/v1/pins/{pinId}/image`
 with `PinImageDownloadInputDto`, answered `202`: the pin exists, its image does not yet, and the tile
@@ -405,12 +406,45 @@ cannot: the outcome depends on a remote download, so the pin appears when the se
 |---|---|---|---|
 | 2 | Required `transport` on an input | `2.0.0` | Breaking, declared |
 | 4 | `image` added to a response, URLs made relative | `2.1.0` | Additive |
-| 6 | New route | `2.2.0` | Additive |
-| 7 | Two new routes | `2.3.0` | Additive |
+| 5 | The cursor and the two status fields declared as they are emitted | `3.0.0` | Breaking, declared |
+| 7 | New route | `3.1.0` | Additive |
+| 8 | Two new routes | `3.2.0` | Additive |
 
-Blocks 1, 3, 5, 8 and 9 touch no contract and bump nothing. The guard derives the required bump from
+Blocks 1, 3, 6, 9 and 10 touch no contract and bump nothing. (Corrected: block 5 was inserted
+mid-lot, so the handshake and the download list are blocks 7 and 8 and bump from `3.0.0` rather than
+from `2.1.0`.) The guard derives the required bump from
 the diff against `main` and fails on a version that does not match it, so a block that forgets its
 bump is red before review.
+
+### 4.10 The contract declares what it emits (block 5)
+
+Two schemas declare less than the server sends, and block 4 made the second one urgent: it put
+`PinImageStateDto` on every pin of every list, so its `status` is now the discriminator every tile
+reads. This block was decided during the lot, in answer to question AD.
+
+**The cursor is a string.** `@Base64Json` decodes the query parameter and `Base64JsonSerializer`
+encodes the response field. SmallRye knows neither, derives the schema from `CursorDto` and
+publishes the object a client must never read, in eight positions: the six `cursor` query parameters
+of `GET /api/v1/pins`, `/api/v1/pins/recycled`, `/api/v1/boards/{boardId}/pins`, `/api/v1/me/exports`,
+`/api/v1/me/imports` and `/api/v1/me/imports/{id}/issues`, and both fields of `PaginationOutputDto`.
+`CursorDto` therefore carries `@Schema(type = STRING)`, which SmallRye honours by dropping the
+properties, so the one component all eight positions reference is the opaque string the wire
+carries. Annotating the eight positions instead would write the same sentence eight times, which is
+the smell `agents/engineering.md` names.
+
+**A status declares its values.** `PinImageStateDto.status` and its nested `ReplacementDto.status`
+were a `String` filled from an enum's name. They become presentation enums, `PinImageStatusDto` and
+`DownloadStatusDto`, mapped by an exhaustive `when`, which is what `CursorDirectionDto` already
+does: a value added to `PinImageStatus` or `DownloadStatus` then fails to compile rather than
+reaching a client as a string the contract never declared. Annotating the schema with a list of
+values was refused for that reason: it breaks nothing when the enum moves.
+
+`reasonCode` stays a `String`, deliberately. `DownloadReason` is a list of failure reasons that
+grows, and `oasdiff` reads a response enum gaining a value as breaking, so declaring it would make
+every new reason a contract major. Its closed set is already held at compile time by
+`PinImageStateMapper.messageFor`, whose `when` has no `else`.
+
+`oasdiff` reads all of it as breaking, which the alpha allows, so the contract goes to `3.0.0`.
 
 ## 5. Block table
 
@@ -420,11 +454,12 @@ bump is red before review.
 | 2 | `feat/session-cookie-transport` | The cookie mechanism, the `transport` field, renewal and revocation following the transport, the cookie security scheme, the empty CORS default, ADR 0026, contract `2.0.0` | A `COOKIE` creation answering `200` with no `token` and a `Set-Cookie` carrying `HttpOnly`, `Secure`, `SameSite=Strict`; the next request authenticating on that cookie with no header; a `BEARER` creation still answering `201` with a token and no `Set-Cookie`; a request holding a cookie and a header for two different sessions resolving to the header's; a cookie renewal answering `200` with no token and a fresh `Set-Cookie`; revocation clearing it; a preflight from an unlisted origin refused with the production default read from `src/main/resources`; the gate refusing the same change with `info-version` left at `1.0.0` |
 | 3 | `feat/webapp-auth` | `packages/api-client` generated at install, `packages/auth` with both transports, sign up and sign in screens, French and English catalogues | Sign up, sign in, sign out and session expiry as MSW journeys; a message present in English and absent in French failing the parity test of 4.6; `packages/api-client` importing `packages/auth` failing dependency-cruiser |
 | 4 | `feat/pin-image-in-list` | `image` on `PinOutputDto` populated by every list, relative image URLs including `Location`, contract `2.1.0` | A pin with a ready image returning width and height in the list response; a pin with a pending download returning `PENDING` and no dimensions; a pin with no image returning null; every emitted URL starting with `/api/v1/` and no test needing `api.remote_host`; a page of N pins calling the image repository once, counted through a fake in the use case test |
-| 5 | `feat/webapp-grid` | The virtualised grid, cursor paging with a page cap, the read only pin dialog | Browsing and loading a second page as a journey; opening a pin as a journey; the tile carrying `aspect-ratio` computed from the response; the rendition size varying with column width |
-| 6 | `feat/deployment-handshake` | `GET /api/v1/handshake`, contract `2.2.0` | The route answering unauthenticated; the two limits changing in the response when the configuration keys change; the version in the response equal to the one `src/main/resources/application.properties` declares, read from the file |
-| 7 | `feat/image-download-list` | The download list, the deletion of a failed row, contract `2.3.0` | A failed download listed and a successful one absent; a recycled pin's row absent; another user's row absent; deleting a failed row answering `204` and the row gone; deleting a `PENDING` row answering `409` through the new `ErrorCode` |
-| 8 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves |
-| 9 | `chore/webapp-lot-wrap` | The holistic review's findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
+| 5 | `fix/contract-declares-what-it-emits` | The cursor declared a string in its eight positions, both status fields declared as the enums they are filled from, contract `3.0.0` | The six cursor query parameters and both `PaginationOutputDto` cursors declaring `string`, asserted against the generated document; `PinImageStateDto.status` declaring the four values of `PinImageStatus` and `ReplacementDto.status` the two of `DownloadStatus`, asserted the same way; the gate refusing the same diff with `quarkus.smallrye-openapi.info-version` left at `2.1.0` |
+| 6 | `feat/webapp-grid` | The virtualised grid, cursor paging with a page cap, the read only pin dialog | Browsing and loading a second page as a journey; opening a pin as a journey; the tile carrying `aspect-ratio` computed from the response; the rendition size varying with column width |
+| 7 | `feat/deployment-handshake` | `GET /api/v1/handshake`, contract `3.1.0` | The route answering unauthenticated; the two limits changing in the response when the configuration keys change; the version in the response equal to the one `src/main/resources/application.properties` declares, read from the file |
+| 8 | `feat/image-download-list` | The download list, the deletion of a failed row, contract `3.2.0` | A failed download listed and a successful one absent; a recycled pin's row absent; another user's row absent; deleting a failed row answering `204` and the row gone; deleting a `PENDING` row answering `409` through the new `ErrorCode` |
+| 9 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves |
+| 10 | `chore/webapp-lot-wrap` | The holistic review's findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
 
 Every block measures its diff with `git diff --numstat` against 600 lines, of which under 200 of
 production code (`docs/adr/0018-a-block-is-a-pull-request.md`), as soon as it is first green rather
@@ -434,6 +469,9 @@ exceeds, it splits into the workspace and the application first, `clients-gate` 
 two coherent halves puts a second contract major inside the lot and shifts every version in 4.9.
 `contract/openapi.json` joins the exclusions, marked generated in `contract/.gitattributes` for the
 same reason as the lockfile; block 2's own figures are in its pull request.)
+(Corrected: block 5 was inserted before the grid during the lot, in answer to question AD, so every
+block after it shifted by one. Block numbers everywhere in this document are the new ones, the
+headings of section 4 included.)
 
 ## 6. Adjacent backlog items
 
@@ -442,7 +480,7 @@ same reason as the lockfile; block 2's own figures are in its pull request.)
 | **Browser-extension CORS origin** (`P1`) | Left open, its reason unchanged: the extension has no stable identifier. Block 2 touches the neighbouring line by emptying `api.cors.origins` (question X), which narrows the item rather than closing it |
 | **Import follow-ons** (`P1`) | Not adjacent. Selective import, partial export, merging onto an existing pin and a pin with no medium travelling are import work, and no block here touches the import |
 | **Two cold Gradle builds per pull request** (`P2`) | Not adjacent, and this lot makes it slightly worse by adding a second ecosystem to the same gate. The exits ADR 0024 names are unchanged |
-| **Flatten the migration history** (Before beta) | Left open, and no block needs it: blocks 4, 6 and 7 add no column and no table, `image` being mapped from rows that already exist and the handshake reading configuration |
+| **Flatten the migration history** (Before beta) | Left open, and no block needs it: blocks 4, 7 and 8 add no column and no table, `image` being mapped from rows that already exist and the handshake reading configuration |
 | **Populate `contract/frozen/`** (Before beta) | Untouched. The contract breaks in block 2 precisely because the alpha allows it |
 | **Audience mechanics** (Features) | Left open, and the lot depends on it staying closed: everything is `@Authenticated` and owner scoped, so the web application has no anonymous view and no shareable link to build |
 
@@ -496,3 +534,6 @@ Each row names how a reader notices if it changed anyway.
   parameters `"required": true`, so `GET /api/v1/pins/{pinId}/image` declares `animated`, `size` and
   `If-None-Match` as required and nullable at once. That is the route every tile calls. Block 3 is
   the first to find out, and a defect there is an API defect, inside this lot's perimeter.
+  (Corrected: block 5 closed the first oddity. `CursorDto` is still passed through a `$ref`, but the
+  component behind it is a plain string, so the generated type is the opaque cursor rather than an
+  object a client would have to build.)
