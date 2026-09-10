@@ -8,6 +8,8 @@ export const REQUIRED_JOURNEYS = [
   "sign in",
   "sign out",
   "session expiry",
+  "browse the grid and load a second page",
+  "open a pin",
 ]
 
 /** The file under `src/journeys/` that holds a journey's test. */
