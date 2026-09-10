@@ -1,5 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.usecases
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
 import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.ImageDownloadRepositoryInterface
 import fr.geoffreyCoulaud.pinryReborn.api.domain.repositories.ImageRepositoryInterface
@@ -23,6 +24,26 @@ class ResolvePinImageState(
         // One snapshot for both reads: the swap commits the new image and the replacement's removal together.
         return transactionRunner.inTransaction {
             PinImageState.derive(imageRepository.findByPinId(pinId), imageDownloadRepository.findByPinId(pinId))
+        }
+    }
+
+    /**
+     * The image state of [pins], keyed by pin id, in two reads whatever the page holds. A pin with
+     * neither an image nor a download is absent, so a caller renders it as "no image".
+     *
+     * No permission check: the caller passes pins a reader-scoped query already returned, unlike
+     * [resolve], which is reached by pin id alone.
+     */
+    fun statesFor(pins: Collection<Pin>): Map<UUID, PinImageState> {
+        if (pins.isEmpty()) return emptyMap()
+        val pinIds = pins.map { it.id }
+        // Same snapshot as above, for the same reason: a swap must not be read half done.
+        return transactionRunner.inTransaction {
+            val images = imageRepository.findByPinIds(pinIds)
+            val downloads = imageDownloadRepository.findByPinIds(pinIds)
+            pinIds
+                .associateWith { PinImageState.derive(images[it], downloads[it]) }
+                .filterValues { it.status != PinImageStatus.NONE }
         }
     }
 }
