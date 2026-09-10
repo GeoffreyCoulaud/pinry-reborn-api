@@ -472,6 +472,10 @@ same reason as the lockfile; block 2's own figures are in its pull request.)
 (Corrected: block 5 was inserted before the grid during the lot, in answer to question AD, so every
 block after it shifted by one. Block numbers everywhere in this document are the new ones, the
 headings of section 4 included.)
+(Corrected: block 6 exceeds the production half of the budget, at 255 lines against 200, and does
+not split: its only seam puts the read only dialog in a block of its own, which costs 51 lines and
+leaves the grid at 204, over the bound it was split to reach. Accepted by the operator; the
+block's own figures are in its pull request.)
 
 ## 6. Adjacent backlog items
 
