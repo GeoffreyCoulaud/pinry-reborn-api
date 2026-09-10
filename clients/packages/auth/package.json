@@ -1,0 +1,15 @@
+{
+  "name": "@pinry-reborn/auth",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pinry-reborn/api-client": "workspace:*"
+  }
+}

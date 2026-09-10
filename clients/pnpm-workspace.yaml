@@ -3,6 +3,10 @@
 packages:
   - apps/*
   - packages/*
+# MSW's install script only refreshes the service worker a browser would run, and question Z
+# keeps every browser out of the gate: `msw/node` is all this workspace loads.
+allowBuilds:
+  msw: false
 # pnpm holds back a version published inside its release-age window, so a pin read from the
 # registry on the day it is added lands here. pnpm writes these lines itself.
 minimumReleaseAgeExclude:

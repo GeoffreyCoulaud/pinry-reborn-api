@@ -10,7 +10,7 @@
     "messages": "pnpm --recursive --sequential run messages",
     "typecheck": "pnpm --recursive run typecheck",
     "lint": "eslint .",
-    "boundaries": "depcruise apps",
+    "boundaries": "depcruise apps packages",
     "test": "pnpm --recursive run test",
     "build": "pnpm --recursive run build"
   },
