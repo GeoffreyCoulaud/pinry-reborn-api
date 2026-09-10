@@ -44,6 +44,13 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `lot/X.Y.
   and its mirror **partial export**; **merging metadata onto a pin that already exists**, which is
   the option the v1 "skip" rule forecloses; and **making a pin with no medium travel**, which needs
   the export to carry `ImageDownload` so a pending or failed download survives the round trip.
+- **The grid cannot cap the pages it holds.** A capped `useInfiniteQuery` drops the pages at the
+  far end and nothing reloads them upward, so block 6 of the web application ships no cap: React
+  Aria's `GridListLoadMoreItem` carries `onLoadMore` and `isLoading` alone, with no trigger at the
+  start of the scroll container, while the API's `previousCursor` and `BACKWARD` wait for a
+  consumer; and anchoring the scroll position while pages prepend into a waterfall is not
+  exercisable under jsdom. See `docs/specs/2026-09-10-web-application.md`, section 4.7.
+  New 2026-09-11.
 
 ### P2: Operational debt
 

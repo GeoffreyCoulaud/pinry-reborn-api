@@ -7,13 +7,10 @@ export type Pin = Schemas["PinOutputDto"]
 const PAGE_SIZE = 40
 
 /**
- * How many pages the grid holds at once. Past it the oldest is dropped and reloaded from
- * `previousCursor` on the way back up, so what the grid holds is what scrolling accumulates
- * rather than the collection (specification 4.7, question Y).
+ * The catalogue, one page at a time, in the order the API sorts it. Every page loaded is kept:
+ * a cap on the query drops pages nothing reloads, and what holds the grid's memory is the
+ * virtualiser, which mounts the visible tiles alone (specification 4.7, question Y).
  */
-const MAX_PAGES = 5
-
-/** The catalogue, one page at a time, in the order the API sorts it. */
 export function usePins() {
   return useInfiniteQuery({
     queryKey: ["pins"],
@@ -27,7 +24,5 @@ export function usePins() {
     // The cursor is opaque: it is read from a response and sent back unchanged (contract 3.0.0).
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
-    getPreviousPageParam: (page) => page.pagination.previousCursor ?? undefined,
-    maxPages: MAX_PAGES,
   })
 }
