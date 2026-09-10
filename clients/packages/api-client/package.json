@@ -3,9 +3,7 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
+  "exports": { ".": "./src/index.ts" },
   "scripts": {
     "generate": "openapi-typescript ../../../contract/openapi.json --output ./src/schema.d.ts",
     "prepare": "pnpm run generate",

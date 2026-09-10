@@ -10,10 +10,7 @@ export type Credentials = components["schemas"]["UserInputDto"]
  * package: the application above holds no credential whatever the transport
  * (docs/adr/0026-one-session-two-transports.md, decision 1).
  */
-export interface Session {
-  expiresAt: string
-  renewAfter: string
-}
+export interface Session { expiresAt: string; renewAfter: string }
 
 export interface AuthOptions {
   transport: SessionTransport
