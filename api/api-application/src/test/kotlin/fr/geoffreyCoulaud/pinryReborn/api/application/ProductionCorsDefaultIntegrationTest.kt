@@ -8,10 +8,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * The shipped `api.cors.origins` names nobody: the reverse proxy puts the web application on the
- * API's own origin, so no browser client is cross-origin until the extension has an identifier
- * (`docs/adr/0026-one-session-two-transports.md`). A boot of its own because a profile is the only
- * way to reach the production value.
+ * The shipped `api.cors.origins` names nobody, the proxy making the web application same origin
+ * (`docs/adr/0026-one-session-two-transports.md`). A profile is the only way to reach that value.
  */
 @QuarkusTest
 @TestProfile(ProductionCorsTestProfile::class)

@@ -57,6 +57,7 @@ class MePasswordIntegrationTest : IntegrationTest() {
     }
 
     private fun login(name: String, password: String) =
-        given().contentType("application/json").body("""{"name":"$name","password":"$password"}""")
+        given().contentType("application/json")
+            .body("""{"name":"$name","password":"$password","transport":"BEARER"}""")
             .post("/api/v1/sessions")
 }

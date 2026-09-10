@@ -145,7 +145,7 @@ class AuthAttemptLimitIntegrationTest : IntegrationTest() {
     /** Every request this class sends carries the wrong secret: being refused is the point. */
     private fun login(name: String): Response =
         given().contentType(JSON)
-            .body("""{"name":"$name","password":"$WRONG_PASSWORD"}""")
+            .body("""{"name":"$name","password":"$WRONG_PASSWORD","transport":"BEARER"}""")
             .post("/api/v1/sessions")
 
     private fun changePassword(auth: AuthenticatedUser): Response =

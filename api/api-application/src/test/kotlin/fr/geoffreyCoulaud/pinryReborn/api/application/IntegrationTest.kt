@@ -51,7 +51,7 @@ abstract class IntegrationTest {
         val token = RestAssured
             .given()
             .contentType(ContentType.JSON)
-            .body(mapOf("name" to name, "password" to password, "rememberMe" to rememberMe))
+            .body(mapOf("name" to name, "password" to password, "rememberMe" to rememberMe, "transport" to "BEARER"))
             .post("/api/v1/sessions")
             .then()
             .statusCode(HTTP_CREATED)

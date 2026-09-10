@@ -182,7 +182,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
         // When / Then - logging in with the correct password succeeds and issues a token
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "$username", "password": "$password"}""")
+            .body("""{"name": "$username", "password": "$password", "transport": "BEARER"}""")
             .`when`()
             .post("/api/v1/sessions")
             .then()
@@ -192,7 +192,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
         // When / Then - logging in with the wrong password fails
         given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "$username", "password": "wrongpassword"}""")
+            .body("""{"name": "$username", "password": "wrongpassword", "transport": "BEARER"}""")
             .`when`()
             .post("/api/v1/sessions")
             .then()
@@ -267,7 +267,7 @@ class UserCreationIntegrationTest : IntegrationTest() {
 
         val token = given()
             .contentType(ContentType.JSON)
-            .body("""{"name": "caselogin", "password": "$password"}""")
+            .body("""{"name": "caselogin", "password": "$password", "transport": "BEARER"}""")
             .`when`()
             .post("/api/v1/sessions")
             .then()

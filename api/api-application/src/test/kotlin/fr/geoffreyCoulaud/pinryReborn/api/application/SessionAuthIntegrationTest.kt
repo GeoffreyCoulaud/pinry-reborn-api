@@ -8,11 +8,14 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasKey
 import org.hamcrest.Matchers.matchesPattern
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.hamcrest.Matchers.nullValue
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -22,13 +25,26 @@ import java.time.Instant
 class SessionAuthIntegrationTest : IntegrationTest() {
     private val iso8601Utc = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z"
 
-    private fun login(name: String, password: String = DEFAULT_PASSWORD, rememberMe: Boolean? = null) =
+    private fun login(
+        name: String,
+        password: String = DEFAULT_PASSWORD,
+        rememberMe: Boolean? = null,
+        transport: String = "BEARER",
+    ) =
         given().contentType(ContentType.JSON)
             .body(buildMap<String, Any> {
-                put("name", name); put("password", password)
+                put("name", name); put("password", password); put("transport", transport)
                 if (rememberMe != null) put("rememberMe", rememberMe)
             })
             .post("/api/v1/sessions")
+
+    /** A user with a live cookie session, returning the cookie's value. */
+    private fun cookieSession(rememberMe: Boolean? = null): String {
+        val name = createRandomString()
+        userCreator.createUserWithPassword(name, DEFAULT_PASSWORD)
+        return login(name, rememberMe = rememberMe, transport = "COOKIE")
+            .then().statusCode(200).extract().cookie(SESSION_COOKIE)
+    }
 
     @Test
     fun `Given valid credentials, Then POST sessions returns 201 with a token and ISO-8601 UTC metadata`() {
@@ -40,6 +56,81 @@ class SessionAuthIntegrationTest : IntegrationTest() {
             .body("token", notNullValue())
             .body("expiresAt", matchesPattern(iso8601Utc))
             .body("renewAfter", matchesPattern(iso8601Utc))
+    }
+
+    @Test
+    fun `Given the bearer transport, Then POST sessions sets no cookie`() {
+        val name = createRandomString()
+        userCreator.createUserWithPassword(name, DEFAULT_PASSWORD)
+        login(name).then().statusCode(201).header("Set-Cookie", nullValue())
+    }
+
+    @Test
+    fun `Given the cookie transport, Then POST sessions answers 200 with a hardened cookie and no token`() {
+        // Given
+        val name = createRandomString()
+        userCreator.createUserWithPassword(name, DEFAULT_PASSWORD)
+
+        // When
+        val response = login(name, rememberMe = true, transport = "COOKIE")
+            .then().statusCode(200)
+            .body("$", not(hasKey("token")))
+            .body("persistent", equalTo(true))
+            .extract()
+
+        // Then
+        val cookie = response.detailedCookie(SESSION_COOKIE)
+        assertTrue(cookie.isHttpOnly, "A script that can read the token defeats the transport")
+        assertTrue(cookie.isSecured)
+        assertEquals("Strict", cookie.sameSite, "SameSite=Strict is what closes CSRF")
+        assertNotNull(cookie.expiryDate, "rememberMe maps onto the cookie's lifetime")
+    }
+
+    @Test
+    fun `Given a cookie session, Then the next request authenticates on the cookie with no header`() {
+        // Given / When / Then: the claim the whole lot rests on, exercised rather than read
+        given().cookie(SESSION_COOKIE, cookieSession()).get("/api/v1/me").then().statusCode(200)
+    }
+
+    @Test
+    fun `Given a cookie and a header for two sessions, Then the header's session is the one that authenticates`() {
+        // Given
+        val bearer = createAuthenticatedUser()
+        val cookie = cookieSession()
+
+        // When / Then
+        given().authenticatedAs(bearer).cookie(SESSION_COOKIE, cookie)
+            .get("/api/v1/me")
+            .then().statusCode(200).body("name", equalTo(bearer.user.name))
+    }
+
+    @Test
+    fun `Given a cookie session, Then renew answers 200 with a fresh cookie and no token`() {
+        // Given
+        val cookie = cookieSession()
+
+        // When
+        val renewed = given().cookie(SESSION_COOKIE, cookie).post("/api/v1/sessions/current/renew")
+            .then().statusCode(200).body("$", not(hasKey("token")))
+            .extract().cookie(SESSION_COOKIE)
+
+        // Then
+        given().cookie(SESSION_COOKIE, cookie).get("/api/v1/me").then().statusCode(401)
+        given().cookie(SESSION_COOKIE, renewed).get("/api/v1/me").then().statusCode(200)
+    }
+
+    @Test
+    fun `Given a cookie session, Then DELETE sessions current clears the cookie and the session`() {
+        // Given
+        val cookie = cookieSession()
+
+        // When
+        val cleared = given().cookie(SESSION_COOKIE, cookie).delete("/api/v1/sessions/current")
+            .then().statusCode(204).extract().detailedCookie(SESSION_COOKIE)
+
+        // Then
+        assertEquals(0, cleared.maxAge)
+        given().cookie(SESSION_COOKIE, cookie).get("/api/v1/me").then().statusCode(401)
     }
 
     @Test
@@ -90,7 +181,7 @@ class SessionAuthIntegrationTest : IntegrationTest() {
     fun `Given a token, Then renew returns a new token and the old one is rejected`() {
         val auth = createAuthenticatedUser()
         val newToken = given().authenticatedAs(auth).post("/api/v1/sessions/current/renew")
-            .then().statusCode(200).header("Cache-Control", "no-store").extract().path<String>("token")
+            .then().statusCode(201).header("Cache-Control", "no-store").extract().path<String>("token")
         assertNotNull(newToken)
         // Old token now rejected:
         given().authenticatedAs(auth).get("/api/v1/me").then().statusCode(401)
@@ -202,5 +293,6 @@ class SessionAuthIntegrationTest : IntegrationTest() {
 
     private companion object {
         const val PROBLEM_JSON = "application/problem+json"
+        const val SESSION_COOKIE = "pinry_session"
     }
 }
