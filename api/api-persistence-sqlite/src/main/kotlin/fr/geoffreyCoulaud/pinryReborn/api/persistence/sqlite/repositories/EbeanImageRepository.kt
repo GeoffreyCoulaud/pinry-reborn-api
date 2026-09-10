@@ -28,6 +28,11 @@ class EbeanImageRepository(
     override fun findByPinId(pinId: UUID): Image? =
         QImageModel().pinId.equalTo(pinId).findOne()?.toDomain()
 
+    override fun findByPinIds(pinIds: Collection<UUID>): Map<UUID, Image> {
+        if (pinIds.isEmpty()) return emptyMap()
+        return QImageModel().pinId.isIn(pinIds).findList().associate { it.pinId to it.toDomain() }
+    }
+
     override fun deleteByPinId(pinId: UUID) {
         QImageModel().pinId.equalTo(pinId).delete()
     }

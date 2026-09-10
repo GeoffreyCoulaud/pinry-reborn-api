@@ -11,6 +11,12 @@ interface ImageDownloadRepositoryInterface {
 
     fun findByPinId(pinId: UUID): ImageDownload?
 
+    /**
+     * The download rows of [pinIds], keyed by pin id; a pin with no row is absent from the map.
+     * One `IN (...)` lookup, bounded by the size of [pinIds] (a page).
+     */
+    fun findByPinIds(pinIds: Collection<UUID>): Map<UUID, ImageDownload>
+
     /** CAS on PENDING: set FAILED + reason. Returns true if a PENDING row was updated. */
     fun markFailed(pinId: UUID, reason: DownloadReason, now: Instant): Boolean
 
