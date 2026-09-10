@@ -15,6 +15,12 @@ interface ImageRepositoryInterface {
     fun findByPinId(pinId: UUID): Image?
 
     /**
+     * The images attached to [pinIds], keyed by pin id; a pin with no image is absent from the map.
+     * Backed by one `IN (...)` lookup, so the call is bounded by the size of [pinIds] (a page).
+     */
+    fun findByPinIds(pinIds: Collection<UUID>): Map<UUID, Image>
+
+    /**
      * Delete the image attached to a pin, if any.
      */
     fun deleteByPinId(pinId: UUID)

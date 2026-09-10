@@ -88,4 +88,30 @@ class EbeanImageDownloadRepositoryTest : RepositoryTest() {
         assertNull(repository.findByPinId(pinId))
         repository.deleteByPinId(randomUUID()) // must not throw
     }
+
+    @Test
+    fun `Given pins with and without a download, Then findByPinIds keys the rows it finds by pin id`() {
+        // Given
+        val downloading = randomUUID()
+        val bare = randomUUID()
+        val row = repository.upsertPending(downloading, "https://x/i.png", randomUUID(), now)
+
+        // When
+        val found = repository.findByPinIds(listOf(downloading, bare))
+
+        // Then
+        assertEquals(mapOf(downloading to row), found)
+    }
+
+    @Test
+    fun `Given no pin ids, Then findByPinIds returns an empty map`() {
+        // Given
+        repository.upsertPending(randomUUID(), "https://x/i.png", randomUUID(), now)
+
+        // When
+        val found = repository.findByPinIds(emptyList())
+
+        // Then
+        assertTrue(found.isEmpty())
+    }
 }

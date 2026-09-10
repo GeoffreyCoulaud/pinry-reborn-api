@@ -107,4 +107,33 @@ class EbeanImageRepositoryTest : RepositoryTest() {
         // Then
         assertTrue(missing.isEmpty())
     }
+
+    // --- findByPinIds (a page of pins in one query) ---
+
+    @Test
+    fun `Given pins with and without an image, Then findByPinIds keys the images it finds by pin id`() {
+        // Given
+        val imaged = savedPin()
+        val bare = savedPin()
+        val image = repository.save(imageFor(imaged.id))
+
+        // When
+        val found = repository.findByPinIds(listOf(imaged.id, bare.id))
+
+        // Then
+        assertEquals(mapOf(imaged.id to image), found)
+    }
+
+    @Test
+    fun `Given no pin ids, Then findByPinIds returns an empty map`() {
+        // Given
+        val pin = savedPin()
+        repository.save(imageFor(pin.id))
+
+        // When
+        val found = repository.findByPinIds(emptyList())
+
+        // Then
+        assertTrue(found.isEmpty())
+    }
 }
