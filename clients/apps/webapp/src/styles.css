@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Both themes follow the system; the manual switch is a later block's (question T). */
+:root {
+  color-scheme: light dark;
+}
