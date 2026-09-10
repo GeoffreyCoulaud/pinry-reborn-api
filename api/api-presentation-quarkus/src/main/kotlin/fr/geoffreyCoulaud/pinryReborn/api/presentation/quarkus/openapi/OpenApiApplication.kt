@@ -1,6 +1,8 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.openapi
 
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.security.SessionCookie
 import jakarta.ws.rs.core.Application
+import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeIn
 import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme
 
@@ -16,15 +18,27 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme
  * `bearerFormat: JWT`). Declaring the scheme explicitly keeps the generated `contract/openapi.json`
  * coherent (no dangling security refs) while accurately documenting `Authorization: Bearer <token>`.
  *
+ * The cookie scheme beside it is the same session token read from `pinry_session`
+ * (`docs/adr/0026-one-session-two-transports.md`); [SessionSecurityRequirementFilter] is what puts
+ * both on every protected operation.
+ *
  * Quarkus does not require a JAX-RS `Application` subclass, but application-level OpenAPI
  * annotations (like `@SecurityScheme`) need one as their scan anchor. This class carries no
  * behavior beyond that; declaring it does not change routing (no `@ApplicationPath` is set, so the
  * application path stays the default "/").
  */
 @SecurityScheme(
-    securitySchemeName = "SecurityScheme",
+    securitySchemeName = SessionSecurityRequirementFilter.BEARER_SCHEME,
     type = SecuritySchemeType.HTTP,
     scheme = "bearer",
     description = "Session token issued by POST /api/v1/sessions, sent as 'Authorization: Bearer <token>'.",
+)
+@SecurityScheme(
+    securitySchemeName = SessionSecurityRequirementFilter.COOKIE_SCHEME,
+    type = SecuritySchemeType.APIKEY,
+    apiKeyName = SessionCookie.NAME,
+    `in` = SecuritySchemeIn.COOKIE,
+    description = "The same session token, issued by POST /api/v1/sessions with transport COOKIE and " +
+        "sent by the browser on its own.",
 )
 class OpenApiApplication : Application()

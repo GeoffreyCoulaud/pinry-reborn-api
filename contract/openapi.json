@@ -2,6 +2,12 @@
   "openapi" : "3.1.0",
   "components" : {
     "securitySchemes" : {
+      "CookieScheme" : {
+        "type" : "apiKey",
+        "description" : "The same session token, issued by POST /api/v1/sessions with transport COOKIE and sent by the browser on its own.",
+        "name" : "pinry_session",
+        "in" : "cookie"
+      },
       "SecurityScheme" : {
         "type" : "http",
         "description" : "Session token issued by POST /api/v1/sessions, sent as 'Authorization: Bearer <token>'.",
@@ -439,7 +445,7 @@
       },
       "SessionCreationInputDto" : {
         "type" : "object",
-        "required" : [ "name", "password", "rememberMe" ],
+        "required" : [ "name", "password", "transport", "rememberMe" ],
         "properties" : {
           "name" : {
             "type" : "string",
@@ -449,10 +455,17 @@
             "type" : "string",
             "pattern" : "\\S"
           },
+          "transport" : {
+            "$ref" : "#/components/schemas/SessionTransport"
+          },
           "rememberMe" : {
             "type" : [ "boolean", "null" ]
           }
         }
+      },
+      "SessionTransport" : {
+        "type" : "string",
+        "enum" : [ "BEARER", "COOKIE" ]
       },
       "StreamingOutput" : {
         "type" : "object"
@@ -756,6 +769,8 @@
         "tags" : [ "Board Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "post" : {
@@ -804,6 +819,8 @@
         "tags" : [ "Board Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -831,6 +848,8 @@
         "tags" : [ "Board Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "delete" : {
@@ -849,6 +868,8 @@
         "tags" : [ "Board Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -877,6 +898,8 @@
         "tags" : [ "Board Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -912,6 +935,8 @@
         "tags" : [ "Board Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -970,6 +995,8 @@
         "tags" : [ "Board Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "delete" : {
@@ -996,6 +1023,8 @@
         "tags" : [ "Board Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "get" : {
@@ -1029,6 +1058,8 @@
         "tags" : [ "Board Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1091,6 +1122,8 @@
         "tags" : [ "Board Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1118,6 +1151,8 @@
         "tags" : [ "Me Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "delete" : {
@@ -1144,6 +1179,8 @@
         "tags" : [ "Me Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1217,6 +1254,8 @@
         "tags" : [ "Me Export Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "get" : {
@@ -1260,6 +1299,8 @@
         "tags" : [ "Me Export Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1312,6 +1353,8 @@
         "tags" : [ "Me Export Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "delete" : {
@@ -1355,6 +1398,8 @@
         "tags" : [ "Me Export Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1447,6 +1492,8 @@
         "tags" : [ "Me Export Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1492,6 +1539,8 @@
         "tags" : [ "Me Import Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "post" : {
@@ -1528,6 +1577,8 @@
         "tags" : [ "Me Import Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1580,6 +1631,8 @@
         "tags" : [ "Me Import Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "delete" : {
@@ -1624,6 +1677,8 @@
         "tags" : [ "Me Import Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1728,6 +1783,8 @@
         "tags" : [ "Me Import Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1791,6 +1848,8 @@
         "tags" : [ "Me Import Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1861,6 +1920,8 @@
         "tags" : [ "Me Import Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1894,6 +1955,8 @@
         "tags" : [ "Me Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -1949,6 +2012,8 @@
         "tags" : [ "Pin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "post" : {
@@ -1987,6 +2052,8 @@
         "tags" : [ "Pin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2042,6 +2109,8 @@
         "tags" : [ "Pin Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "delete" : {
@@ -2060,6 +2129,8 @@
         "tags" : [ "Pin Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2088,6 +2159,8 @@
         "tags" : [ "Pin Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2123,6 +2196,8 @@
         "tags" : [ "Pin Recycle Bin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2167,6 +2242,8 @@
         "tags" : [ "Pin Search Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2195,6 +2272,8 @@
         "tags" : [ "Pin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "get" : {
@@ -2228,6 +2307,8 @@
         "tags" : [ "Pin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2276,6 +2357,8 @@
         "tags" : [ "Pin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2353,6 +2436,8 @@
         "tags" : [ "Image Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "get" : {
@@ -2407,6 +2492,8 @@
         "tags" : [ "Image Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "delete" : {
@@ -2433,6 +2520,8 @@
         "tags" : [ "Image Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2468,6 +2557,8 @@
         "tags" : [ "Image Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2517,6 +2608,8 @@
         "tags" : [ "Pin Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2524,7 +2617,7 @@
       "delete" : {
         "responses" : {
           "204" : {
-            "description" : "No Content"
+            "description" : "Session revoked, and the pinry_session cookie cleared when the request carried one"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -2537,6 +2630,8 @@
         "tags" : [ "Session Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "post" : {
@@ -2551,12 +2646,22 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "OK",
+          "201" : {
+            "description" : "Bearer session, with the token the client sends back as a header",
             "content" : {
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CreatedSessionOutputDto"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Cookie session, carried by the pinry_session cookie and never in the body",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExistingSessionOutputDto"
                 }
               }
             }
@@ -2573,7 +2678,7 @@
       "delete" : {
         "responses" : {
           "204" : {
-            "description" : "No Content"
+            "description" : "Session revoked, and the pinry_session cookie cleared when the request carried one"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -2586,6 +2691,8 @@
         "tags" : [ "Session Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       },
       "get" : {
@@ -2611,18 +2718,30 @@
         "tags" : [ "Session Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
     "/api/v1/sessions/current/renew" : {
       "post" : {
         "responses" : {
-          "200" : {
-            "description" : "OK",
+          "201" : {
+            "description" : "Bearer session, with the token the client sends back as a header",
             "content" : {
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CreatedSessionOutputDto"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Cookie session, carried by the pinry_session cookie and never in the body",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExistingSessionOutputDto"
                 }
               }
             }
@@ -2638,6 +2757,8 @@
         "tags" : [ "Session Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2682,6 +2803,8 @@
         "tags" : [ "Tag Search Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
         } ]
       }
     },
@@ -2719,7 +2842,7 @@
   },
   "info" : {
     "title" : "Pinry Reborn API",
-    "version" : "1.0.0"
+    "version" : "2.0.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",

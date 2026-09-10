@@ -26,6 +26,8 @@ norms, its commands and its gate; this file carries what holds for the repositor
 | Root        | `docs/`, `agents/`, `security/`, `.claude/`, `.github/`, `.githooks/`, `dagger.json`.                      |
 
 - **`contract/openapi.json` is generated and committed**, never edited by hand (`agents/writing.md`).
+  `contract/.gitattributes` marks it `linguist-generated`, and a block's diff budget excludes it for the
+  same reason as `clients/pnpm-lock.yaml`: the budget measures what a human rereads.
 - **Its `info.title` and `info.version` are the contract's own**, declared by
   `quarkus.smallrye-openapi.info-title` and `.info-version` in
   `api/api-application/src/main/resources/application.properties`. Left undeclared they fall back to the
