@@ -1,19 +1,6 @@
 {
   "openapi" : "3.1.0",
   "components" : {
-    "securitySchemes" : {
-      "CookieScheme" : {
-        "type" : "apiKey",
-        "description" : "The same session token, issued by POST /api/v1/sessions with transport COOKIE and sent by the browser on its own.",
-        "name" : "pinry_session",
-        "in" : "cookie"
-      },
-      "SecurityScheme" : {
-        "type" : "http",
-        "description" : "Session token issued by POST /api/v1/sessions, sent as 'Authorization: Bearer <token>'.",
-        "scheme" : "bearer"
-      }
-    },
     "schemas" : {
       "BoardInputDto" : {
         "type" : "object",
@@ -88,21 +75,13 @@
           }
         }
       },
-      "CursorDirectionDto" : {
-        "type" : "string",
-        "enum" : [ "FORWARD", "BACKWARD" ]
-      },
       "CursorDto" : {
-        "type" : "object",
-        "required" : [ "pivotId", "direction" ],
-        "properties" : {
-          "pivotId" : {
-            "$ref" : "#/components/schemas/UUID"
-          },
-          "direction" : {
-            "$ref" : "#/components/schemas/CursorDirectionDto"
-          }
-        }
+        "description" : "Opaque pagination cursor. Read it from a response and send it back unchanged.",
+        "type" : "string"
+      },
+      "DownloadStatusDto" : {
+        "type" : "string",
+        "enum" : [ "PENDING", "FAILED" ]
       },
       "ExistingSessionOutputDto" : {
         "type" : "object",
@@ -237,7 +216,7 @@
         "required" : [ "status" ],
         "properties" : {
           "status" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/PinImageStatusDto"
           },
           "url" : {
             "type" : [ "string", "null" ]
@@ -271,6 +250,10 @@
             } ]
           }
         }
+      },
+      "PinImageStatusDto" : {
+        "type" : "string",
+        "enum" : [ "NONE", "PENDING", "READY", "FAILED" ]
       },
       "PinListOutputDto" : {
         "type" : "object",
@@ -440,7 +423,7 @@
         "required" : [ "status" ],
         "properties" : {
           "status" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/DownloadStatusDto"
           },
           "reasonCode" : {
             "type" : [ "string", "null" ]
@@ -748,6 +731,19 @@
             "type" : "string"
           }
         }
+      }
+    },
+    "securitySchemes" : {
+      "CookieScheme" : {
+        "type" : "apiKey",
+        "description" : "The same session token, issued by POST /api/v1/sessions with transport COOKIE and sent by the browser on its own.",
+        "name" : "pinry_session",
+        "in" : "cookie"
+      },
+      "SecurityScheme" : {
+        "type" : "http",
+        "description" : "Session token issued by POST /api/v1/sessions, sent as 'Authorization: Bearer <token>'.",
+        "scheme" : "bearer"
       }
     }
   },
@@ -2849,7 +2845,7 @@
   },
   "info" : {
     "title" : "Pinry Reborn API",
-    "version" : "2.1.0"
+    "version" : "3.0.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",
