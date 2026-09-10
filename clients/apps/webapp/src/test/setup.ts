@@ -11,6 +11,26 @@ import { server } from "./server"
 // route no journey declared cannot pass on a silent network failure.
 server.listen({ onUnhandledRequest: "error" })
 
+// jsdom implements no IntersectionObserver, and the grid's load-more sentinel is one. The stub
+// reports the sentinel as reached, which is what react-aria's own infinite viewport under test
+// already makes every tile: a journey therefore accumulates every page its catalogue serves.
+class ReachedSentinelObserver implements IntersectionObserver {
+  readonly root = null
+  readonly rootMargin = ""
+  readonly scrollMargin = ""
+  readonly thresholds: readonly number[] = []
+  constructor(private readonly reached: IntersectionObserverCallback) {}
+  observe(target: Element) {
+    this.reached([{ isIntersecting: true, target } as IntersectionObserverEntry], this)
+  }
+  unobserve() {}
+  disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return []
+  }
+}
+globalThis.IntersectionObserver = ReachedSentinelObserver
+
 // Testing Library cleans up by itself only when Vitest exposes its globals, which it does not here.
 afterEach(cleanup)
 afterEach(() => server.resetHandlers())

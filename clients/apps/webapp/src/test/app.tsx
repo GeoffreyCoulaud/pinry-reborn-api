@@ -25,7 +25,7 @@ const AUTHOR_ID = "0f5c6e58-2d6c-4a3a-9c1f-2a1f6b6d4f11"
 let pinCount = 0
 
 /** A pin the journey names by its description, which the tile reads as the image's text. */
-export function pin(description: string, image: Pin["image"]): Pin {
+export function pin(description: string, image: Pin["image"] = null): Pin {
   const id = `${AUTHOR_ID.slice(0, -2)}${(pinCount++).toString().padStart(2, "0")}`
   return {
     id,
@@ -35,13 +35,15 @@ export function pin(description: string, image: Pin["image"]): Pin {
     description,
     tags: [],
     boards: [],
-    image: image && { ...image, url: `/api/v1/pins/${id}/image` },
+    image,
   }
 }
 
 /** A pin whose image the API downloaded, at the dimensions the tile is placed with. */
 export function readyPin(description: string, width = 800, height = 600): Pin {
-  return pin(description, { status: "READY", url: "", width, height })
+  const bare = pin(description)
+  const url = `/api/v1/pins/${bare.id}/image`
+  return { ...bare, image: { status: "READY", url, width, height } }
 }
 
 /**

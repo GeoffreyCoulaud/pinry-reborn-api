@@ -50,7 +50,11 @@ describe("the tiles a page places", () => {
   })
 
   it("Given a pin the API reports no image for at all, Then it is placed like any other", () => {
-    const pins = [{ id: "bare" }, withStatus("failed", "FAILED"), withStatus("none", "NONE")]
+    const pins = [
+      { id: "bare", image: null },
+      withStatus("failed", "FAILED"),
+      withStatus("none", "NONE"),
+    ]
 
     expect(placeableTiles(pins).map((pin) => pin.id)).toEqual(["bare", "failed", "none"])
   })

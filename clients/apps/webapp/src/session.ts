@@ -1,12 +1,6 @@
-import { createAuth, type Credentials, type Session } from "@pinry-reborn/auth"
+import type { Credentials, Session } from "@pinry-reborn/auth"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-
-/**
- * The application and the API are one origin behind the proxy, so the application's own is the
- * API's, and the cookie is the transport a browser can send on an `<img>`
- * (docs/adr/0026-one-session-two-transports.md, decisions 3 and 5).
- */
-const auth = createAuth({ transport: "COOKIE", baseUrl: window.location.origin })
+import { auth } from "./api"
 
 const SESSION_KEY = ["session"]
 

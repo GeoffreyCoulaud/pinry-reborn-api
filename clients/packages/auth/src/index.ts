@@ -6,6 +6,12 @@ export type SessionTransport = components["schemas"]["SessionTransport"]
 export type Credentials = components["schemas"]["UserInputDto"]
 
 /**
+ * The contract's own types, so an application names a response without depending on the package a
+ * generator rewrites at every install.
+ */
+export type Schemas = components["schemas"]
+
+/**
  * What both transports agree on. A bearer answer also carries the token, which never leaves this
  * package: the application above holds no credential whatever the transport
  * (docs/adr/0026-one-session-two-transports.md, decision 1).
@@ -19,6 +25,11 @@ export interface AuthOptions {
 }
 
 export interface Auth {
+  /**
+   * The typed client every other route goes through, carrying whichever transport this session
+   * was opened with (specification 4.6). An application holds no client of its own.
+   */
+  readonly client: ApiClient
   /** Creates the account and opens its first session, so a fresh instance signs the user in once. */
   signUp(credentials: Credentials, rememberMe?: boolean): Promise<Session>
   signIn(credentials: Credentials, rememberMe?: boolean): Promise<Session>
@@ -49,6 +60,7 @@ export function createAuth({ transport, baseUrl }: AuthOptions): Auth {
   }
 
   return {
+    client,
     async signUp(credentials, rememberMe = false) {
       const { data, response } = await client.POST("/api/v1/users", { body: credentials })
       if (data === undefined) throw new Error(`The API refused the account: ${response.status}.`)
