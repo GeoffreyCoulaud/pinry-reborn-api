@@ -1,14 +1,14 @@
-import { RouterProvider, createMemoryHistory } from "@tanstack/react-router"
-import { render, screen } from "@testing-library/react"
+import { screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { m } from "../paraglide/messages.js"
-import { createAppRouter } from "../router"
+import { renderApp, sessionRoute } from "../test/app"
+import { server } from "../test/server"
 
 describe("open the application", () => {
-  it("Given the application's only route, Then the home heading is on screen", async () => {
-    const router = createAppRouter(createMemoryHistory({ initialEntries: ["/"] }))
+  it("Given an open session, Then the home heading is on screen", async () => {
+    server.use(sessionRoute(() => true))
 
-    render(<RouterProvider router={router} />)
+    renderApp("/")
 
     expect(await screen.findByRole("heading", { name: m.home_heading() })).toBeVisible()
   })
