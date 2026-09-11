@@ -51,6 +51,13 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `lot/X.Y.
   consumer; and anchoring the scroll position while pages prepend into a waterfall is not
   exercisable under jsdom. See `docs/specs/2026-09-10-web-application.md`, section 4.7.
   New 2026-09-11.
+- **A pin cannot be created without a source page URL.** `sourceContextUrl` is non-null in `Pin`,
+  `not null` in the column and required on `PinCreationInputDto`, so the creation screen's file
+  entry asks for a page URL that an image from disk does not have. Unlike `sourceMediaUrl`, which
+  block 10 made optional, this one is a domain change: the entity, the SQLite table rebuild the
+  nullable column needs, `PinOutputDto`, the export and import content, some thirty test fixtures
+  and a contract major. See `docs/specs/2026-09-10-web-application.md`, section 4.8.
+  New 2026-09-11.
 
 ### P2: Operational debt
 

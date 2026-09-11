@@ -425,6 +425,13 @@ state. It polls while the list is not empty and stops when it empties. A failed 
 
 Optimistic mutation is used where the client can compute the result. Creating a pin from a URL
 cannot: the outcome depends on a remote download, so the pin appears when the server says it did.
+(Corrected: this block does change the contract, which section 4.9's table did not expect.
+`POST /api/v1/pins` required a non-blank `sourceMediaUrl`, and a pin whose image is uploaded from
+disk has none, so the file entry could not be built without writing a falsehood into the field.
+`PinCreationInputDto.sourceMediaUrl` becomes nullable, the controller reading a blank one as none;
+the domain, the use case and the column had allowed null since `1.4.sql`. The contract goes to
+`3.3.0`, `oasdiff` reading the request property's widened type as a generalisation.
+`sourceContextUrl` stays required, which is a backlog item and not this block's.)
 
 ### 4.9 The contract's version through the lot
 
@@ -435,8 +442,11 @@ cannot: the outcome depends on a remote download, so the pin appears when the se
 | 5 | The cursor and the two status fields declared as they are emitted | `3.0.0` | Breaking, declared |
 | 7 | New route | `3.1.0` | Additive |
 | 8 | Two new routes | `3.2.0` | Additive |
+| 10 | `sourceMediaUrl` made optional on pin creation | `3.3.0` | Additive |
 
-Blocks 1, 3, 6, 9, 10 and 11 touch no contract and bump nothing. (Corrected: block 5 was inserted
+Blocks 1, 3, 6, 9 and 11 touch no contract and bump nothing. (Corrected: block 10 was expected here
+too, and it is not: the file entry of 4.8 cannot create a pin under a required `sourceMediaUrl`, so
+the row above is its.) (Corrected: block 5 was inserted
 mid-lot, so the handshake and the download list are blocks 7 and 8 and bump from `3.0.0` rather than
 from `2.1.0`.) (Corrected: block 9 was inserted after the download list, so pin creation and the
 wrap are blocks 10 and 11; it changes no schema and no route, so this table gains no row.) The guard
@@ -520,7 +530,7 @@ legitimate and which hide an incomplete model as this one did.
 | 7 | `feat/deployment-handshake` | `GET /api/v1/handshake`, contract `3.1.0` (Corrected: the four rendition sizes travel beside the two limits, see 4.3) | The route answering unauthenticated; the two limits changing in the response when the configuration keys change (Corrected: the four rendition sizes with them); the version in the response equal to the one `src/main/resources/application.properties` declares, read from the file |
 | 8 | `feat/image-download-list` | The download list, the deletion of a failed row, contract `3.2.0` | A failed download listed and a successful one absent; a recycled pin's row absent; another user's row absent; deleting a failed row answering `204` and the row gone; deleting a `PENDING` row answering `409` through the new `ErrorCode` |
 | 9 | `fix/image-download-holds-its-pin` | `ImageDownloadModel` holds its relation to `PinModel`, `findByAuthor` rewritten through the query beans, the foreign key the table never had, the `raw(` audit filed. No contract change | `findByAuthor` reading the caller's downloads in one statement, counted through the SQL log; the five behaviours of block 8 unchanged; removing `withActivePin()` making the recycled case red; no `raw(` left in `EbeanImageDownloadRepository` |
-| 10 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves |
+| 10 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling (Corrected: and `sourceMediaUrl` made optional on pin creation, contract `3.3.0`, without which the file entry cannot create a pin; see 4.8) | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves (Corrected: and a creation with no `sourceMediaUrl` answering `201` with the field null) |
 | 11 | `chore/webapp-lot-wrap` | The holistic review's findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
 
 Every block measures its diff with `git diff --numstat` against 600 lines, of which under 200 of
@@ -542,6 +552,13 @@ not split: its only seam puts the read only dialog in a block of its own, which 
 leaves the grid at 205, over the bound it was split to reach. Accepted by the operator at 255; the
 figure moved twice afterwards, up by six for the load more sentinel's guard and down by five when
 the page cap went. The block's own figures are in its pull request.)
+(Corrected: block 10 exceeds **both** bounds, at 425 lines of production against 200 and 796 in
+total against 600, and it is the first of the lot to break the 600: the blocks that exceeded before
+it, 2 at 206 lines of production, 3 at 262 and 6 at 256, all stayed inside the total, block 2's 791
+being under it by 9. It holds two screens, three journeys and the polling, and
+its only seam, the task centre against the creation screen, leaves halves of 232 and 193, the
+first still over the production bound while costing a second pull request at the lot's end.
+Accepted whole by the operator. The block's own figures are in its pull request.)
 
 ## 6. Adjacent backlog items
 
