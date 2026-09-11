@@ -54,6 +54,12 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `lot/X.Y.
 
 ### P2: Operational debt
 
+- **The `raw(` calls in production have never been audited.** Twelve remain across eight files: eight
+  are cursor pagination in the four sort strategies, two are `name collate nocase = ?`, which has no
+  typed equivalent, one is a `coalesce(...)` comparison, and one is `PinRepository:167`'s
+  `id in (select ...)`, the shape that hid an incomplete model in `ImageDownloadModel`. Nothing
+  records which are legitimate and which stand in for a relation the model does not hold. See
+  `docs/specs/2026-09-10-web-application.md`, section 4.11. New 2026-09-11.
 - **A pull request pays two cold Gradle builds**, one in `verify` and one in `build-image`: the jobs run
   on different runners and the Dagger cache volume dies with each. The exits are the ones ADR 0024's
   consequences name. See `docs/handoffs/2026-09-09 - handoff - monorepo-and-pipeline.md`. New 2026-09-09.

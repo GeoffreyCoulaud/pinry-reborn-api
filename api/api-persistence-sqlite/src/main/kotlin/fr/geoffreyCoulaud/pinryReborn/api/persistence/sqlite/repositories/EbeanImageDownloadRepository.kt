@@ -8,7 +8,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.Persistor
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.mappers.ImageDownloadModelMapper.toDomain
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.mappers.ImageDownloadModelMapper.toModel
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.models.query.QImageDownloadModel
-import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.queries.PinQueries
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.queries.withActivePin
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.Instant
 import java.util.UUID
@@ -37,22 +37,15 @@ class EbeanImageDownloadRepository(
         return QImageDownloadModel().pinId.isIn(pinIds).findList().associate { it.pinId to it.toDomain() }
     }
 
-    // Rooted on pins, so the recycled state is stated by the queries package and nowhere else. The
-    // raw subquery keeps the id list to the pins that carry a download, not the whole collection.
-    override fun findByAuthor(authorId: UUID): List<ImageDownload> {
-        val pinIds = PinQueries
-            .active()
-            .author.id
-            .equalTo(authorId)
-            .select("id")
-            .raw("id in (select pin_id from image_download)")
-            .findSingleAttributeList<UUID>()
-        return QImageDownloadModel()
-            .pinId.isIn(pinIds)
+    // The recycled state is stated by the queries package and nowhere else, here through the
+    // extension that navigates the association rather than a subquery this file would spell out.
+    override fun findByAuthor(authorId: UUID): List<ImageDownload> =
+        QImageDownloadModel()
+            .withActivePin()
+            .pin.author.id.equalTo(authorId)
             .orderBy().requestedAt.desc()
             .findList()
             .map { it.toDomain() }
-    }
 
     override fun markFailed(pinId: UUID, reason: DownloadReason, now: Instant): Boolean =
         pendingRows(pinId)
