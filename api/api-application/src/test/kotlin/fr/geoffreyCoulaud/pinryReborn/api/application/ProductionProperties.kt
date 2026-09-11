@@ -4,7 +4,7 @@ import java.io.File
 
 /**
  * `src/main/resources/application.properties`, read from the file: the test resources share its name
- * and win by classpath order, so nothing under `@QuarkusTest` ever observes a production default.
+ * and override the keys they declare, which is what a case comparing against a shipped value needs.
  */
 object ProductionProperties {
     private const val PATH = "src/main/resources/application.properties"
