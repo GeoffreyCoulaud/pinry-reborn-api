@@ -17,6 +17,12 @@ interface ImageDownloadRepositoryInterface {
      */
     fun findByPinIds(pinIds: Collection<UUID>): Map<UUID, ImageDownload>
 
+    /**
+     * The downloads of [authorId]'s pins, newest request first. Ownership is a traversal: the row
+     * carries no author, so it is read through the pin, and a recycled pin's row is left out.
+     */
+    fun findByAuthor(authorId: UUID): List<ImageDownload>
+
     /** CAS on PENDING: set FAILED + reason. Returns true if a PENDING row was updated. */
     fun markFailed(pinId: UUID, reason: DownloadReason, now: Instant): Boolean
 
