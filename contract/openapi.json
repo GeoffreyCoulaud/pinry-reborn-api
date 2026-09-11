@@ -113,6 +113,45 @@
           }
         }
       },
+      "ImageDownloadListOutputDto" : {
+        "type" : "object",
+        "required" : [ "downloads" ],
+        "properties" : {
+          "downloads" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImageDownloadOutputDto"
+            }
+          }
+        }
+      },
+      "ImageDownloadOutputDto" : {
+        "type" : "object",
+        "required" : [ "pinId", "sourceUrl", "status", "requestedAt", "updatedAt", "reasonCode", "message" ],
+        "properties" : {
+          "pinId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "sourceUrl" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/DownloadStatusDto"
+          },
+          "requestedAt" : {
+            "$ref" : "#/components/schemas/Instant"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/Instant"
+          },
+          "reasonCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "message" : {
+            "type" : [ "string", "null" ]
+          }
+        }
+      },
       "ImageOutputDto" : {
         "type" : "object",
         "required" : [ "id", "pinId", "mimeType", "width", "height", "byteSize", "url" ],
@@ -1569,6 +1608,87 @@
         } ]
       }
     },
+    "/api/v1/me/image-downloads" : {
+      "get" : {
+        "summary" : "List the caller's running and failed image downloads",
+        "description" : "Newest request first. A recycled pin's download is left out, like every other read.",
+        "responses" : {
+          "200" : {
+            "description" : "The caller's downloads, running and failed",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImageDownloadListOutputDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "tags" : [ "Me Image Download Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/v1/me/image-downloads/{pinId}" : {
+      "delete" : {
+        "summary" : "Drop one settled download",
+        "description" : "The pin and its image are untouched.",
+        "parameters" : [ {
+          "name" : "pinId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Download dropped"
+          },
+          "404" : {
+            "description" : "IMAGE_DOES_NOT_EXIST: no download of the caller carries this pin id",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "IMAGE_DOWNLOAD_IN_PROGRESS: the download is still running, and the worker owns its row",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "tags" : [ "Me Image Download Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        }, {
+          "CookieScheme" : [ ]
+        } ]
+      }
+    },
     "/api/v1/me/imports" : {
       "get" : {
         "parameters" : [ {
@@ -2914,7 +3034,7 @@
   },
   "info" : {
     "title" : "Pinry Reborn API",
-    "version" : "3.1.0"
+    "version" : "3.2.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",

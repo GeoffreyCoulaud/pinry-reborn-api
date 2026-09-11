@@ -11,9 +11,8 @@ import jakarta.enterprise.context.ApplicationScoped
 import java.util.UUID
 
 /**
- * What a requester still has to watch or to clear: a download row lives while the fetch runs and
- * after it failed, and success deletes it, so the list is exactly the work whose result is not a
- * pin yet (spec `docs/specs/2026-09-10-web-application.md`, section 4.4).
+ * What a requester still has to watch or to clear: a row lives while the fetch runs and after it
+ * failed, success deleting it (spec `docs/specs/2026-09-10-web-application.md`, section 4.4).
  */
 @ApplicationScoped
 class ImageDownloads(
@@ -23,9 +22,8 @@ class ImageDownloads(
     fun list(requester: User): List<ImageDownload> = imageDownloadRepository.findByAuthor(requester.id)
 
     /**
-     * Drops one settled row: what the requester cannot see is absent to them, and a running row
-     * belongs to the worker. Read and delete share a transaction, the requester being free to
-     * request the same download again while this one runs.
+     * Drops one settled row: what the requester cannot see is absent, and a running row belongs to
+     * the worker. One transaction, the same download being requestable again while this runs.
      */
     fun delete(requester: User, pinId: UUID): Unit = transactionRunner.inTransaction {
         val download = list(requester).firstOrNull { it.pinId == pinId } ?: throw ImageDownloadDoesNotExistError()
