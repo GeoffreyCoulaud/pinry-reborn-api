@@ -1,8 +1,13 @@
 package fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite
 
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.Pin
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.User
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.DownloadReason
 import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.DownloadStatus
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.EbeanImageDownloadRepository
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.PinRepository
+import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.UserRepository
+import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -13,7 +18,16 @@ import java.util.UUID.randomUUID
 
 class EbeanImageDownloadRepositoryTest : RepositoryTest() {
     private val repository = EbeanImageDownloadRepository(persistor)
+    private val pins = PinRepository(persistor)
+    private val users = UserRepository(persistor)
     private val now = Instant.parse("2026-07-10T00:00:00Z")
+
+    private fun saveUser(): User = users.saveUser(User(randomUUID(), createRandomString(), createdAt = now))
+
+    private fun savePin(author: User): Pin =
+        pins.savePin(
+            Pin(randomUUID(), author, "https://example.com", null, "d", emptyList(), emptyList(), now, now),
+        )
 
     @Test
     fun `Given upsertPending, Then findByPinId returns a PENDING row`() {
@@ -113,5 +127,48 @@ class EbeanImageDownloadRepositoryTest : RepositoryTest() {
 
         // Then
         assertTrue(found.isEmpty())
+    }
+
+    @Test
+    fun `Given running and failed downloads of the author, Then findByAuthor returns both newest first`() {
+        // Given
+        val author = saveUser()
+        val failed = savePin(author)
+        val running = savePin(author)
+        repository.upsertPending(failed.id, "https://x/old.png", randomUUID(), now)
+        repository.markFailed(failed.id, DownloadReason.NOT_FOUND, now)
+        repository.upsertPending(running.id, "https://x/new.png", randomUUID(), now.plusSeconds(SIXTY_SECONDS))
+
+        // When
+        val found = repository.findByAuthor(author.id)
+
+        // Then
+        assertEquals(listOf(running.id, failed.id), found.map { it.pinId })
+        assertEquals(listOf(DownloadStatus.PENDING, DownloadStatus.FAILED), found.map { it.status })
+    }
+
+    @Test
+    fun `Given a recycled pin carrying a download, Then findByAuthor omits its row`() {
+        // Given
+        val author = saveUser()
+        val recycled = savePin(author)
+        repository.upsertPending(recycled.id, "https://x/i.png", randomUUID(), now)
+        pins.softDeletePin(recycled, now)
+
+        // When / Then
+        assertTrue(repository.findByAuthor(author.id).isEmpty())
+    }
+
+    @Test
+    fun `Given another author's download, Then findByAuthor omits its row`() {
+        // Given
+        repository.upsertPending(savePin(saveUser()).id, "https://x/i.png", randomUUID(), now)
+
+        // When / Then
+        assertTrue(repository.findByAuthor(saveUser().id).isEmpty())
+    }
+
+    private companion object {
+        const val SIXTY_SECONDS = 60L
     }
 }
