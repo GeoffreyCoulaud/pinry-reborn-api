@@ -31,6 +31,12 @@ class ReachedSentinelObserver implements IntersectionObserver {
 }
 globalThis.IntersectionObserver = ReachedSentinelObserver
 
+// jsdom decodes no image, and the creation screen measures one to read it against the
+// deployment's pixel limit. The stub reports a small picture, so what a journey exercises is the
+// weight half of the refusal; the pixel half is held by `uploadRefusal`'s own tests.
+globalThis.createImageBitmap = () =>
+  Promise.resolve({ width: 100, height: 100, close: () => {} } as ImageBitmap)
+
 // Testing Library cleans up by itself only when Vitest exposes its globals, which it does not here.
 afterEach(cleanup)
 afterEach(() => server.resetHandlers())

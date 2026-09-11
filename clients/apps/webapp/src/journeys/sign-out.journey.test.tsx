@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { HttpResponse, http } from "msw"
 import { describe, expect, it } from "vitest"
 import { m } from "../paraglide/messages.js"
-import { pinsRoute, renderApp, sessionRoute } from "../test/app"
+import { downloadsRoute, pinsRoute, renderApp, sessionRoute } from "../test/app"
 import { server } from "../test/server"
 
 describe("sign out", () => {
@@ -12,6 +12,7 @@ describe("sign out", () => {
     server.use(
       sessionRoute(() => open),
       pinsRoute([]),
+      downloadsRoute(),
       http.delete("/api/v1/sessions/current", () => {
         open = false
         return new HttpResponse(null, { status: 204 })

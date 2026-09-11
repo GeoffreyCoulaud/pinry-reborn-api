@@ -10,6 +10,9 @@ export const REQUIRED_JOURNEYS = [
   "session expiry",
   "browse the grid and load a second page",
   "open a pin",
+  "create a pin from a URL through to the tile appearing",
+  "create a pin by uploading a file",
+  "a failed download surfacing in the task centre",
 ]
 
 /** The file under `src/journeys/` that holds a journey's test. */
