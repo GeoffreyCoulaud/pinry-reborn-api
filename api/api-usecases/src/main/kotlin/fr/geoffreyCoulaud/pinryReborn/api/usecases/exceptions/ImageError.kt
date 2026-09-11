@@ -15,3 +15,10 @@ class ImageInvalidError(message: String, cause: Throwable? = null) : ImageError(
 
 class ImageSourceUrlInvalidError(cause: Throwable? = null) :
     ImageError("Invalid source URL", ErrorCode.IMAGE_SOURCE_URL_INVALID, cause)
+
+// The image family's 404, as for a pin nobody can reach: the message names the case, the code names
+// the family, and a requester learns nothing about another account's rows.
+class ImageDownloadDoesNotExistError : ImageError("Pin has no image download", ErrorCode.IMAGE_DOES_NOT_EXIST)
+
+class ImageDownloadInProgressError :
+    ImageError("The download is still running", ErrorCode.IMAGE_DOWNLOAD_IN_PROGRESS)

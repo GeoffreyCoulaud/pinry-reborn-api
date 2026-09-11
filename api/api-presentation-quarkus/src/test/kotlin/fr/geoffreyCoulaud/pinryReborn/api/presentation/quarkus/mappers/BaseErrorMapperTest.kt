@@ -108,6 +108,11 @@ class BaseErrorMapperTest {
     }
 
     @Test
+    fun `Given IMAGE_DOWNLOAD_IN_PROGRESS, Then status is CONFLICT`() {
+        assertEquals(Response.Status.CONFLICT, statusFor(ErrorCode.IMAGE_DOWNLOAD_IN_PROGRESS))
+    }
+
+    @Test
     fun `Given IMAGE_RENDITION_SIZE_INVALID, Then status is BAD_REQUEST`() {
         assertEquals(Response.Status.BAD_REQUEST, statusFor(ErrorCode.IMAGE_RENDITION_SIZE_INVALID))
     }
