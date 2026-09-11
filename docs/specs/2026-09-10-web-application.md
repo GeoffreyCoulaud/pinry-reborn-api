@@ -265,7 +265,9 @@ file to compare, which is what keeps it from being a tautology. Raising the file
 exactly those running or failed. `DELETE /api/v1/me/image-downloads/{pinId}` removes one failed row.
 
 **Ownership is a traversal, not a column.** `ImageDownload` has no author and no relation to
-`PinModel` (property 3), so the query joins through `pins.author_id`. `PinModel` is a
+`PinModel` (property 3), so the query joins through `pins.author_id`.
+(Corrected: block 9 gives `ImageDownloadModel` the relation, and the traversal becomes one typed
+join; section 4.11 carries it.) `PinModel` is a
 `SoftDeletableModel`, so the traversal goes through the `Queries` objects that
 `agents/engineering.md` mandates, under the Konsist assertions and the
 `SoftDeleteStateFilteredOutsideQueries` detekt rule. **A recycled pin's download row is not listed**,
@@ -409,7 +411,7 @@ The tile requests the `small` or `medium` rendition depending on the column widt
 A pin opens in a dialog, read only: its image, description, tags and boards. Editing any of them is
 another lot.
 
-### 4.8 Creating a pin, and the task centre (block 9)
+### 4.8 Creating a pin, and the task centre (block 10)
 
 Two entries, one screen. A URL goes to `POST /api/v1/pins` then `PUT /api/v1/pins/{pinId}/image`
 with `PinImageDownloadInputDto`, answered `202`: the pin exists, its image does not yet, and the tile
@@ -434,9 +436,11 @@ cannot: the outcome depends on a remote download, so the pin appears when the se
 | 7 | New route | `3.1.0` | Additive |
 | 8 | Two new routes | `3.2.0` | Additive |
 
-Blocks 1, 3, 6, 9 and 10 touch no contract and bump nothing. (Corrected: block 5 was inserted
+Blocks 1, 3, 6, 9, 10 and 11 touch no contract and bump nothing. (Corrected: block 5 was inserted
 mid-lot, so the handshake and the download list are blocks 7 and 8 and bump from `3.0.0` rather than
-from `2.1.0`.) The guard derives the required bump from
+from `2.1.0`.) (Corrected: block 9 was inserted after the download list, so pin creation and the
+wrap are blocks 10 and 11; it changes no schema and no route, so this table gains no row.) The guard
+derives the required bump from
 the diff against `main` and fails on a version that does not match it, so a block that forgets its
 bump is red before review.
 
@@ -470,6 +474,39 @@ every new reason a contract major. Its closed set is already held at compile tim
 
 `oasdiff` reads all of it as breaking, which the alpha allows, so the contract goes to `3.0.0`.
 
+### 4.11 The download holds its pin (block 9)
+
+`ImageDownloadModel` declared `@Id var pinId: UUID` and nothing else about the pin, so block 8's
+`findByAuthor` had no join to reach for and asked for the ownership traversal in raw SQL:
+`PinQueries.active()` filtered by author, narrowed by `raw("id in (select pin_id from
+image_download)")`, then a second query over those identifiers. Raw SQL here is the symptom; the
+model is the cause. This block was decided during the lot, on reviewing block 8.
+
+**The relation sits beside the identifier, not in its place.** Ebean 19.2 refuses `@Id` on an
+association: it reads the identity property as an `@EmbeddedId` and the database fails to boot with
+`BeanNotRegisteredException` on `PinModel`. So `pinId` stays the mapped identity, and `pin` is a
+`@ManyToOne` on the same `pin_id` column, `insertable = false, updatable = false`, which is what
+lets two properties share one column. It is `lateinit` because Ebean fills it on every read and
+nothing in this codebase writes it. `@DbForeignKey(noIndex = true)` keeps the generator from
+claiming an index on a column that is already the primary key.
+
+**The association also declares the foreign key the table never had.** `1.5` created
+`image_download` with `pin_id` as its primary key and no reference to `pins`, because the model
+named no relation. SQLite cannot add a foreign key to an existing table, so the generator writes a
+`-- not supported` marker that `DbMigrationModelCoverageTest` refuses; `1.22.sql` is therefore a
+hand-written table rebuild, on the precedent `1.4` set for `pins`, with the generated
+`1.22.model.xml` beside it. No column changes and no data moves.
+
+**The query is then the one the query beans already offer.** `withActivePin()` joins `queries/` as
+the pin-to-board join's two extensions did, and `findByAuthor` reads
+`QImageDownloadModel().withActivePin().pin.author.id.equalTo(authorId)`: one statement, a left join
+on `pins`, the same five behaviours block 8 fixed. Removing `withActivePin()` makes the recycled
+case red, which is the mutation that holds the state filter in place.
+
+The contract does not change, and section 4.9 gains no row. The twelve other `raw(` calls in
+production code are not this block's: they are a backlog item, which asks which of them are
+legitimate and which hide an incomplete model as this one did.
+
 ## 5. Block table
 
 | # | Branch | Delivers | Green alone |
@@ -482,8 +519,9 @@ every new reason a contract major. Its closed set is already held at compile tim
 | 6 | `feat/webapp-grid` | The virtualised grid, cursor paging with a page cap, the read only pin dialog | Browsing and loading a second page as a journey; opening a pin as a journey; the tile carrying `aspect-ratio` computed from the response; the rendition size varying with column width |
 | 7 | `feat/deployment-handshake` | `GET /api/v1/handshake`, contract `3.1.0` (Corrected: the four rendition sizes travel beside the two limits, see 4.3) | The route answering unauthenticated; the two limits changing in the response when the configuration keys change (Corrected: the four rendition sizes with them); the version in the response equal to the one `src/main/resources/application.properties` declares, read from the file |
 | 8 | `feat/image-download-list` | The download list, the deletion of a failed row, contract `3.2.0` | A failed download listed and a successful one absent; a recycled pin's row absent; another user's row absent; deleting a failed row answering `204` and the row gone; deleting a `PENDING` row answering `409` through the new `ErrorCode` |
-| 9 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves |
-| 10 | `chore/webapp-lot-wrap` | The holistic review's findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
+| 9 | `fix/image-download-holds-its-pin` | `ImageDownloadModel` holds its relation to `PinModel`, `findByAuthor` rewritten through the query beans, the foreign key the table never had, the `raw(` audit filed. No contract change | `findByAuthor` reading the caller's downloads in one statement, counted through the SQL log; the five behaviours of block 8 unchanged; removing `withActivePin()` making the recycled case red; no `raw(` left in `EbeanImageDownloadRepository` |
+| 10 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves |
+| 11 | `chore/webapp-lot-wrap` | The holistic review's findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
 
 Every block measures its diff with `git diff --numstat` against 600 lines, of which under 200 of
 production code (`docs/adr/0018-a-block-is-a-pull-request.md`), as soon as it is first green rather
@@ -496,6 +534,9 @@ same reason as the lockfile; block 2's own figures are in its pull request.)
 (Corrected: block 5 was inserted before the grid during the lot, in answer to question AD, so every
 block after it shifted by one. Block numbers everywhere in this document are the new ones, the
 headings of section 4 included.)
+(Corrected: block 9 was inserted after the download list during the lot, in answer to the raw SQL
+block 8 left behind, so pin creation and the wrap shifted to 10 and 11. Block numbers everywhere in
+this document are the new ones, the headings of section 4 included.)
 (Corrected: block 6 exceeds the production half of the budget, at 256 lines against 200, and does
 not split: its only seam puts the read only dialog in a block of its own, which costs 51 lines and
 leaves the grid at 205, over the bound it was split to reach. Accepted by the operator at 255; the

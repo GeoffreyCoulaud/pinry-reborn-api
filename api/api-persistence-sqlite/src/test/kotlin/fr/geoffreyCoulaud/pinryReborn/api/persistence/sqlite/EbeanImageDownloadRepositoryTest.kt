@@ -8,6 +8,7 @@ import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.EbeanI
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.PinRepository
 import fr.geoffreyCoulaud.pinryReborn.api.persistence.sqlite.repositories.UserRepository
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.createRandomString
+import io.ebean.test.LoggedSql
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -157,6 +158,21 @@ class EbeanImageDownloadRepositoryTest : RepositoryTest() {
 
         // When / Then
         assertTrue(repository.findByAuthor(author.id).isEmpty())
+    }
+
+    @Test
+    fun `Given the author's downloads, Then findByAuthor reads them through a single statement`() {
+        // Given
+        val author = saveUser()
+        repository.upsertPending(savePin(author).id, "https://x/i.png", randomUUID(), now)
+
+        // When
+        LoggedSql.start()
+        repository.findByAuthor(author.id)
+        val statements = LoggedSql.stop()
+
+        // Then
+        assertEquals(1, statements.size, "Expected one statement, ran ${statements.size}: $statements")
     }
 
     @Test
