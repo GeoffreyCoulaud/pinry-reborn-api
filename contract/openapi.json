@@ -98,6 +98,21 @@
           }
         }
       },
+      "HandshakeOutputDto" : {
+        "type" : "object",
+        "required" : [ "contractVersion", "limits", "renditionSizes" ],
+        "properties" : {
+          "contractVersion" : {
+            "type" : "string"
+          },
+          "limits" : {
+            "$ref" : "#/components/schemas/LimitsDto"
+          },
+          "renditionSizes" : {
+            "$ref" : "#/components/schemas/RenditionSizesDto"
+          }
+        }
+      },
       "ImageOutputDto" : {
         "type" : "object",
         "required" : [ "id", "pinId", "mimeType", "width", "height", "byteSize", "url" ],
@@ -132,6 +147,20 @@
         "type" : "string",
         "format" : "date-time",
         "examples" : [ "2022-03-10T16:15:50Z" ]
+      },
+      "LimitsDto" : {
+        "type" : "object",
+        "required" : [ "maxFileBytes", "maxPixels" ],
+        "properties" : {
+          "maxFileBytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "maxPixels" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
       },
       "PaginationOutputDto" : {
         "type" : "object",
@@ -415,6 +444,28 @@
             "items" : {
               "$ref" : "#/components/schemas/RecycledBoardDto"
             }
+          }
+        }
+      },
+      "RenditionSizesDto" : {
+        "type" : "object",
+        "required" : [ "tiny", "small", "medium", "large" ],
+        "properties" : {
+          "tiny" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "small" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "medium" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "large" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -1128,6 +1179,24 @@
         }, {
           "CookieScheme" : [ ]
         } ]
+      }
+    },
+    "/api/v1/handshake" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HandshakeOutputDto"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Get Handshake",
+        "tags" : [ "Handshake Controller" ]
       }
     },
     "/api/v1/me" : {
@@ -2845,7 +2914,7 @@
   },
   "info" : {
     "title" : "Pinry Reborn API",
-    "version" : "3.0.0"
+    "version" : "3.1.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",

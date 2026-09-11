@@ -237,12 +237,27 @@ deployment that configures it.
 `GET /api/v1/handshake`, unauthenticated, carrying the contract version and the two keys of
 `ImagesConfig` a client acts on, `maxFileBytes` and `maxPixels`. `ImportsConfig.maxChunkBytes` stays
 out, its consumer being the import, which this lot does not build.
+(Corrected: the four `RenditionsConfig` sizes travel too, as `renditionSizes`. Block 6's tile picks
+its rendition on a breakpoint of 240 pixels, which is `small`'s default and which no route
+published: exactly the drift this section exists to prevent. `webpQuality` stays out, a server
+encoding detail no client acts on. The response is `contractVersion`, `limits.maxFileBytes`,
+`limits.maxPixels` and `renditionSizes.{tiny,small,medium,large}`, each size being the shortest side
+in pixels that `GET /api/v1/pins/{pinId}/image?size=` answers.)
 
 **The version is read the way `ContractVersionDeclarationTest` already reads it**, from
 `src/main/resources/application.properties`, not from the injected configuration. The test resources
 do not declare `quarkus.smallrye-openapi.info-version` and win by classpath order, so a route reading
 the injected value would serve a default under test, and a test comparing the response to that same
 injected value would be a tautology that passes at any number. The contract goes to `2.2.0`.
+(Corrected: the version is `3.1.0`, section 4.9's table being right; the renumbering that inserted
+block 5 left this sentence behind.)
+(Corrected: the premise is false, re-measured on this branch. `src/test/resources/application.properties`
+overrides the keys it declares and shadows none other, so a `@QuarkusTest` reads the production
+file's `quarkus.smallrye-openapi.info-version`; `ImportsConfigIntegrationTest` already rests on that
+for `quarkus.http.limits.max-body-size`, which only the production file declares. So the route
+injects the key SmallRye stamps the document from, one declaration for both, and the test reads the
+file to compare, which is what keeps it from being a tautology. Raising the file from `3.0.0` to
+`3.1.0` is the mutation that proved it: the response followed.)
 
 ### 4.4 The download list (block 8)
 
@@ -463,7 +478,7 @@ every new reason a contract major. Its closed set is already held at compile tim
 | 4 | `feat/pin-image-in-list` | `image` on `PinOutputDto` populated by every list, relative image URLs including `Location`, contract `2.1.0` | A pin with a ready image returning width and height in the list response; a pin with a pending download returning `PENDING` and no dimensions; a pin with no image returning null; every emitted URL starting with `/api/v1/` and no test needing `api.remote_host`; a page of N pins calling the image repository once, counted through a fake in the use case test |
 | 5 | `fix/contract-declares-what-it-emits` | The cursor declared a string in its eight positions, both status fields declared as the enums they are filled from, contract `3.0.0` | The six cursor query parameters and both `PaginationOutputDto` cursors declaring `string`, asserted against the generated document; `PinImageStateDto.status` declaring the four values of `PinImageStatus` and `ReplacementDto.status` the two of `DownloadStatus`, asserted the same way; the gate refusing the same diff with `quarkus.smallrye-openapi.info-version` left at `2.1.0` |
 | 6 | `feat/webapp-grid` | The virtualised grid, cursor paging with a page cap, the read only pin dialog | Browsing and loading a second page as a journey; opening a pin as a journey; the tile carrying `aspect-ratio` computed from the response; the rendition size varying with column width |
-| 7 | `feat/deployment-handshake` | `GET /api/v1/handshake`, contract `3.1.0` | The route answering unauthenticated; the two limits changing in the response when the configuration keys change; the version in the response equal to the one `src/main/resources/application.properties` declares, read from the file |
+| 7 | `feat/deployment-handshake` | `GET /api/v1/handshake`, contract `3.1.0` (Corrected: the four rendition sizes travel beside the two limits, see 4.3) | The route answering unauthenticated; the two limits changing in the response when the configuration keys change (Corrected: the four rendition sizes with them); the version in the response equal to the one `src/main/resources/application.properties` declares, read from the file |
 | 8 | `feat/image-download-list` | The download list, the deletion of a failed row, contract `3.2.0` | A failed download listed and a successful one absent; a recycled pin's row absent; another user's row absent; deleting a failed row answering `204` and the row gone; deleting a `PENDING` row answering `409` through the new `ErrorCode` |
 | 9 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves |
 | 10 | `chore/webapp-lot-wrap` | The holistic review's findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
@@ -511,7 +526,7 @@ Each row names how a reader notices if it changed anyway.
 | Editing or deleting a pin | The pin dialog has no control that issues a `PUT` or a `DELETE` |
 | Account management and the import and export screens | No call to `/api/v1/me/exports`, `/api/v1/me/imports` or `/api/v1/me/password` |
 | Server side rendering, and any Node process in production | No server in the webapp's image; `pnpm build` emits static files only |
-| A capability registry in the handshake | The handshake response has two limit fields and a version, nothing else |
+| A capability registry in the handshake | The handshake response has two limit fields and a version, nothing else (Corrected: and the four rendition sizes, see 4.3; nothing else) |
 | Selection and drag and drop as features, though the primitives that carry them are chosen | `selectionMode` is set on the grid and no action consumes a selection |
 | SSE for download progress | No route serves `text/event-stream` |
 | A browser in the gate | No Playwright, no `@vitest/browser-*` in any manifest |
