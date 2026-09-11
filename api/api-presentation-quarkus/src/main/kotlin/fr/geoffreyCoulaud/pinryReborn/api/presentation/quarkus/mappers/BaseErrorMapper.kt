@@ -59,6 +59,7 @@ class BaseErrorMapper : ExceptionMapper<BaseError> {
             ErrorCode.IMAGE_TOO_LARGE -> Response.Status.REQUEST_ENTITY_TOO_LARGE.statusCode
             ErrorCode.IMAGE_INVALID -> UNPROCESSABLE_ENTITY_STATUS_CODE
             ErrorCode.IMAGE_SOURCE_URL_INVALID -> Response.Status.BAD_REQUEST.statusCode
+            ErrorCode.IMAGE_DOWNLOAD_IN_PROGRESS -> Response.Status.CONFLICT.statusCode
             ErrorCode.IMAGE_RENDITION_SIZE_INVALID -> Response.Status.BAD_REQUEST.statusCode
             ErrorCode.BOARD_DOES_NOT_EXIST -> Response.Status.NOT_FOUND.statusCode
             ErrorCode.BOARD_INSUFFICIENT_PERMISSIONS -> Response.Status.FORBIDDEN.statusCode
