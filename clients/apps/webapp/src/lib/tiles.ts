@@ -3,9 +3,9 @@ export type Rendition = "SMALL" | "MEDIUM"
 
 /**
  * The widest column, in device pixels, the small rendition covers without stretching. It is
- * `images.renditions.small`'s default, which no route publishes: the handshake of section 4.3
- * serves the upload limits and nothing else, so a deployment that narrows its renditions costs a
- * tile more bytes than it needs rather than a defect.
+ * `images.renditions.small`'s default, and the handshake of section 4.3 does publish the
+ * deployment's own since block 7: nothing reads it here yet, so a deployment that narrows its
+ * renditions costs a tile more bytes than it needs rather than a defect.
  */
 const SMALL_RENDITION_PX = 240
 
