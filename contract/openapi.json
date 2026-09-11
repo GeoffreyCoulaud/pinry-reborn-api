@@ -260,8 +260,7 @@
             "pattern" : "\\S"
           },
           "sourceMediaUrl" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "type" : [ "string", "null" ]
           },
           "description" : {
             "type" : "string",
@@ -3034,7 +3033,7 @@
   },
   "info" : {
     "title" : "Pinry Reborn API",
-    "version" : "3.2.0"
+    "version" : "3.3.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",

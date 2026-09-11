@@ -7,10 +7,12 @@ import fr.geoffreyCoulaud.pinryReborn.api.domain.enums.PinSortStrategy
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDirectionDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.common.CursorDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinBoardsInputDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinCreationInputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.input.PinSortStrategyInputEnum
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.PinOutputDto
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinResponses
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinBoardSetter
+import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinCreator
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.PinGetter
 import fr.geoffreyCoulaud.pinryReborn.api.usecases.ResolvePinImageState
 import fr.geoffreyCoulaud.pinryReborn.api.utilities.TestTime
@@ -19,10 +21,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.quarkus.security.identity.SecurityIdentity
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.util.UUID.randomUUID
 
 class PinControllerTest {
+    private val pinCreator = mockk<PinCreator>()
     private val pinGetter = mockk<PinGetter>()
     private val pinBoardSetter = mockk<PinBoardSetter>()
     private val securityIdentity = mockk<SecurityIdentity>()
@@ -31,7 +35,7 @@ class PinControllerTest {
         every { it.statesFor(any()) } returns emptyMap()
     }
     private val controller = PinController(
-        pinCreator = mockk(),
+        pinCreator = pinCreator,
         pinGetter = pinGetter,
         pinTagger = mockk(),
         pinRecycleBin = mockk(),
@@ -39,6 +43,55 @@ class PinControllerTest {
         securityIdentity = securityIdentity,
         pinResponses = PinResponses(resolvePinImageState),
     )
+
+    /** Creates a pin through the controller and answers what the created pin actually carries. */
+    private fun createPinWith(sourceMediaUrl: String?): PinOutputDto {
+        val user = User(id = randomUUID(), name = createRandomString(), createdAt = TestTime.now)
+        every { securityIdentity.getAttribute<User>("user") } returns user
+        every {
+            pinCreator.createPin(
+                author = user,
+                sourceContextUrl = any(),
+                sourceMediaUrl = any(),
+                description = any(),
+                tags = any(),
+            )
+        } answers {
+            Pin(
+                id = randomUUID(),
+                author = user,
+                sourceContextUrl = arg(1),
+                sourceMediaUrl = arg(2),
+                description = arg(3),
+                tags = emptyList(),
+                boards = emptyList(),
+                createdAt = TestTime.now,
+                updatedAt = TestTime.now,
+            )
+        }
+        val dto = PinCreationInputDto(
+            sourceContextUrl = "https://example.test/page",
+            sourceMediaUrl = sourceMediaUrl,
+            description = createRandomString(),
+        )
+
+        return controller.createPin(dto).entity
+    }
+
+    @Test
+    fun `Given no source media url, Then the created pin carries none`() {
+        assertNull(createPinWith(null).sourceMediaUrl)
+    }
+
+    @Test
+    fun `Given a blank source media url, Then the created pin carries none`() {
+        assertNull(createPinWith("   ").sourceMediaUrl)
+    }
+
+    @Test
+    fun `Given a source media url, Then the created pin carries it`() {
+        assertEquals("https://example.test/i.png", createPinWith("https://example.test/i.png").sourceMediaUrl)
+    }
 
     @Test
     fun `Given no cursor, no page size and no sort, Then listPins uses defaults`() {
