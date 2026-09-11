@@ -42,13 +42,14 @@ object PinImageStateMapper {
             PinImageStatus.FAILED -> PinImageStatusDto.FAILED
         }
 
-    private fun DownloadStatus.toDto(): DownloadStatusDto =
+    internal fun DownloadStatus.toDto(): DownloadStatusDto =
         when (this) {
             DownloadStatus.PENDING -> DownloadStatusDto.PENDING
             DownloadStatus.FAILED -> DownloadStatusDto.FAILED
         }
 
-    private fun messageFor(reason: DownloadReason): String =
+    // Shared with ImageDownloadDtoMapper: one reason, one sentence, declared once.
+    internal fun messageFor(reason: DownloadReason): String =
         when (reason) {
             DownloadReason.URL_NOT_ALLOWED -> "This URL is not allowed."
             DownloadReason.UNREACHABLE -> "The server could not reach this URL."

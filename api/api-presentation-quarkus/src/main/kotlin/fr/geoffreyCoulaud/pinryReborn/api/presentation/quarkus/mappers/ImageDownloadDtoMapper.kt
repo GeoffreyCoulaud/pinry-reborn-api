@@ -1,0 +1,21 @@
+package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers
+
+import fr.geoffreyCoulaud.pinryReborn.api.domain.entities.ImageDownload
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.ImageDownloadListOutputDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.dtos.output.ImageDownloadOutputDto
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinImageStateMapper.messageFor
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.mappers.PinImageStateMapper.toDto
+
+object ImageDownloadDtoMapper {
+    fun ImageDownload.toDto() = ImageDownloadOutputDto(
+        pinId = pinId,
+        sourceUrl = sourceUrl,
+        status = status.toDto(),
+        requestedAt = requestedAt,
+        updatedAt = updatedAt,
+        reasonCode = reasonCode?.name,
+        message = reasonCode?.let { messageFor(it) },
+    )
+
+    fun List<ImageDownload>.toDto() = ImageDownloadListOutputDto(downloads = map { it.toDto() })
+}

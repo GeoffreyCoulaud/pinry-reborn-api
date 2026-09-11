@@ -279,6 +279,8 @@ This adds one method, `findByAuthor`, to the six the interface has today.
 `agents/engineering.md` requires the status to come from `BaseErrorMapper.statusFor`, a `when` over
 `ErrorCode` with no `else`. Block 8 therefore adds one `ErrorCode` value, its row in that table, and
 the exception the use case throws. The contract goes to `2.3.0`.
+(Corrected: the version is `3.2.0`, section 4.9's table being right; the renumbering that inserted
+block 5 left this sentence behind.)
 
 ### 4.5 The client's tree and its tooling (block 1)
 

@@ -12,6 +12,7 @@ import jakarta.inject.Inject
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -55,17 +56,18 @@ class ModeBImageHostingIntegrationTest : IntegrationTest() {
 
     private fun fixture(name: String) = File("src/test/resources/fixtures/$name")
 
+    private fun createPin(auth: AuthenticatedUser): UUID =
+        pinCreator.createPin(
+            author = auth.user,
+            sourceContextUrl = "https://example.com",
+            sourceMediaUrl = "https://example.com/img.jpg",
+            description = "Mode-B image hosting test pin",
+            tags = emptyList(),
+        ).id
+
     private fun createUserAndPin(): Pair<AuthenticatedUser, UUID> {
         val auth = createAuthenticatedUser()
-        val pin =
-            pinCreator.createPin(
-                author = auth.user,
-                sourceContextUrl = "https://example.com",
-                sourceMediaUrl = "https://example.com/img.jpg",
-                description = "Mode-B image hosting test pin",
-                tags = emptyList(),
-            )
-        return auth to pin.id
+        return auth to createPin(auth)
     }
 
     private fun originUrl(path: String) = "http://127.0.0.1:$port$path"
@@ -110,6 +112,14 @@ class ModeBImageHostingIntegrationTest : IntegrationTest() {
             .authenticatedAs(auth)
             .multiPart("file", fixture(fixtureName), mimeType)
             .`when`().put("/api/v1/pins/$pinId/image")
+
+    /** The caller's task centre: the downloads that are running or have failed (expects `200`). */
+    private fun downloadList(auth: AuthenticatedUser): JsonPath =
+        given()
+            .authenticatedAs(auth)
+            .`when`().get(DOWNLOADS_PATH)
+            .then().statusCode(200)
+            .extract().jsonPath()
 
     @Test
     fun `Given a mode-B request for a real image, Then it settles READY and the bytes are served`() {
@@ -377,7 +387,86 @@ class ModeBImageHostingIntegrationTest : IntegrationTest() {
         error("Status for the hard-deleted pin $pinId never reported 404 within the poll budget")
     }
 
+    @Test
+    fun `Given a failed and a successful download, Then the list holds the failed one alone`() {
+        // Given: one download that fails and one that settles READY, whose row a success removes
+        val (auth, failedPin) = createUserAndPin()
+        requestDownload(failedPin, auth, originUrl("/private")).then().statusCode(202)
+        pollStatus(failedPin, auth, "FAILED")
+        val readyPin = createPin(auth)
+        requestDownload(readyPin, auth, originUrl("/img.png")).then().statusCode(202)
+        pollStatus(readyPin, auth, "READY")
+
+        // When
+        val body = downloadList(auth)
+
+        // Then
+        assertEquals(listOf(failedPin.toString()), body.getList<String>("downloads.pinId"))
+        assertEquals("FAILED", body.getString("downloads[0].status"))
+        assertEquals("ACCESS_DENIED", body.getString("downloads[0].reasonCode"))
+        assertTrue(body.getString("downloads[0].message").isNotBlank(), "a failed row carries a human message")
+
+        // Then: another account sees none of it
+        assertTrue(
+            downloadList(createAuthenticatedUser()).getList<String>("downloads").isEmpty(),
+            "a download is owned by the author of its pin",
+        )
+    }
+
+    @Test
+    fun `Given a recycled pin carrying a failed download, Then the list omits it`() {
+        // Given
+        val (auth, pinId) = createUserAndPin()
+        requestDownload(pinId, auth, originUrl("/private")).then().statusCode(202)
+        pollStatus(pinId, auth, "FAILED")
+
+        // When: the pin goes to the recycle bin
+        given().authenticatedAs(auth).`when`().delete("/api/v1/pins/$pinId").then().statusCode(204)
+
+        // Then
+        assertTrue(downloadList(auth).getList<String>("downloads").isEmpty(), "a recycled pin's row is not listed")
+    }
+
+    @Test
+    fun `Given a failed download, Then deleting it empties the list and leaves the pin`() {
+        // Given
+        val (auth, pinId) = createUserAndPin()
+        requestDownload(pinId, auth, originUrl("/private")).then().statusCode(202)
+        pollStatus(pinId, auth, "FAILED")
+
+        // When
+        given().authenticatedAs(auth).`when`().delete("$DOWNLOADS_PATH/$pinId").then().statusCode(204)
+
+        // Then: the row is gone, the pin is not, and a second deletion finds nothing
+        assertTrue(downloadList(auth).getList<String>("downloads").isEmpty())
+        given().authenticatedAs(auth).`when`().get("/api/v1/pins/$pinId").then().statusCode(200)
+        given().authenticatedAs(auth).`when`().delete("$DOWNLOADS_PATH/$pinId").then().statusCode(404)
+    }
+
+    @Test
+    fun `Given a running download, Then deleting it is refused, the worker owning the row`() {
+        // Given: a gated download held PENDING
+        val (auth, pinId) = createUserAndPin()
+        gateLatch = CountDownLatch(1)
+        try {
+            requestDownload(pinId, auth, originUrl("/gated")).then().statusCode(202)
+            assertEquals("PENDING", downloadList(auth).getString("downloads[0].status"))
+
+            // When / Then
+            given()
+                .authenticatedAs(auth)
+                .`when`().delete("$DOWNLOADS_PATH/$pinId")
+                .then().statusCode(409).body("code", equalTo("IMAGE_DOWNLOAD_IN_PROGRESS"))
+        } finally {
+            gateLatch.countDown()
+        }
+
+        // Then: the released fetch still settles, the row having survived the refusal
+        pollStatus(pinId, auth, "READY")
+    }
+
     companion object {
+        private const val DOWNLOADS_PATH = "/api/v1/me/image-downloads"
         private const val POLL_ATTEMPTS = 50
         private const val POLL_INTERVAL_MS = 200L
         private const val POLL_SETTLE_CONFIRMATIONS = 5
