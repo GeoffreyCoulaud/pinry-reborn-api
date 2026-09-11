@@ -1,4 +1,4 @@
-import { Navigate } from "@tanstack/react-router"
+import { Link, Navigate } from "@tanstack/react-router"
 import { useLayoutEffect, useRef, useState, type RefObject } from "react"
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   Virtualizer,
   WaterfallLayout,
 } from "react-aria-components"
+import { TaskCentre } from "../components/TaskCentre"
 import { placeableTiles, renditionForColumn, tileAspectRatio, tileImageSource } from "../lib/tiles"
 import { m } from "../paraglide/messages.js"
 import { usePins, type Pin } from "../pins"
@@ -158,11 +159,15 @@ export function Home() {
 
   return (
     <main className="flex h-screen flex-col gap-4 p-4">
-      <header className="flex items-baseline justify-between">
+      <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-2xl font-semibold">{m.home_heading()}</h1>
-        <button type="button" onClick={() => signOut.mutate()}>
-          {m.sign_out()}
-        </button>
+        <div className="flex items-center gap-3">
+          <Link to="/pins/new">{m.create_pin()}</Link>
+          <TaskCentre />
+          <button type="button" onClick={() => signOut.mutate()}>
+            {m.sign_out()}
+          </button>
+        </div>
       </header>
       <div className="min-h-0 flex-1">
         <PinGrid />

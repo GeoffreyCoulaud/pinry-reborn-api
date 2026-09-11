@@ -1,13 +1,13 @@
 import { screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
-import { pin, pinsRoute, readyPin, renderApp, sessionRoute } from "../test/app"
+import { downloadsRoute, pin, pinsRoute, readyPin, renderApp, sessionRoute } from "../test/app"
 import { server } from "../test/server"
 
 describe("browse the grid and load a second page", () => {
   it("Given a catalogue of two pages, Then the end of the first brings the second", async () => {
     const first = readyPin("a harbour at dusk")
     const second = readyPin("a cat asleep")
-    server.use(sessionRoute(() => true), pinsRoute([[first], [second]]))
+    server.use(sessionRoute(() => true), pinsRoute([[first], [second]]), downloadsRoute())
 
     renderApp("/")
 
@@ -17,7 +17,7 @@ describe("browse the grid and load a second page", () => {
 
   it("Given an image the API measured, Then the tile is placed at that ratio before it loads", async () => {
     const wide = readyPin("a harbour at dusk", 800, 600)
-    server.use(sessionRoute(() => true), pinsRoute([[wide]]))
+    server.use(sessionRoute(() => true), pinsRoute([[wide]]), downloadsRoute())
 
     renderApp("/")
 
@@ -30,7 +30,7 @@ describe("browse the grid and load a second page", () => {
   it("Given a download the server is still running, Then no tile stands for the pin", async () => {
     const ready = readyPin("a harbour at dusk")
     const pending = pin("a cat asleep", { status: "PENDING" })
-    server.use(sessionRoute(() => true), pinsRoute([[ready, pending]]))
+    server.use(sessionRoute(() => true), pinsRoute([[ready, pending]]), downloadsRoute())
 
     renderApp("/")
 
@@ -44,7 +44,7 @@ describe("browse the grid and load a second page", () => {
       reasonCode: "NOT_FOUND",
       message: "No image at this URL.",
     })
-    server.use(sessionRoute(() => true), pinsRoute([[failed]]))
+    server.use(sessionRoute(() => true), pinsRoute([[failed]]), downloadsRoute())
 
     renderApp("/")
 

@@ -1,0 +1,98 @@
+import { useNavigate } from "@tanstack/react-router"
+import { useState } from "react"
+import { useCreatePin, useHandshake, type ImageSource } from "../images"
+import { uploadRefusal, type UploadRefusal } from "../lib/uploads"
+import { m } from "../paraglide/messages.js"
+
+const FIELD = "rounded border border-current/30 px-2 py-1"
+
+const REFUSALS: Record<UploadRefusal, () => string> = {
+  TOO_MANY_BYTES: m.file_too_heavy,
+  TOO_MANY_PIXELS: m.file_too_large,
+}
+
+/** The pixel count a limit is read against, which nothing short of a decoder knows. */
+async function measured(file: File) {
+  const bitmap = await createImageBitmap(file)
+  return { size: file.size, width: bitmap.width, height: bitmap.height }
+}
+
+/**
+ * Two entries, one screen: an address the server fetches, or a file from disk. The file is
+ * measured against the deployment's limits here, so an oversized one costs no upload at all
+ * (specification 4.8).
+ */
+export function CreatePin() {
+  const navigate = useNavigate()
+  const create = useCreatePin()
+  const handshake = useHandshake()
+  // The file is held here rather than read from the form: jsdom carries an uploaded file into
+  // `new FormData(form)` with its bytes dropped, which makes every journey test a lie.
+  const [file, setFile] = useState<File | null>(null)
+  const [refused, setRefused] = useState<UploadRefusal | null>(null)
+
+  async function submit(fields: FormData) {
+    let source: ImageSource = { url: String(fields.get("sourceMediaUrl")) }
+    if (file !== null) {
+      const refusal = uploadRefusal(await measured(file), handshake.data?.limits)
+      setRefused(refusal)
+      if (refusal !== null) return
+      source = { file }
+    }
+    create.mutate(
+      {
+        sourceContextUrl: String(fields.get("sourceContextUrl")),
+        description: String(fields.get("description")),
+        source,
+      },
+      { onSuccess: () => void navigate({ to: "/" }) },
+    )
+  }
+
+  return (
+    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+      <h1 className="text-2xl font-semibold">{m.create_pin()}</h1>
+      <form
+        className="flex flex-col gap-3"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void submit(new FormData(event.currentTarget))
+        }}
+      >
+        <label className="flex flex-col gap-1">
+          {m.source_page()}
+          <input name="sourceContextUrl" type="url" required className={FIELD} />
+        </label>
+        <label className="flex flex-col gap-1">
+          {m.description()}
+          <input name="description" className={FIELD} />
+        </label>
+        {/* The address stops being required once a file is chosen: an image comes from one or the other. */}
+        <label className="flex flex-col gap-1">
+          {m.image_address()}
+          <input name="sourceMediaUrl" type="url" required={file === null} className={FIELD} />
+        </label>
+        <label className="flex flex-col gap-1">
+          {m.image_file()}
+          <input
+            name="file"
+            type="file"
+            accept="image/*"
+            onChange={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
+            className={FIELD}
+          />
+        </label>
+        {refused !== null && <p role="alert">{REFUSALS[refused]()}</p>}
+        {create.isError && <p role="alert">{m.creation_refused()}</p>}
+        {/* Submitting before the limits arrive would send a file this deployment refuses. */}
+        <button
+          type="submit"
+          disabled={create.isPending || handshake.isPending}
+          className="rounded bg-current/10 py-1"
+        >
+          {m.create_pin()}
+        </button>
+      </form>
+    </main>
+  )
+}

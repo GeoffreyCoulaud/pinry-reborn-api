@@ -64,6 +64,42 @@ export function pinsRoute(pages: Pin[][]) {
   })
 }
 
+/** The catalogue as a single page, reread each time the journey's own state changes it. */
+export function onePinPage(pins: () => Pin[]) {
+  return http.get("/api/v1/pins", () =>
+    HttpResponse.json({ pins: pins(), pagination: { previousCursor: null, nextCursor: null } }),
+  )
+}
+
+/** The task centre's list, answered from what the journey decided last. */
+export function downloadsRoute(rows: () => unknown[] = () => []) {
+  return http.get("/api/v1/me/image-downloads", () => HttpResponse.json({ downloads: rows() }))
+}
+
+/** The deployment's limits, as narrow as the journey needs them to be. */
+export function handshakeRoute(maxFileBytes = 30 * 1024 * 1024) {
+  return http.get("/api/v1/handshake", () =>
+    HttpResponse.json({
+      contractVersion: "3.3.0",
+      limits: { maxFileBytes, maxPixels: 50_000_000 },
+      renditionSizes: { tiny: 80, small: 240, medium: 640, large: 1600 },
+    }),
+  )
+}
+
+/** A row of the task centre, as `GET /api/v1/me/image-downloads` answers it. */
+export function download(pinId: string, status: "PENDING" | "FAILED", message: string | null = null) {
+  return {
+    pinId,
+    sourceUrl: `https://example.test/${pinId}.png`,
+    status,
+    requestedAt: "2026-09-11T10:00:00Z",
+    updatedAt: "2026-09-11T10:00:01Z",
+    reasonCode: status === "FAILED" ? "FETCH_FAILED" : null,
+    message,
+  }
+}
+
 /** The application on one route, with a cache of its own so no journey inherits another's. */
 export function renderApp(path: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
