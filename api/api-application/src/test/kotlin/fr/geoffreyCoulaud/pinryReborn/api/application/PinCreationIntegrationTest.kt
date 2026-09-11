@@ -6,6 +6,7 @@ import io.restassured.http.ContentType
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.Matchers.emptyIterable
 import org.junit.jupiter.api.Test
 
@@ -39,6 +40,26 @@ class PinCreationIntegrationTest : IntegrationTest() {
             .body("sourceMediaUrl", equalTo("https://example.com/image.jpg"))
             .body("description", equalTo("A test pin"))
             .body("tags", emptyIterable<Any>())
+    }
+
+    @Test
+    fun `creating a pin with no source media url returns the created pin, carrying none`() {
+        val auth = createAuthenticatedUser()
+
+        given()
+            .contentType(ContentType.JSON)
+            .authenticatedAs(auth)
+            .body(
+                """{
+                    "sourceContextUrl": "https://example.com/page",
+                    "description": "A pin whose image comes from disk"
+                }"""
+            )
+            .`when`()
+            .post("/api/v1/pins")
+            .then()
+            .statusCode(201)
+            .body("sourceMediaUrl", nullValue())
     }
 
     @Test
