@@ -26,6 +26,19 @@ updates:
         patterns:
           - "*"
 
+  # The pnpm workspace of clients/: one grouped weekly PR. Dependabot's "npm" ecosystem is
+  # what reads pnpm-lock.yaml; the directory is the workspace root, not each package.
+  - package-ecosystem: "npm"
+    directory: "/clients"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      clients:
+        patterns:
+          - "*"
+
   # Base image of the Dockerfile: one grouped weekly PR.
   - package-ecosystem: "docker"
     directory: "/api"
