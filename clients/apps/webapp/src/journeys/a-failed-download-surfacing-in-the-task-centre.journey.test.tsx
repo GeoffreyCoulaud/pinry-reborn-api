@@ -38,6 +38,27 @@ describe("a failed download surfacing in the task centre", () => {
     await waitFor(() => expect(retried).toBe(failed.id))
   })
 
+  it("Given actions the API refuses, Then the centre says so rather than staying silent", async () => {
+    const user = userEvent.setup()
+    const failed = pin("a cat asleep", { status: "FAILED", reasonCode: "FETCH_FAILED" })
+    server.use(
+      sessionRoute(() => true),
+      onePinPage(() => [failed]),
+      downloadsRoute(() => [download(failed.id, "FAILED")]),
+      http.put("/api/v1/pins/:pinId/image", () => new HttpResponse(null, { status: 503 })),
+      http.delete("/api/v1/me/image-downloads/:pinId", () => new HttpResponse(null, { status: 503 })),
+    )
+
+    renderApp("/")
+    await user.click(await screen.findByRole("button", { name: "Downloads (1)" }))
+
+    await user.click(await screen.findByRole("button", { name: "Try again" }))
+    expect(await screen.findByRole("alert")).toHaveTextContent("That image could not be added.")
+
+    await user.click(screen.getByRole("button", { name: "Forget it" }))
+    expect(await screen.findByText("That task could not be forgotten.")).toBeVisible()
+  })
+
   it("Given a file uploaded from the centre, Then the grid rereads and the tile appears", async () => {
     const user = userEvent.setup()
     const failed = pin("a cat asleep", { status: "FAILED", reasonCode: "FETCH_FAILED" })
