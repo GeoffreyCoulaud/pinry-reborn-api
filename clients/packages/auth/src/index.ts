@@ -34,9 +34,14 @@ export interface Auth {
   signUp(credentials: Credentials, rememberMe?: boolean): Promise<Session>
   signIn(credentials: Credentials, rememberMe?: boolean): Promise<Session>
   signOut(): Promise<void>
-  /** The session the request already carries, or null when the API no longer honours it. */
+  /**
+   * The session the request already carries, or null when the API answers `401`. Any other
+   * refusal throws: a deployment that is briefly unreachable has not ended the session.
+   */
   currentSession(): Promise<Session | null>
 }
+
+const UNAUTHORISED = 401
 
 export function createAuth({ transport, baseUrl }: AuthOptions): Auth {
   const client: ApiClient = createApiClient(baseUrl)
@@ -74,8 +79,13 @@ export function createAuth({ transport, baseUrl }: AuthOptions): Auth {
       token = undefined
     },
     async currentSession() {
-      const { data } = await client.GET("/api/v1/sessions/current")
-      return data === undefined ? null : { expiresAt: data.expiresAt, renewAfter: data.renewAfter }
+      const { data, response } = await client.GET("/api/v1/sessions/current")
+      // Only a 401 is an answer about the session. openapi-fetch leaves `data` undefined for a
+      // 500 or a 503 just as readily, and reading those as no session signs the user out on a
+      // failure the next request would survive.
+      if (response.status === UNAUTHORISED) return null
+      if (data === undefined) throw new Error(`The API refused the session: ${response.status}.`)
+      return { expiresAt: data.expiresAt, renewAfter: data.renewAfter }
     },
   }
 }

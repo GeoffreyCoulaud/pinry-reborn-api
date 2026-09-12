@@ -18,6 +18,7 @@
   "password": "Password",
   "remember_me": "Stay signed in",
   "retry": "Try again",
+  "session_unreadable": "Your session could not be read. Try again in a moment.",
   "sign_in": "Sign in",
   "sign_in_refused": "That username and password did not work.",
   "sign_out": "Sign out",
