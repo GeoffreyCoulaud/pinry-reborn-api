@@ -3,7 +3,14 @@ import userEvent from "@testing-library/user-event"
 import { HttpResponse, http } from "msw"
 import { describe, expect, it } from "vitest"
 import { m } from "../paraglide/messages.js"
-import { SESSION, downloadsRoute, pinsRoute, renderApp, sessionRoute } from "../test/app"
+import {
+  SESSION,
+  downloadsRoute,
+  handshakeRoute,
+  pinsRoute,
+  renderApp,
+  sessionRoute,
+} from "../test/app"
 import { server } from "../test/server"
 
 describe("sign in", () => {
@@ -17,6 +24,7 @@ describe("sign in", () => {
       sessionRoute(() => opened !== undefined),
       pinsRoute([]),
       downloadsRoute(),
+      handshakeRoute(),
     )
     renderApp("/sign-in")
     const user = userEvent.setup()

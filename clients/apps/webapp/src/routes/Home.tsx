@@ -15,6 +15,7 @@ import {
 } from "react-aria-components"
 import { TaskCentre } from "../components/TaskCentre"
 import { downloadReason } from "../downloadReasons"
+import { useHandshake } from "../images"
 import { placeableTiles, renditionForColumn, tileAspectRatio, tileImageSource } from "../lib/tiles"
 import { m } from "../paraglide/messages.js"
 import { usePins, type Pin } from "../pins"
@@ -47,17 +48,18 @@ function useColumnWidth(ref: RefObject<HTMLElement | null>): number {
  * The tile carries its ratio so the layout measures it at its true height on the first pass and
  * its column settles once, before a byte of the image arrives (specification 4.7).
  */
-function Tile({ pin }: { pin: Pin }) {
+function Tile({ pin, smallRenditionPx }: { pin: Pin; smallRenditionPx?: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const columnWidth = useColumnWidth(ref)
   const image = pin.image
   const ratio = { aspectRatio: tileAspectRatio(image?.width, image?.height) }
+  const rendition = renditionForColumn(columnWidth, window.devicePixelRatio, smallRenditionPx)
 
   return (
     <div ref={ref} className="w-full">
       {image?.url ? (
         <img
-          src={tileImageSource(image.url, renditionForColumn(columnWidth, window.devicePixelRatio))}
+          src={tileImageSource(image.url, rendition)}
           alt={pin.description}
           style={ratio}
           className="w-full rounded object-cover"
@@ -102,6 +104,9 @@ function PinDialog({ pin }: { pin: Pin }) {
 
 function PinGrid() {
   const pins = usePins()
+  // The breakpoint a tile picks its rendition on is the deployment's, not a constant: `small`
+  // lowered in the configuration would otherwise upscale every tile (specification 4.3).
+  const renditionSizes = useHandshake().data?.renditionSizes
   const [openedId, setOpenedId] = useState<string | null>(null)
   const tiles = placeableTiles(pins.data?.pages.flatMap((page) => page.pins) ?? [])
   const opened = tiles.find((pin) => pin.id === openedId)
@@ -119,7 +124,7 @@ function PinGrid() {
           <Collection items={tiles}>
             {(pin) => (
               <GridListItem textValue={pin.description}>
-                <Tile pin={pin} />
+                <Tile pin={pin} smallRenditionPx={renditionSizes?.small} />
               </GridListItem>
             )}
           </Collection>

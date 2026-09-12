@@ -5,9 +5,8 @@ export type Rendition = "SMALL" | "MEDIUM"
 
 /**
  * The widest column, in device pixels, the small rendition covers without stretching. It is
- * `images.renditions.small`'s default, and the handshake of section 4.3 does publish the
- * deployment's own since block 7: nothing reads it here yet, so a deployment that narrows its
- * renditions costs a tile more bytes than it needs rather than a defect.
+ * `images.renditions.small`'s default, and it stands in only until the handshake answers with
+ * the deployment's own: a deployment that narrowed `small` would upscale every tile visibly.
  */
 const SMALL_RENDITION_PX = 240
 
@@ -25,8 +24,12 @@ export function tileAspectRatio(
 }
 
 /** The rendition a column this wide needs, on a display of this pixel ratio. */
-export function renditionForColumn(columnWidth: number, pixelRatio: number): Rendition {
-  return columnWidth * pixelRatio > SMALL_RENDITION_PX ? "MEDIUM" : "SMALL"
+export function renditionForColumn(
+  columnWidth: number,
+  pixelRatio: number,
+  smallRenditionPx: number = SMALL_RENDITION_PX,
+): Rendition {
+  return columnWidth * pixelRatio > smallRenditionPx ? "MEDIUM" : "SMALL"
 }
 
 /** The bytes an `<img>` fetches: the relative URL the API gave, at one rendition. */
