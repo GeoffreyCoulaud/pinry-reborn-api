@@ -1,11 +1,10 @@
+import type { Schemas } from "@pinry-reborn/auth"
+
 /** Why this deployment will not store this file, told before a byte of it is sent. */
 export type UploadRefusal = "TOO_MANY_BYTES" | "TOO_MANY_PIXELS"
 
-/** The two keys of the handshake a client acts on (specification 4.3). */
-export interface UploadLimits {
-  maxFileBytes: number
-  maxPixels: number
-}
+/** The limits the handshake publishes, read from the contract rather than retyped (4.3). */
+export type UploadLimits = Schemas["HandshakeOutputDto"]["limits"]
 
 /** A file the browser has decoded far enough to know what it would cost the server. */
 export interface MeasuredUpload {
