@@ -1,6 +1,9 @@
 # 0024. Three projects share one repository, and one pipeline runs everywhere
 
-Status: Accepted
+Status: Partially superseded by `0026-one-session-two-transports.md` (decision 9 and the cross-origin
+consequence: the web application and the API share one public origin, and the session also travels in a
+cookie) and by `0027-the-web-application-stack.md` (decision 11: the clients' coverage bound covers the
+pure functions, not everything the architecture separates from the view). The nine other decisions stand.
 Date: 2026-09-08
 Specification: `docs/specs/2026-09-08-monorepo.md`
 Related: `docs/adr/0018-a-block-is-a-pull-request.md` (the block budget block 1 is measured

@@ -5,7 +5,9 @@ Date: 2026-09-10
 Specification: `docs/specs/2026-09-10-web-application.md`, questions A to D and X, and section 4.1
 Related: `docs/adr/0024-three-projects-share-one-repository.md`, whose decision 9 this one revises along
 with its cross-origin consequence; `docs/adr/0027-the-web-application-stack.md`, which ships the bundle
-this cookie serves.
+this cookie serves; `docs/specs/2026-07-21-cors.md`, which this one partially supersedes, its "Bearer
+header only and will stay so" being what the cookie transport falsifies (added by block 12, the
+both-ways link `agents/writing.md` requires).
 
 ## Context
 
