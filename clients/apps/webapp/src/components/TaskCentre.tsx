@@ -42,6 +42,9 @@ function Task({ download }: { download: Download }) {
           </Button>
         </div>
       )}
+      {/* A refused action is silent otherwise, which is what the creation screen already avoids. */}
+      {setImage.isError && <p role="alert">{m.image_refused()}</p>}
+      {drop.isError && <p role="alert">{m.dismissal_refused()}</p>}
     </li>
   )
 }
