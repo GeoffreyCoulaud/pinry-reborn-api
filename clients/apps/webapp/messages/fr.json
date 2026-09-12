@@ -18,6 +18,7 @@
   "password": "Mot de passe",
   "remember_me": "Rester connecté",
   "retry": "Réessayer",
+  "session_unreadable": "Votre session n’a pas pu être lue. Réessayez dans un instant.",
   "sign_in": "Se connecter",
   "sign_in_refused": "Ce nom d’utilisateur et ce mot de passe n’ont pas fonctionné.",
   "sign_out": "Se déconnecter",

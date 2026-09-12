@@ -155,6 +155,9 @@ export function Home() {
   const signOut = useSignOut()
 
   if (session.isPending) return null
+  // A session the API could not answer for is not an expired one, and only the second sends the
+  // user back to the credentials screen.
+  if (session.isError) return <p role="alert">{m.session_unreadable()}</p>
   if (!session.data) return <Navigate to="/sign-in" />
 
   return (
