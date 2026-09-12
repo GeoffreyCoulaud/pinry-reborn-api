@@ -1,7 +1,13 @@
-/** What the task centre reads of a download: which pin it feeds, and whether it still runs. */
+import type { Schemas } from "@pinry-reborn/auth"
+
+/**
+ * What the task centre reads of a download: which pin it feeds, and whether it still runs. The
+ * status is the contract's own enumeration, which block 5 declared so that a value the server
+ * never emits fails to compile here.
+ */
 export interface DownloadProgress {
   pinId: string
-  status: "PENDING" | "FAILED"
+  status: Schemas["ImageDownloadOutputDto"]["status"]
 }
 
 const POLL_MS = 1000

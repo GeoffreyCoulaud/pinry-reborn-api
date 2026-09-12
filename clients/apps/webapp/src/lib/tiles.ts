@@ -1,3 +1,5 @@
+import type { Schemas } from "@pinry-reborn/auth"
+
 /** The two renditions a tile ever asks for, of the four the API serves. */
 export type Rendition = "SMALL" | "MEDIUM"
 
@@ -37,8 +39,8 @@ export function tileImageSource(url: string, rendition: Rendition): string {
  * would reflow the column when it finished: it stays out until the pin carries its image
  * (specification 4.2).
  */
-export function placeableTiles<T extends { image?: { status: string } | null }>(
-  pins: readonly T[],
-): T[] {
+export function placeableTiles<
+  T extends { image?: { status: Schemas["PinImageStateDto"]["status"] } | null },
+>(pins: readonly T[]): T[] {
   return pins.filter((pin) => pin.image?.status !== "PENDING")
 }
