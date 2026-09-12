@@ -1,4 +1,5 @@
 import { Button, Dialog, DialogTrigger, Popover } from "react-aria-components"
+import { downloadReason } from "../downloadReasons"
 import { useDropDownload, useImageDownloads, useSetPinImage, type Download } from "../images"
 import { m } from "../paraglide/messages.js"
 
@@ -9,12 +10,13 @@ function Task({ download }: { download: Download }) {
   const setImage = useSetPinImage()
   const drop = useDropDownload()
   const failed = download.status === "FAILED"
+  const reason = downloadReason(download.reasonCode, download.message)
 
   return (
     <li className="flex flex-col gap-1 border-b border-current/10 py-2 last:border-0">
       <span className="font-medium">{failed ? m.task_failed() : m.task_running()}</span>
       <span className="truncate text-sm opacity-70">{download.sourceUrl}</span>
-      {download.message !== null && <span className="text-sm">{download.message}</span>}
+      {reason !== null && <span className="text-sm">{reason}</span>}
       {failed && (
         <div className="flex flex-wrap items-center gap-2">
           <Button

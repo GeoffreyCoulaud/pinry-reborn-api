@@ -28,7 +28,10 @@ describe("a failed download surfacing in the task centre", () => {
     await user.click(await screen.findByRole("button", { name: "Downloads (1)" }))
 
     expect(await screen.findByText("Failed")).toBeVisible()
-    expect(screen.getByText("The server could not fetch it.")).toBeVisible()
+    // The reason is read from `reasonCode` through the catalogue, not from the server's own
+    // English sentence, which a French reader would otherwise get (specification 4.8).
+    expect(screen.getByText("That download failed.")).toBeVisible()
+    expect(screen.queryByText("The server could not fetch it.")).toBeNull()
     // The recourse question V exists for: the address again, a file from disk, or neither.
     expect(screen.getByLabelText("Image file")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Forget it" })).toBeVisible()
