@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Both themes follow the system; the manual switch belongs to a later block. */
+/* Both themes follow the system. The manual switch question T asked for is a backlog item. */
 :root {
   color-scheme: light dark;
 }

@@ -81,8 +81,11 @@ Three conditions:
 - **Coherent alone.** Nothing it adds is unreachable: every new port method has a caller, every configuration key is
   read, every new state is produced somewhere. Where a surface's real consumer arrives in a later block, the spec says
   so and the pull request repeats it.
-- **Readable alone.** The diff excluding dated documents stays under 600 lines. Past that the block splits, or the spec
-  states in one line why it cannot.
+- **Readable alone.** The diff stays under 600 lines, of which under 200 of production code
+  (`docs/adr/0018-a-block-is-a-pull-request.md`). Past either bound the block splits, or the spec states in one
+  line why it cannot. Outside the count: the dated documents (`docs/specs`, `docs/adr`, `docs/handoffs`) and the
+  files marked `linguist-generated`, which are `.dagger/sdk/**`, `clients/pnpm-lock.yaml` and
+  `contract/openapi.json`. The budget measures what a human rereads.
 
 ### The phases
 

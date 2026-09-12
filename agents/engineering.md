@@ -124,9 +124,15 @@ The failure mode is never one endpoint being wrong: it is one endpoint being **d
   what the framework refuses before one runs. Convention: 400 malformed request, 422 well-formed but refused on its
   merits, 401 unauthenticated, 403 forbidden, 409 state conflict, 404 absent, 410 expired, 413 oversize upload, 429
   rate limit.
-- **Authentication**: opaque session tokens as `Authorization: Bearer <token>`, issued by
-  `POST /api/v1/sessions`, validated by `SessionTokenAuthenticator`. Not JWTs: the OpenAPI security scheme is declared
-  by hand in `openapi/OpenApiApplication.kt` (the Quarkus shortcut would stamp `bearerFormat: JWT`).
+- **Authentication**: opaque session tokens, issued by `POST /api/v1/sessions` and validated by
+  `SessionTokenAuthenticator`. One token, two transports (`docs/adr/0026-one-session-two-transports.md`): the
+  `Authorization: Bearer <token>` header, and the `pinry_session` cookie the browser sends for an `<img>`. The
+  creation input declares which with a required `transport`, and the status code answers it, `201` with a token
+  or `200` with a `Set-Cookie`.
+- **Not JWTs, and both schemes are declared by hand** in `openapi/OpenApiApplication.kt` (the Quarkus shortcut
+  would stamp `bearerFormat: JWT`). SmallRye stamps only the first of the two on a protected operation, so
+  `openapi/SessionSecurityRequirementFilter.kt` puts both on each: a contract that named one would tell a client
+  the other is refused.
 
 ## Design invariants (settled decisions)
 

@@ -30,9 +30,11 @@ the repository.
 5. **Test suite as a whole.** Do the tests, collectively, still discriminate? Shared fixtures that
    weaken assertions, mocks that assert their own configuration, coverage achieved by tests that
    would pass against a broken implementation.
-6. **Covered but unrequested.** The gate enforces branch coverage inside its perimeter only;
-   `api-application` and the Ebean model packages are outside it (`agents/engineering.md`), so a
-   branch there may have no test at all, which is its own finding. Coverage anyway proves nothing
+6. **Covered but unrequested.** The gate enforces branch coverage inside its perimeter only, and each
+   ecosystem draws its own: on the API side `api-application` and the Ebean model packages are outside it
+   (`agents/engineering.md`), and on the clients' side the bound covers `clients/apps/webapp/src/lib/**`
+   alone, the whole view being outside it (`clients/AGENTS.md`). A branch outside a perimeter may have no
+   test at all, which is its own finding. Coverage anyway proves nothing
    about whether anyone asked for the branch. For each new conditional, option, parameter, fallback
    and error path, name the line of the specification that demanded it; code whose only
    justification is the test covering it is an unrequested feature, and you say what to delete.
