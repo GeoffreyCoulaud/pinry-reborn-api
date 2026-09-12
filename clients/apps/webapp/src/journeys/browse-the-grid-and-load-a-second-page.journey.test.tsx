@@ -1,5 +1,4 @@
 import { screen, waitFor } from "@testing-library/react"
-import { HttpResponse, http } from "msw"
 import { describe, expect, it } from "vitest"
 import {
   downloadsRoute,
@@ -64,14 +63,7 @@ describe("browse the grid and load a second page", () => {
       sessionRoute(() => true),
       pinsRoute([[ready]]),
       downloadsRoute(),
-      http.get("/api/v1/handshake", () => {
-        asked += 1
-        return HttpResponse.json({
-          contractVersion: "3.4.0",
-          limits: { maxFileBytes: 30 * 1024 * 1024, maxPixels: 50_000_000 },
-          renditionSizes: { tiny: 80, small: 120, medium: 640, large: 1600 },
-        })
-      }),
+      handshakeRoute({ small: 120, onRequest: () => (asked += 1) }),
     )
 
     renderApp("/")

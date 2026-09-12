@@ -2219,8 +2219,8 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "OK",
+          "201" : {
+            "description" : "Pin created",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3033,7 +3033,7 @@
   },
   "info" : {
     "title" : "Pinry Reborn API",
-    "version" : "3.3.0"
+    "version" : "4.0.0"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",

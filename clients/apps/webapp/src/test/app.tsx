@@ -77,15 +77,20 @@ export function downloadsRoute(rows: () => unknown[] = () => []) {
   return http.get("/api/v1/me/image-downloads", () => HttpResponse.json({ downloads: rows() }))
 }
 
-/** The deployment's limits, as narrow as the journey needs them to be. */
-export function handshakeRoute(maxFileBytes = 30 * 1024 * 1024) {
-  return http.get("/api/v1/handshake", () =>
-    HttpResponse.json({
-      contractVersion: "3.3.0",
+/** The deployment's limits and rendition sizes, as narrow as the journey needs them to be. */
+export function handshakeRoute({
+  maxFileBytes = 30 * 1024 * 1024,
+  small = 240,
+  onRequest = () => {},
+}: { maxFileBytes?: number; small?: number; onRequest?: () => void } = {}) {
+  return http.get("/api/v1/handshake", () => {
+    onRequest()
+    return HttpResponse.json({
+      contractVersion: "4.0.0",
       limits: { maxFileBytes, maxPixels: 50_000_000 },
-      renditionSizes: { tiny: 80, small: 240, medium: 640, large: 1600 },
-    }),
-  )
+      renditionSizes: { tiny: 80, small, medium: 640, large: 1600 },
+    })
+  })
 }
 
 /** A row of the task centre, as `GET /api/v1/me/image-downloads` answers it. */
