@@ -38,7 +38,7 @@ describe("browse the grid and load a second page", () => {
     expect(screen.queryByText(pending.description)).toBeNull()
   })
 
-  it("Given a download that failed, Then its tile carries the reason the API gave", async () => {
+  it("Given a download that failed, Then its tile carries the reason in the reader's language", async () => {
     const failed = pin("a cat asleep", {
       status: "FAILED",
       reasonCode: "NOT_FOUND",
@@ -48,6 +48,20 @@ describe("browse the grid and load a second page", () => {
 
     renderApp("/")
 
-    expect(await screen.findByText("No image at this URL.")).toBeVisible()
+    expect(await screen.findByText("There is no image at that address.")).toBeVisible()
+    expect(screen.queryByText("No image at this URL.")).toBeNull()
+  })
+
+  it("Given a reason this bundle has no key for, Then the server's own sentence is shown", async () => {
+    const failed = pin("a cat asleep", {
+      status: "FAILED",
+      reasonCode: "A_REASON_ADDED_AFTER_THIS_BUNDLE",
+      message: "Something else went wrong.",
+    })
+    server.use(sessionRoute(() => true), pinsRoute([[failed]]), downloadsRoute())
+
+    renderApp("/")
+
+    expect(await screen.findByText("Something else went wrong.")).toBeVisible()
   })
 })

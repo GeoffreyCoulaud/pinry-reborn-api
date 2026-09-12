@@ -14,6 +14,7 @@ import {
   WaterfallLayout,
 } from "react-aria-components"
 import { TaskCentre } from "../components/TaskCentre"
+import { downloadReason } from "../downloadReasons"
 import { placeableTiles, renditionForColumn, tileAspectRatio, tileImageSource } from "../lib/tiles"
 import { m } from "../paraglide/messages.js"
 import { usePins, type Pin } from "../pins"
@@ -64,7 +65,7 @@ function Tile({ pin }: { pin: Pin }) {
       ) : (
         // A failed download keeps its tile and says why; a pin with no image at all says what it is.
         <p style={ratio} className="grid place-content-center rounded bg-current/5 p-2 text-center">
-          {image?.message ?? pin.description}
+          {downloadReason(image?.reasonCode, image?.message) ?? pin.description}
         </p>
       )}
     </div>
