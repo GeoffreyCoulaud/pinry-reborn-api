@@ -443,8 +443,15 @@ the domain, the use case and the column had allowed null since `1.4.sql`. The co
 | 7 | New route | `3.1.0` | Additive |
 | 8 | Two new routes | `3.2.0` | Additive |
 | 10 | `sourceMediaUrl` made optional on pin creation | `3.3.0` | Additive |
+| 11 | `POST /api/v1/pins` declares the `201` it answers | `4.0.0` | Breaking, declared |
 
-Blocks 1, 3, 6, 9 and 11 touch no contract and bump nothing. (Corrected: block 10 was expected here
+Blocks 1, 3, 6, 9 and 11 touch no contract and bump nothing. (Corrected: block 11 does, the row
+above being its: the holistic review found the route declaring `200` and answering `201`. The bump
+is a major and not the additive one the review expected, because declaring the `201` removes the
+`200` SmallRye derived from the return type, and `oasdiff` rates
+`response-success-status-removed` an error: `contract-guard` refused `3.4.0` in those words. The
+operator accepted the major, the alpha's policy and an empty `contract/frozen/` being what let the
+lot's two earlier breaks land.) (Corrected: block 10 was expected here
 too, and it is not: the file entry of 4.8 cannot create a pin under a required `sourceMediaUrl`, so
 the row above is its.) (Corrected: block 5 was inserted
 mid-lot, so the handshake and the download list are blocks 7 and 8 and bump from `3.0.0` rather than
@@ -531,7 +538,8 @@ legitimate and which hide an incomplete model as this one did.
 | 8 | `feat/image-download-list` | The download list, the deletion of a failed row, contract `3.2.0` | A failed download listed and a successful one absent; a recycled pin's row absent; another user's row absent; deleting a failed row answering `204` and the row gone; deleting a `PENDING` row answering `409` through the new `ErrorCode` |
 | 9 | `fix/image-download-holds-its-pin` | `ImageDownloadModel` holds its relation to `PinModel`, `findByAuthor` rewritten through the query beans, the foreign key the table never had, the `raw(` audit filed. No contract change | `findByAuthor` reading the caller's downloads in one statement, counted through the SQL log; the five behaviours of block 8 unchanged; removing `withActivePin()` making the recycled case red; no `raw(` left in `EbeanImageDownloadRepository` |
 | 10 | `feat/webapp-pin-creation` | Creation from a URL and from a file, the task centre, polling (Corrected: and `sourceMediaUrl` made optional on pin creation, contract `3.3.0`, without which the file entry cannot create a pin; see 4.8) | Both creation journeys; a failed download surfacing in the task centre as a journey; the polling stopping when the list empties; an oversized file refused before any request leaves (Corrected: and a creation with no `sourceMediaUrl` answering `201` with the field null) |
-| 11 | `chore/webapp-lot-wrap` | The holistic review's findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
+| 11 | `fix/webapp-review-findings` | The holistic review's code findings: the file recourse that deleted a row the server had cleared, an alert per mutation in the task centre, a session no transient failure ends, the failure reason read from `reasonCode` through the catalogue, `lib/`'s three hand-typed contract types, the tile on the handshake's own rendition sizes, the `201` of pin creation with the guard that compares every route's built status against the declared one, one row read for one deletion, the two shipped behaviours no assertion covered, and three minors. Contract `4.0.0` | The gate, and each finding named with what was done to it |
+| 12 | `chore/webapp-lot-wrap` | The holistic review's document findings, the backlog reconciled, the handoff | The gate, and each finding named with its exit |
 
 Every block measures its diff with `git diff --numstat` against 600 lines, of which under 200 of
 production code (`docs/adr/0018-a-block-is-a-pull-request.md`), as soon as it is first green rather
@@ -559,6 +567,9 @@ being under it by 9. It holds two screens, three journeys and the polling, and
 its only seam, the task centre against the creation screen, leaves halves of 232 and 193, the
 first still over the production bound while costing a second pull request at the lot's end.
 Accepted whole by the operator. The block's own figures are in its pull request.)
+(Corrected: Wrap's closing work was split in two, so the lot has twelve blocks. Block 11 takes the
+holistic review's code findings and block 12 the documents, the backlog and the handoff. Block
+numbers everywhere in this document are the new ones.)
 
 ## 6. Adjacent backlog items
 
