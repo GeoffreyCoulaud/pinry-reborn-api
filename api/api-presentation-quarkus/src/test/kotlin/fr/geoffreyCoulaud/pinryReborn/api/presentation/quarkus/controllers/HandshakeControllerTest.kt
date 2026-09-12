@@ -1,5 +1,6 @@
 package fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.controllers
 
+import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ContractConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.ImagesConfig
 import fr.geoffreyCoulaud.pinryReborn.api.presentation.quarkus.config.RenditionsConfig
 import io.mockk.every
@@ -10,7 +11,8 @@ import org.junit.jupiter.api.Test
 class HandshakeControllerTest {
     private val imagesConfig = mockk<ImagesConfig>()
     private val renditionsConfig = mockk<RenditionsConfig>()
-    private val controller = HandshakeController(imagesConfig, renditionsConfig, CONTRACT_VERSION)
+    private val contractConfig = mockk<ContractConfig>()
+    private val controller = HandshakeController(imagesConfig, renditionsConfig, contractConfig)
 
     @Test
     fun `Given the deployment's configuration, Then the handshake carries it beside the contract version`() {
@@ -21,6 +23,7 @@ class HandshakeControllerTest {
         every { renditionsConfig.small() } returns SMALL
         every { renditionsConfig.medium() } returns MEDIUM
         every { renditionsConfig.large() } returns LARGE
+        every { contractConfig.infoVersion() } returns CONTRACT_VERSION
 
         // When
         val dto = controller.getHandshake()
