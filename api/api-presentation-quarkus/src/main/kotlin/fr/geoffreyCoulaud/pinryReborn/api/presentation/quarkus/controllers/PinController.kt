@@ -27,7 +27,11 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 import org.eclipse.microprofile.openapi.annotations.Operation
+import org.eclipse.microprofile.openapi.annotations.media.Content
+import org.eclipse.microprofile.openapi.annotations.media.Schema
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.jboss.resteasy.reactive.RestResponse
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder
 import java.net.URI
@@ -56,6 +60,18 @@ class PinController(
 
     @POST
     @Authenticated
+    // SmallRye reads the status off the return type, and a runtime ResponseBuilder carries none,
+    // so the 201 this route answers is declared here as BoardController's creation declares its own.
+    @APIResponse(
+        responseCode = "201",
+        description = "Pin created",
+        content = [
+            Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = Schema(implementation = PinOutputDto::class),
+            ),
+        ],
+    )
     fun createPin(@Valid creationDto: PinCreationInputDto): RestResponse<PinOutputDto> {
         val author = securityIdentity.getUser()
         val pin = pinCreator.createPin(

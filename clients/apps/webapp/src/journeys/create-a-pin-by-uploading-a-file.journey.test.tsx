@@ -20,7 +20,7 @@ describe("create a pin by uploading a file", () => {
     let requests = 0
     server.use(
       sessionRoute(() => true),
-      handshakeRoute(4),
+      handshakeRoute({ maxFileBytes: 4 }),
       http.post("/api/v1/pins", () => {
         requests += 1
         return HttpResponse.json({}, { status: 201 })
