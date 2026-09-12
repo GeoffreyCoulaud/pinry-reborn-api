@@ -101,8 +101,8 @@ $ grep -n "@PermitAll" $K/controllers/UserController.kt
 | Q | Which UI primitives | React Aria Components, the only maintained set that carries accessible drag and drop, grid selection and virtualisation together |
 | R | Is sign up in the lot | Yes. Without it the lot produces nothing usable on a fresh instance |
 | S | How does the client learn a download finished | Polling, stopping when the list empties. SSE later, if an import ever fills it |
-| T | One theme or two | Light and dark, following the system, with a manual switch |
-| U | One lot or two | One, nine blocks, each API block landing before the client block that consumes it (Corrected: ten, block 5 having been inserted mid-lot by question AD) |
+| T | One theme or two | Light and dark, following the system, with a manual switch (Corrected: the switch did not land. Both themes follow the system through `color-scheme: light dark` and nothing writes or reads a preference; no block took the switch, and it is a `P1` backlog item rather than a dropped answer) |
+| U | One lot or two | One, nine blocks, each API block landing before the client block that consumes it (Corrected: ten, block 5 having been inserted mid-lot by question AD) (Corrected: twelve, block 9 having been inserted after the download list and Wrap's closing work having been split in two) |
 | V | Can a file be uploaded from disk | Yes. A remote download fails often, and without upload a failed task has no recourse |
 | W | Does the lot serve the handshake | Yes, in its own block. Client side validation is impossible without the limits, and a hard coded limit would drift from the deployment |
 | X | What happens to CORS | The default origin list empties. The proxy makes the web application same origin, and the extension will add its own |
@@ -274,8 +274,15 @@ join; section 4.11 carries it.) `PinModel` is a
 by the same read isolation every other query follows
 (`docs/adr/0008-structural-soft-delete-read-isolation.md`): the task centre shows work whose result
 the user can still see.
+(Corrected: that holds for the task centre's list alone. `findByPinIds`, which block 4 added so a page
+of pins resolves its image state in one read, filters on no pin state, so `GET /api/v1/pins/recycled`
+reports `PENDING` or `FAILED` for the same row the task centre hides. Deliberate, and unwritten until
+now: the recycle bin is about the pin, and hiding the image state there would show a recycled pin as
+having no image at all.)
 
 This adds one method, `findByAuthor`, to the six the interface has today.
+(Corrected: seven, block 4 having added `findByPinIds` in this same lot, so `findByAuthor` is the
+eighth; block 11's `findByAuthorAndPin` makes nine today.)
 
 **Deleting a `PENDING` row is refused with `409`.** The worker owns that row, and
 `agents/engineering.md` requires the status to come from `BaseErrorMapper.statusFor`, a `when` over
@@ -340,7 +347,9 @@ placement ourselves.
 then typecheck, lint, dependency-cruiser, the Paraglide compile, the catalogue parity test and
 Vitest. (Corrected: block 1 runs the Paraglide compile second, right after the install, because what it
 emits is what the typecheck reads; the parity test is one of the Vitest cases rather than a step of its
-own.) **Continuous integration needs no change**: `validate.yml` already runs
+own.) (Corrected: the gate runs seven steps, the last being `pnpm run build`, the static bundle. A
+typecheck is not a build, and a Vite plugin wired wrong passes every step above it; the figure in
+section 8 was corrected for it and this list was not.) **Continuous integration needs no change**: `validate.yml` already runs
 `dagger call --progress=plain gate` and nothing else, which is what ADR 0024 decision 5 buys.
 
 **Coverage covers the pure functions, at 100% of lines and branches**, which is the bound
@@ -358,6 +367,9 @@ percentage drops. The list at the end of this lot is: sign up, sign in, sign out
 browse the grid and load a second page, open a pin, create a pin from a URL through to the tile
 appearing, create a pin by uploading a file, and a failed download surfacing in the task centre.
 Each block adds its own and none is removed.
+(Corrected: ten. Block 1 opened the list with "open the application", which this sentence does not
+name. `clients/apps/webapp/src/lib/journeys.ts` is the list and `src/journeys/` holds one test each,
+compared in both directions.)
 
 **dependency-cruiser states three rules, and each forbids something that exists.** No cycles. The
 view does not import the HTTP client, only `packages/auth` and `packages/api-client` do.
@@ -422,9 +434,15 @@ exceeds the limits of 4.3, before any byte is sent.
 The header carries a task indicator with the count from 4.4 and a popover listing each task with its
 state. It polls while the list is not empty and stops when it empties. A failed task offers the
 `reasonCode`, a retry and an upload from disk, which is the recourse question V exists for.
+(Corrected: it polls while a `PENDING` row exists, not while the list is non-empty. A failed row also
+sits in the list and changes only when the user retries or drops it, so polling for it would never
+stop. The departure was recorded in `clients/apps/webapp/src/lib/downloads.ts` alone until now.)
 
 Optimistic mutation is used where the client can compute the result. Creating a pin from a URL
 cannot: the outcome depends on a remote download, so the pin appears when the server says it did.
+(Corrected: nothing in the lot is optimistic. Both creation entries and the task centre's three
+actions wait for the server, and `clients/apps/webapp/src/images.ts` says so where the mutations are
+built. The sentence describes a technique the lot considered and never used.)
 (Corrected: this block does change the contract, which section 4.9's table did not expect.
 `POST /api/v1/pins` required a non-blank `sourceMediaUrl`, and a pin whose image is uploaded from
 disk has none, so the file entry could not be built without writing a falsehood into the field.
@@ -570,6 +588,15 @@ Accepted whole by the operator. The block's own figures are in its pull request.
 (Corrected: Wrap's closing work was split in two, so the lot has twelve blocks. Block 11 takes the
 holistic review's code findings and block 12 the documents, the backlog and the handoff. Block
 numbers everywhere in this document are the new ones.)
+(Corrected: block 3 exceeds the production half too, at 262 lines against 200, accepted by the
+operator at the time and unrecorded here until block 12.)
+(Corrected: block 2's figures are 778 in total and 232 of production, measured from its merged range,
+`git diff --numstat aca1ffe0..47e232c5` excluding the dated documents and the generated contract. The
+791 and 206 the correction above carries are the first green run's, before the SmallRye fix added 73
+lines, and they are what the tier-2 question was asked with. Two things follow. The comparison is
+against ADR 0018's 600, no document stating an 800, so "under it by 9" is wrong twice over: block 2
+exceeded the total as well, by 178. And block 10 is therefore the largest overrun of the lot rather
+than the first, which is the only claim the sentence above still supports.)
 
 ## 6. Adjacent backlog items
 
