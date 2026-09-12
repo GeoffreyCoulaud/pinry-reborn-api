@@ -24,6 +24,39 @@ describe("browse the grid and load a second page", () => {
     expect(await screen.findByRole("img", { name: second.description })).toBeVisible()
   })
 
+  it("Given two pages, Then the grid asks the API for each of them once", async () => {
+    const first = readyPin("a harbour at dusk")
+    const second = readyPin("a cat asleep")
+    let requests = 0
+    server.use(
+      sessionRoute(() => true),
+      pinsRoute([[first], [second]], () => {
+        requests += 1
+      }),
+      downloadsRoute(),
+      handshakeRoute(),
+    )
+
+    renderApp("/")
+
+    expect(await screen.findByRole("img", { name: second.description })).toBeVisible()
+    // The sentinel is re-observed on every collection change, its own loading flag being one
+    // such change, so an unguarded `onLoadMore` asks again for a page the grid already holds.
+    expect(requests).toBe(2)
+  })
+
+  it("Given six pages, Then the first page's tiles survive scrolling to the end", async () => {
+    const pages = Array.from({ length: 6 }, (_, index) => [readyPin(`page ${index + 1}`)])
+    server.use(sessionRoute(() => true), pinsRoute(pages), downloadsRoute(), handshakeRoute())
+
+    renderApp("/")
+
+    expect(await screen.findByRole("img", { name: "page 6" })).toBeVisible()
+    // A cap on the infinite query drops the pages past it and nothing reloads them, which is
+    // why the grid holds every page and the virtualiser bounds the memory (question Y).
+    expect(screen.getByRole("img", { name: "page 1" })).toBeVisible()
+  })
+
   it("Given the grid, Then the deployment's own rendition sizes are what the tile reads", async () => {
     const ready = readyPin("a harbour at dusk")
     let asked = 0
