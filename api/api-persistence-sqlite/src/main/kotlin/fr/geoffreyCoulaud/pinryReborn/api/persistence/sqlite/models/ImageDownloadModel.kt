@@ -23,8 +23,8 @@ class ImageDownloadModel(
     var updatedAt: Instant,
 ) {
     /**
-     * The pin [pinId] names, so a query about it is a join rather than raw SQL. Read-only on the
-     * column [pinId] writes; `docs/specs/2026-09-10-web-application.md` section 4.11 says why.
+     * The pin [pinId] names, so a query about it is a join rather than raw SQL. Ebean refuses `@Id`
+     * on an association, so the identity stays [pinId] and this is a second property on its column.
      */
     @ManyToOne
     @DbForeignKey(noIndex = true)

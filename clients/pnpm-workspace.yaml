@@ -1,5 +1,4 @@
 # The JavaScript ecosystem's root (docs/adr/0024-three-projects-share-one-repository.md, decision 1).
-# `packages/*` is empty until block 3 brings the two packages with their first consumer.
 packages:
   - apps/*
   - packages/*
