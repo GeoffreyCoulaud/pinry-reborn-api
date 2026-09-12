@@ -50,8 +50,9 @@ export function readyPin(description: string, width = 800, height = 600): Pin {
  * The catalogue the grid pages through. A cursor is the index of the page it answers, which is
  * all the client may assume of it: block 5 made it an opaque string.
  */
-export function pinsRoute(pages: Pin[][]) {
+export function pinsRoute(pages: Pin[][], onRequest: () => void = () => {}) {
   return http.get("/api/v1/pins", ({ request }) => {
+    onRequest()
     const cursor = new URL(request.url).searchParams.get("cursor")
     const index = cursor === null ? 0 : Number(cursor)
     return HttpResponse.json({
