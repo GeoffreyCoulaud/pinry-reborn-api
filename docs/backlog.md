@@ -44,32 +44,51 @@ in git history, the handoffs under `docs/handoffs/`, and the annotated `lot/X.Y.
   and its mirror **partial export**; **merging metadata onto a pin that already exists**, which is
   the option the v1 "skip" rule forecloses; and **making a pin with no medium travel**, which needs
   the export to carry `ImageDownload` so a pending or failed download survives the round trip.
-- **The grid cannot cap the pages it holds.** A capped `useInfiniteQuery` drops the pages at the
-  far end and nothing reloads them upward, so block 6 of the web application ships no cap: React
-  Aria's `GridListLoadMoreItem` carries `onLoadMore` and `isLoading` alone, with no trigger at the
-  start of the scroll container, while the API's `previousCursor` and `BACKWARD` wait for a
-  consumer; and anchoring the scroll position while pages prepend into a waterfall is not
-  exercisable under jsdom. See `docs/specs/2026-09-10-web-application.md`, section 4.7.
-  New 2026-09-11.
-- **A pin cannot be created without a source page URL.** `sourceContextUrl` is non-null in `Pin`,
-  `not null` in the column and required on `PinCreationInputDto`, so the creation screen's file
-  entry asks for a page URL that an image from disk does not have. Unlike `sourceMediaUrl`, which
-  block 10 made optional, this one is a domain change: the entity, the SQLite table rebuild the
-  nullable column needs, `PinOutputDto`, the export and import content, some thirty test fixtures
-  and a contract major. See `docs/specs/2026-09-10-web-application.md`, section 4.8.
-  New 2026-09-11.
+- **The grid cannot cap the pages it holds.** A capped `useInfiniteQuery` drops the pages at the far end
+  and nothing reloads them upward, so block 6 ships no cap and the query keeps every page scrolled.
+  See `docs/specs/2026-09-10-web-application.md`, section 4.7. New 2026-09-11.
+- **A pin cannot be created without a source page URL.** `sourceContextUrl` is non-null in `Pin`, `not
+  null` in its column and required on `PinCreationInputDto`; the file entry has no page URL to give.
+  See `docs/specs/2026-09-10-web-application.md`, section 4.8. New 2026-09-11.
+- **Every settled download refetches the whole accumulated catalogue, sequentially.** `images.ts`
+  invalidates `["pins"]`, and TanStack Query refetches all stored pages in series: fifty pages scrolled
+  cost fifty `GET /api/v1/pins` per settled download.
+  See `docs/handoffs/2026-09-11 - handoff - web-application.md`, finding 10. New 2026-09-12.
+- **A pull request pays two cold Gradle builds**, one in `verify` and one in `build-image`, and the two
+  run in series because `build-image` needs `verify`, so a pull request waits about fourteen minutes.
+  See `docs/handoffs/2026-09-11 - handoff - web-application.md`, which measures it, and
+  `docs/handoffs/2026-09-09 - handoff - monorepo-and-pipeline.md`. New 2026-09-09, raised to `P1` 2026-09-12.
+- **Two wire names and two declarations the contract got wrong while breaking was free.**
+  `SessionTransport` is the only wire enumeration with no `Dto` suffix and outside `dtos/`, and the two
+  security schemes are `SecurityScheme` and `CookieScheme`, one naming what it is and the other nothing.
+  See `docs/handoffs/2026-09-11 - handoff - web-application.md`. New 2026-09-12.
+- **`POST /api/v1/sessions` declares no `401` although it answers one**, and `MeImageDownloadController`
+  is the only controller declaring `application/problem+json` with `ProblemDetail` where the others
+  declare a bare description. The route every client starts on is the one that under-declares.
+  See `docs/handoffs/2026-09-11 - handoff - web-application.md`. New 2026-09-12.
+- **Two surfaces of the first web application lot are half consumed.** `Session.renewAfter` reaches the
+  client and nothing reads it, so no client renews although both renewal answers exist; and `/pins/new`
+  carries no task centre, so a download requested there shows no progress until the navigation back.
+  See `docs/handoffs/2026-09-11 - handoff - web-application.md`. New 2026-09-12.
+- **No manual theme switch.** Question T asked for light and dark following the system with a manual
+  switch; `styles.css` sets `color-scheme: light dark` and nothing writes or reads a preference.
+  See `docs/specs/2026-09-10-web-application.md`, question T. New 2026-09-12.
 
 ### P2: Operational debt
 
-- **The `raw(` calls in production have never been audited.** Twelve remain across eight files: eight
-  are cursor pagination in the four sort strategies, two are `name collate nocase = ?`, which has no
-  typed equivalent, one is a `coalesce(...)` comparison, and one is `PinRepository:167`'s
-  `id in (select ...)`, the shape that hid an incomplete model in `ImageDownloadModel`. Nothing
-  records which are legitimate and which stand in for a relation the model does not hold. See
-  `docs/specs/2026-09-10-web-application.md`, section 4.11. New 2026-09-11.
-- **A pull request pays two cold Gradle builds**, one in `verify` and one in `build-image`: the jobs run
-  on different runners and the Dagger cache volume dies with each. The exits are the ones ADR 0024's
-  consequences name. See `docs/handoffs/2026-09-09 - handoff - monorepo-and-pipeline.md`. New 2026-09-09.
+- **The `raw(` calls in production have never been audited.** Thirteen remain across nine files, and
+  nothing records which are legitimate and which stand in for a relation the model does not hold, as
+  `PinRepository:167`'s `id in (select ...)` did for `ImageDownloadModel`.
+  See `docs/specs/2026-09-10-web-application.md`, section 4.11. New 2026-09-11.
+- **The download list is unbounded, unpaginated and polled every second, and nothing sweeps a failed
+  row.** `GET /api/v1/me/image-downloads` returns every row the requester owns, a `FAILED` row lives
+  until the user drops it, and no periodic sweep touches `image_download` where the worker runs four.
+  See `docs/handoffs/2026-09-11 - handoff - web-application.md`. New 2026-09-12.
+- **`foreign_keys` is off, so every declared key is unenforced, and that now has a consequence.**
+  `datasource.db.url` sets `journal_mode`, `synchronous` and `busy_timeout` and not `foreign_keys`;
+  `1.22.sql` spent a table rebuild on a constraint nothing checks, and turning the pragma on would make
+  `ON DELETE RESTRICT` refuse the hard delete of a pin whose download failed.
+  See `docs/handoffs/2026-09-11 - handoff - web-application.md`. New 2026-09-12.
 
 ## Known limits
 
@@ -112,6 +131,10 @@ Dated events. No session starts these early.
 
 ## Features
 
+- **What the API serves and the web application does not reach yet**: boards, tags, search, the recycle
+  bin, account management, import and export, and editing or deleting a pin. The first client lot built
+  sign up, sign in, the grid and creating a pin, and nothing else.
+  See `docs/specs/2026-09-10-web-application.md`, sections 6 and 7. New 2026-09-12.
 - **Perceptual `ImageHash` (pHash)** for pin deduplication / merging. Flagship of the sequenced **user-segmented base
   ** (see the roadmap section below).
 - **Advanced pin / tag / board management** : Features that make the data model genuinely user-segmented and pleasant to
