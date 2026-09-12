@@ -23,6 +23,12 @@ interface ImageDownloadRepositoryInterface {
      */
     fun findByAuthor(authorId: UUID): List<ImageDownload>
 
+    /**
+     * The download of [pinId] when that pin is [authorId]'s and not recycled, else null. The same
+     * traversal as [findByAuthor], narrowed to one pin: a single row is not read through a page.
+     */
+    fun findByAuthorAndPin(authorId: UUID, pinId: UUID): ImageDownload?
+
     /** CAS on PENDING: set FAILED + reason. Returns true if a PENDING row was updated. */
     fun markFailed(pinId: UUID, reason: DownloadReason, now: Instant): Boolean
 

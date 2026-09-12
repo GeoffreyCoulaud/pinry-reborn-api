@@ -158,6 +158,7 @@ class ResolvePinImageStateTest {
 
         override fun findByPinId(pinId: UUID): ImageDownload? = error("not used")
         override fun findByAuthor(authorId: UUID): List<ImageDownload> = error("not used")
+        override fun findByAuthorAndPin(authorId: UUID, pinId: UUID): ImageDownload? = error("not used")
         override fun markFailed(pinId: UUID, reason: DownloadReason, now: Instant): Boolean = error("not used")
         override fun recordLastError(pinId: UUID, lastError: String, now: Instant): Boolean = error("not used")
         override fun deleteIfPending(pinId: UUID): Int = error("not used")

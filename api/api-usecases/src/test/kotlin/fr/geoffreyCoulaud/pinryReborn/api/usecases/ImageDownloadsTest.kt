@@ -53,21 +53,23 @@ class ImageDownloadsTest {
     }
 
     @Test
-    fun `Given a failed row of the requester, Then delete drops it`() {
+    fun `Given a failed row of the requester, Then delete reads that row alone and drops it`() {
         // Given
-        every { downloads.findByAuthor(requester.id) } returns listOf(row(DownloadStatus.FAILED))
+        every { downloads.findByAuthorAndPin(requester.id, pinId) } returns row(DownloadStatus.FAILED)
 
         // When
         subject.delete(requester, pinId)
 
         // Then
         verify { downloads.deleteByPinId(pinId) }
+        // The list is every row the requester owns, and a deletion of one of them needs one.
+        verify(exactly = 0) { downloads.findByAuthor(any()) }
     }
 
     @Test
     fun `Given a running row, Then delete throws ImageDownloadInProgressError and keeps it`() {
         // Given
-        every { downloads.findByAuthor(requester.id) } returns listOf(row(DownloadStatus.PENDING))
+        every { downloads.findByAuthorAndPin(requester.id, pinId) } returns row(DownloadStatus.PENDING)
 
         // When / Then
         assertThrows(ImageDownloadInProgressError::class.java) { subject.delete(requester, pinId) }
@@ -76,8 +78,8 @@ class ImageDownloadsTest {
 
     @Test
     fun `Given a row the requester cannot see, Then delete throws ImageDownloadDoesNotExistError`() {
-        // Given: the traversal answers another pin's row, so this one is absent to the requester
-        every { downloads.findByAuthor(requester.id) } returns listOf(row(DownloadStatus.FAILED, randomUUID()))
+        // Given: the traversal reaches no row of this pin, the pin being another's or recycled
+        every { downloads.findByAuthorAndPin(requester.id, pinId) } returns null
 
         // When / Then
         assertThrows(ImageDownloadDoesNotExistError::class.java) { subject.delete(requester, pinId) }
