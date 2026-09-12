@@ -43,7 +43,8 @@ Inside `apps/webapp/src`:
 - `pnpm --filter @pinry-reborn/api-client run generate` : rewrites `packages/api-client/src/schema.d.ts` from
   `contract/openapi.json`. **Run it after any contract change**, the gotcha below saying why an install may not.
 - **The clients' gate**: `dagger call clients-gate`, from anywhere in the repository. It is what
-  `dagger call gate` calls; the seven steps below are its content and each runs on its own too.
+  `dagger call gate` calls; its seven steps are the install above and the six below, in that order, and each
+  runs on its own too.
 - `pnpm run messages` : compiles `messages/{en,fr}.json` into typed functions under `src/paraglide/`.
   **Run it before anything that typechecks**, a fresh clone having no generated output at all.
 - `pnpm run typecheck`, `pnpm run lint`, `pnpm run boundaries` (dependency-cruiser), `pnpm run test` (Vitest with
