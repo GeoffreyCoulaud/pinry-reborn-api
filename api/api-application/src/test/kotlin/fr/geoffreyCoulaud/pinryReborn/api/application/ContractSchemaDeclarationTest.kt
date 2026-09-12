@@ -12,9 +12,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * The contract declares what the server emits: a cursor is the opaque Base64 string the wire
- * carries, a status filled from an enum's name declares that enum's values, and a route that
- * builds its own status code declares that code.
+ * The contract declares what the server emits: an opaque cursor, the values of a status filled
+ * from an enum's name, and the status code a route builds for itself.
  */
 class ContractSchemaDeclarationTest {
     private val nullableString = setOf("string", "null")
@@ -136,9 +135,8 @@ class ContractSchemaDeclarationTest {
     }
 
     /**
-     * The success codes each route builds, keyed as the contract's operation. Two Kotlin functions
-     * can serve one operation, SmallRye merging the `@Consumes`-differentiated pair of
-     * `PUT /{pinId}/image`, so the codes are unioned per route rather than per function.
+     * The success codes each route builds, keyed as the contract's operation. SmallRye merges the
+     * two `@Consumes`-differentiated functions of `PUT /{pinId}/image`, so codes union per route.
      */
     private fun successCodesBuiltPerRoute(): Map<String, Set<String>> =
         endpoints()
@@ -182,7 +180,7 @@ class ContractSchemaDeclarationTest {
                 val helpers = controller.functions().filter { it.hasPrivateModifier }
                 controller.functions().mapNotNull { function ->
                     val method = function.annotations.firstOrNull { it.name in HTTP_METHODS }
-                    val suffix = function.annotations.firstOrNull { it.name == PATH }?.pathValue() ?: ""
+                    val suffix = function.annotations.firstOrNull { it.name == PATH }?.pathValue().orEmpty()
                     method?.let { Endpoint("${it.name} $base$suffix", function, helpers) }
                 }
             }
