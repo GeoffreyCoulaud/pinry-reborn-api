@@ -37,4 +37,37 @@ describe("a failed download surfacing in the task centre", () => {
 
     await waitFor(() => expect(retried).toBe(failed.id))
   })
+
+  it("Given a file uploaded from the centre, Then the grid rereads and the tile appears", async () => {
+    const user = userEvent.setup()
+    const failed = pin("a cat asleep", { status: "FAILED", reasonCode: "FETCH_FAILED" })
+    const url = `/api/v1/pins/${failed.id}/image`
+    const ready = { ...failed, image: { status: "READY" as const, url, width: 800, height: 600 } }
+    let stored = false
+    server.use(
+      sessionRoute(() => true),
+      onePinPage(() => [stored ? ready : failed]),
+      // The upload clears the row on the server, so the list empties with it and a DELETE the
+      // client sent afterwards would answer 404 (SetPinImage calls ClearPinDownload).
+      downloadsRoute(() => (stored ? [] : [download(failed.id, "FAILED")])),
+      http.put("/api/v1/pins/:pinId/image", () => {
+        stored = true
+        return HttpResponse.json({ id: failed.id, pinId: failed.id }, { status: 200 })
+      }),
+      http.delete("/api/v1/me/image-downloads/:pinId", () => new HttpResponse(null, { status: 404 })),
+    )
+
+    renderApp("/")
+    await user.click(await screen.findByRole("button", { name: "Downloads (1)" }))
+    await user.upload(
+      screen.getByLabelText("Image file"),
+      new File(["ok"], "cat.png", { type: "image/png" }),
+    )
+    // The popover hides the rest of the page from the accessibility tree, react-aria calling
+    // `ariaHideOutside` on it, so the grid is unreadable until it closes.
+    await user.keyboard("{Escape}")
+
+    expect(await screen.findByRole("img", { name: failed.description })).toBeVisible()
+    expect(await screen.findByRole("button", { name: "Downloads (0)" })).toBeVisible()
+  }, 15_000)
 })

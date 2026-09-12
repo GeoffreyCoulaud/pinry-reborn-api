@@ -115,12 +115,10 @@ export function useCreatePin() {
 export function useSetPinImage() {
   const settled = useImageOutcome()
   return useMutation({
-    mutationFn: async ({ pinId, source }: { pinId: string; source: ImageSource }) => {
-      await setPinImage(pinId, source)
-      // An upload leaves the failed row standing: what failed was the server's download, and the
-      // image it was for has arrived by another road.
-      if ("file" in source) await dropDownload(pinId)
-    },
+    // The failed row is the server's to clear, and a successful upload clears it: a DELETE here
+    // would answer 404 and reject a mutation that succeeded (`SetPinImage` calls `ClearPinDownload`).
+    mutationFn: ({ pinId, source }: { pinId: string; source: ImageSource }) =>
+      setPinImage(pinId, source),
     onSuccess: settled,
   })
 }
