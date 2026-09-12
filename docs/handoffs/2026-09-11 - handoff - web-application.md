@@ -157,6 +157,10 @@ build-image` about 4m 45s, and `build-image` declares `needs: [verify]`, so the 
 a pull request waits about fourteen minutes for jobs that hold about fourteen minutes of work between
 them.
 
+This block's own run is the twelfth and it is the longest: `validate / verify` 9m 38s, `validate /
+build-image` 4m 08s, `validate / gate` 5s, and 19m 17s from the run's creation to its last job's end,
+five of those minutes being the final job waiting for a runner. Two jobs of work, three waits.
+
 **The backlog item gains a fourth exit ADR 0024's consequences do not name**, because theirs are
 about the cache and this one is about the job graph. `build-image` waits on `verify` for two reasons:
 not spending runner minutes on a failing pull request, and not publishing an unvalidated image to
