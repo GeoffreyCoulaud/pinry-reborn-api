@@ -47,6 +47,14 @@ class EbeanImageDownloadRepository(
             .findList()
             .map { it.toDomain() }
 
+    override fun findByAuthorAndPin(authorId: UUID, pinId: UUID): ImageDownload? =
+        QImageDownloadModel()
+            .withActivePin()
+            .pin.author.id.equalTo(authorId)
+            .pinId.equalTo(pinId)
+            .findOne()
+            ?.toDomain()
+
     override fun markFailed(pinId: UUID, reason: DownloadReason, now: Instant): Boolean =
         pendingRows(pinId)
             .asUpdate()

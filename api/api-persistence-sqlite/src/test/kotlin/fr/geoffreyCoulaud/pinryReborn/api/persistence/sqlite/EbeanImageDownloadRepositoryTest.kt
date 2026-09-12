@@ -184,6 +184,40 @@ class EbeanImageDownloadRepositoryTest : RepositoryTest() {
         assertTrue(repository.findByAuthor(saveUser().id).isEmpty())
     }
 
+    @Test
+    fun `Given a download of the author's pin, Then findByAuthorAndPin returns that row`() {
+        // Given
+        val author = saveUser()
+        val pin = savePin(author)
+        val row = repository.upsertPending(pin.id, "https://x/i.png", randomUUID(), now)
+        repository.upsertPending(savePin(author).id, "https://x/other.png", randomUUID(), now)
+
+        // When / Then
+        assertEquals(row, repository.findByAuthorAndPin(author.id, pin.id))
+    }
+
+    @Test
+    fun `Given another author's download, Then findByAuthorAndPin returns null`() {
+        // Given
+        val pin = savePin(saveUser())
+        repository.upsertPending(pin.id, "https://x/i.png", randomUUID(), now)
+
+        // When / Then
+        assertNull(repository.findByAuthorAndPin(saveUser().id, pin.id))
+    }
+
+    @Test
+    fun `Given a recycled pin carrying a download, Then findByAuthorAndPin returns null`() {
+        // Given
+        val author = saveUser()
+        val recycled = savePin(author)
+        repository.upsertPending(recycled.id, "https://x/i.png", randomUUID(), now)
+        pins.softDeletePin(recycled, now)
+
+        // When / Then
+        assertNull(repository.findByAuthorAndPin(author.id, recycled.id))
+    }
+
     private companion object {
         const val SIXTY_SECONDS = 60L
     }

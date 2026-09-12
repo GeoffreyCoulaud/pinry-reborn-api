@@ -26,7 +26,8 @@ class ImageDownloads(
      * the worker. One transaction, the same download being requestable again while this runs.
      */
     fun delete(requester: User, pinId: UUID): Unit = transactionRunner.inTransaction {
-        val download = list(requester).firstOrNull { it.pinId == pinId } ?: throw ImageDownloadDoesNotExistError()
+        val download = imageDownloadRepository.findByAuthorAndPin(requester.id, pinId)
+            ?: throw ImageDownloadDoesNotExistError()
         if (download.status == DownloadStatus.PENDING) throw ImageDownloadInProgressError()
         imageDownloadRepository.deleteByPinId(pinId)
     }
