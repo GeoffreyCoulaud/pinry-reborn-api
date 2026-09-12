@@ -1,7 +1,12 @@
 import "@testing-library/jest-dom/vitest"
-import { cleanup } from "@testing-library/react"
+import { cleanup, configure } from "@testing-library/react"
 import { afterAll, afterEach } from "vitest"
 import { server } from "./server"
+
+// Testing Library waits one second for a query by default, which the gate's loaded container
+// spends on the first render and the four requests behind it: at that bound a journey asserts
+// the machine's speed. Kept under Vitest's own per-test timeout so a real absence reports as one.
+configure({ asyncUtilTimeout: 4_000 })
 
 // Interception starts here rather than in `beforeAll`, and the difference is not cosmetic:
 // `openapi-fetch` reads `globalThis.fetch` when the client is built, the application builds
