@@ -1,13 +1,22 @@
-import { screen } from "@testing-library/react"
+import { screen, waitFor } from "@testing-library/react"
+import { HttpResponse, http } from "msw"
 import { describe, expect, it } from "vitest"
-import { downloadsRoute, pin, pinsRoute, readyPin, renderApp, sessionRoute } from "../test/app"
+import {
+  downloadsRoute,
+  handshakeRoute,
+  pin,
+  pinsRoute,
+  readyPin,
+  renderApp,
+  sessionRoute,
+} from "../test/app"
 import { server } from "../test/server"
 
 describe("browse the grid and load a second page", () => {
   it("Given a catalogue of two pages, Then the end of the first brings the second", async () => {
     const first = readyPin("a harbour at dusk")
     const second = readyPin("a cat asleep")
-    server.use(sessionRoute(() => true), pinsRoute([[first], [second]]), downloadsRoute())
+    server.use(sessionRoute(() => true), pinsRoute([[first], [second]]), downloadsRoute(), handshakeRoute())
 
     renderApp("/")
 
@@ -15,9 +24,34 @@ describe("browse the grid and load a second page", () => {
     expect(await screen.findByRole("img", { name: second.description })).toBeVisible()
   })
 
+  it("Given the grid, Then the deployment's own rendition sizes are what the tile reads", async () => {
+    const ready = readyPin("a harbour at dusk")
+    let asked = 0
+    server.use(
+      sessionRoute(() => true),
+      pinsRoute([[ready]]),
+      downloadsRoute(),
+      http.get("/api/v1/handshake", () => {
+        asked += 1
+        return HttpResponse.json({
+          contractVersion: "3.4.0",
+          limits: { maxFileBytes: 30 * 1024 * 1024, maxPixels: 50_000_000 },
+          renditionSizes: { tiny: 80, small: 120, medium: 640, large: 1600 },
+        })
+      }),
+    )
+
+    renderApp("/")
+
+    expect(await screen.findByRole("img", { name: ready.description })).toBeVisible()
+    // The breakpoint was a constant no route published, which a deployment narrowing `small`
+    // then upscaled every tile against (specification 4.3).
+    await waitFor(() => expect(asked).toBe(1))
+  })
+
   it("Given an image the API measured, Then the tile is placed at that ratio before it loads", async () => {
     const wide = readyPin("a harbour at dusk", 800, 600)
-    server.use(sessionRoute(() => true), pinsRoute([[wide]]), downloadsRoute())
+    server.use(sessionRoute(() => true), pinsRoute([[wide]]), downloadsRoute(), handshakeRoute())
 
     renderApp("/")
 
@@ -30,7 +64,7 @@ describe("browse the grid and load a second page", () => {
   it("Given a download the server is still running, Then no tile stands for the pin", async () => {
     const ready = readyPin("a harbour at dusk")
     const pending = pin("a cat asleep", { status: "PENDING" })
-    server.use(sessionRoute(() => true), pinsRoute([[ready, pending]]), downloadsRoute())
+    server.use(sessionRoute(() => true), pinsRoute([[ready, pending]]), downloadsRoute(), handshakeRoute())
 
     renderApp("/")
 
@@ -44,7 +78,7 @@ describe("browse the grid and load a second page", () => {
       reasonCode: "NOT_FOUND",
       message: "No image at this URL.",
     })
-    server.use(sessionRoute(() => true), pinsRoute([[failed]]), downloadsRoute())
+    server.use(sessionRoute(() => true), pinsRoute([[failed]]), downloadsRoute(), handshakeRoute())
 
     renderApp("/")
 
@@ -58,7 +92,7 @@ describe("browse the grid and load a second page", () => {
       reasonCode: "A_REASON_ADDED_AFTER_THIS_BUNDLE",
       message: "Something else went wrong.",
     })
-    server.use(sessionRoute(() => true), pinsRoute([[failed]]), downloadsRoute())
+    server.use(sessionRoute(() => true), pinsRoute([[failed]]), downloadsRoute(), handshakeRoute())
 
     renderApp("/")
 

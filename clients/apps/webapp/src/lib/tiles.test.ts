@@ -29,6 +29,11 @@ describe("a tile's rendition", () => {
   it("Given a column no layout has measured yet, Then the narrowest rendition is asked for", () => {
     expect(renditionForColumn(0, 1)).toBe("SMALL")
   })
+
+  it("Given a deployment that narrowed its small rendition, Then the medium one is asked for sooner", () => {
+    expect(renditionForColumn(200, 1, 120)).toBe("MEDIUM")
+    expect(renditionForColumn(100, 1, 120)).toBe("SMALL")
+  })
 })
 
 describe("a tile's source", () => {

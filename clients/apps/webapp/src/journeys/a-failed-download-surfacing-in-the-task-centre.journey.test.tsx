@@ -2,7 +2,15 @@ import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { HttpResponse, http } from "msw"
 import { describe, expect, it } from "vitest"
-import { download, downloadsRoute, onePinPage, pin, renderApp, sessionRoute } from "../test/app"
+import {
+  download,
+  downloadsRoute,
+  handshakeRoute,
+  onePinPage,
+  pin,
+  renderApp,
+  sessionRoute,
+} from "../test/app"
 import { server } from "../test/server"
 
 describe("a failed download surfacing in the task centre", () => {
@@ -18,6 +26,7 @@ describe("a failed download surfacing in the task centre", () => {
       sessionRoute(() => true),
       onePinPage(() => [failed]),
       downloadsRoute(() => [download(failed.id, "FAILED", "The server could not fetch it.")]),
+      handshakeRoute(),
       http.put("/api/v1/pins/:pinId/image", ({ params }) => {
         retried = String(params.pinId)
         return HttpResponse.json({ status: "PENDING" }, { status: 202 })
@@ -48,6 +57,7 @@ describe("a failed download surfacing in the task centre", () => {
       sessionRoute(() => true),
       onePinPage(() => [failed]),
       downloadsRoute(() => [download(failed.id, "FAILED")]),
+      handshakeRoute(),
       http.put("/api/v1/pins/:pinId/image", () => new HttpResponse(null, { status: 503 })),
       http.delete("/api/v1/me/image-downloads/:pinId", () => new HttpResponse(null, { status: 503 })),
     )
@@ -74,6 +84,7 @@ describe("a failed download surfacing in the task centre", () => {
       // The upload clears the row on the server, so the list empties with it and a DELETE the
       // client sent afterwards would answer 404 (SetPinImage calls ClearPinDownload).
       downloadsRoute(() => (stored ? [] : [download(failed.id, "FAILED")])),
+      handshakeRoute(),
       http.put("/api/v1/pins/:pinId/image", () => {
         stored = true
         return HttpResponse.json({ id: failed.id, pinId: failed.id }, { status: 200 })
